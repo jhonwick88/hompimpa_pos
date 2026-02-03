@@ -1,0 +1,32 @@
+Analyzing hompimpa_pos...                                       
+
+   info • Unused import: 'package:flutter/material.dart' • lib/core/router.dart:1:8 • unused_import
+   info • Unnecessary cast • lib/features/orders/data/order_repository.dart:31:24 • unnecessary_cast
+   info • Avoid `print` calls in production code • lib/features/orders/data/order_repository.dart:34:11 • avoid_print
+   info • Avoid `print` calls in production code • lib/features/orders/data/order_repository.dart:84:5 • avoid_print
+   info • Avoid `print` calls in production code • lib/features/orders/data/order_repository.dart:132:7 • avoid_print
+   info • Avoid `print` calls in production code • lib/features/orders/data/order_repository.dart:134:7 • avoid_print
+   info • Unused import: 'package:cloud_firestore/cloud_firestore.dart' • lib/features/orders/domain/order.dart:2:8 • unused_import
+   info • The import of 'package:json_annotation/json_annotation.dart' is unnecessary because all of the used elements are also provided by the import of 'package:freezed_annotation/freezed_annotation.dart' • lib/features/orders/domain/order.dart:3:8 • unnecessary_import
+   info • The annotation 'JsonSerializable' can only be used on classes • lib/features/orders/domain/order.dart:14:4 • invalid_annotation_target
+   info • DO use curly braces for all flow control structures • lib/features/orders/domain/order.dart:42:42 • curly_braces_in_flow_control_structures
+   info • DO use curly braces for all flow control structures • lib/features/orders/domain/order.dart:43:46 • curly_braces_in_flow_control_structures
+   info • DO use curly braces for all flow control structures • lib/features/orders/domain/order.dart:44:12 • curly_braces_in_flow_control_structures
+   info • Name non-constant identifiers using lowerCamelCase • lib/features/orders/domain/order.g.dart:9:10 • non_constant_identifier_names
+   info • Name non-constant identifiers using lowerCamelCase • lib/features/orders/domain/order.g.dart:25:22 • non_constant_identifier_names
+   info • Unused import: '../../orders/domain/order.dart' • lib/features/orders/presentation/order_entry_screen.dart:9:8 • unused_import
+   info • Unused import: '../../orders/domain/order_item.dart' • lib/features/orders/presentation/order_entry_screen.dart:10:8 • unused_import
+   info • Unnecessary string interpolation • lib/features/orders/presentation/order_list_screen.dart:282:19 • unnecessary_string_interpolations
+   info • Avoid `print` calls in production code • lib/features/products/data/product_seeder.dart:27:7 • avoid_print
+   info • Avoid `print` calls in production code • lib/features/products/data/product_seeder.dart:30:9 • avoid_print
+   info • Avoid `print` calls in production code • lib/features/products/data/product_seeder.dart:32:9 • avoid_print
+   info • Name non-constant identifiers using lowerCamelCase • lib/features/products/domain/product.g.dart:9:12 • non_constant_identifier_names
+   info • Name non-constant identifiers using lowerCamelCase • lib/features/products/domain/product.g.dart:18:22 • non_constant_identifier_names
+   info • Unused import: '../../orders/presentation/cart_controller.dart' • lib/features/products/presentation/dashboard_screen.dart:5:8 • unused_import
+   info • Unused import: '../../orders/data/order_repository.dart' • lib/features/products/presentation/dashboard_screen.dart:6:8 • unused_import
+   info • The value of the local variable 'sales' isn't used • lib/features/products/presentation/dashboard_screen.dart:15:11 • unused_local_variable
+   info • Avoid `print` calls in production code • lib/features/products/presentation/dashboard_screen.dart:32:17 • avoid_print
+   info • Name non-constant identifiers using lowerCamelCase • lib/features/stock/domain/stock_log.g.dart:9:13 • non_constant_identifier_names
+   info • Name non-constant identifiers using lowerCamelCase • lib/features/stock/domain/stock_log.g.dart:17:22 • non_constant_identifier_names
+   info • Avoid `print` calls in production code • lib/main.dart:16:6 • avoid_print
+
