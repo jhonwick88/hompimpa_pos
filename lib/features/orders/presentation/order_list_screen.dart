@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:go_router/go_router.dart';
 import '../../orders/data/order_repository.dart';
 import '../../orders/domain/order.dart';
 import '../../orders/domain/order_item.dart';
@@ -111,6 +112,12 @@ class OrderListScreen extends ConsumerWidget {
             _OrderListTab(status: OrderStatus.selesai),
           ],
         ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () => context.push('/entry?quick=true'),
+          label: const Text('Quick Order'),
+          icon: const Icon(Icons.flash_on),
+          backgroundColor: Colors.orange,
+        ),
       ),
     );
   }
@@ -149,11 +156,18 @@ class _OrderListTab extends ConsumerWidget {
   Future<void> _sendWhatsApp(OrderEntity order) async {
     if (order.customerPhone == null || order.customerPhone!.isEmpty) return;
 
-    final itemsSummary = order.items.map((i) => "- ${i.productName} x${i.qty}").join("\n");
-    final message = "Halo ${order.customerName}, pesanan Anda di *Hompimpa* sudah *Selesai*!\n\n"
-        "Detail Pesanan:\n$itemsSummary\n"
-        "Total: *Rp ${order.total.toStringAsFixed(0)}*\n\n"
-        "Terima kasih sudah memesan!";
+    final dateStr = DateFormat('dd/MM/yyyy').format(order.orderDate);
+    final itemsSummary = order.items.map((i) => "${i.productName} x${i.qty}").join("\n");
+    
+    final message = "*Hi, Hompier !*\n"
+        "Terima kasih telah memesan *Hompimpa Mie & Pangsit*.\n\n"
+        "Detail Pesanan :\n"
+        "Tanggal: $dateStr\n"
+        "Jam: ${order.orderTime}\n"
+        "Item Order:\n$itemsSummary\n\n"
+        "Total Pembayaran: *Rp ${order.total.toStringAsFixed(0)}*\n\n"
+        "*Sudah Bisa diambil*.\n\n"
+        "Silakan konfirmasi jika ada yang perlu dikoreksi. Terima Kasih dan sehat selalu :).";
 
     final encodedMessage = Uri.encodeComponent(message);
     final url = "https://wa.me/${order.customerPhone}?text=$encodedMessage";
@@ -187,8 +201,9 @@ class _OrderListTab extends ConsumerWidget {
 
     if (confirmed == true) {
       try {
+        final messenger = ScaffoldMessenger.of(context);
         await ref.read(orderRepositoryProvider).updateOrderStatus(order.id, OrderStatus.selesai, order.items);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pesanan telah selesai')));
+        messenger.showSnackBar(const SnackBar(content: Text('Pesanan telah selesai')));
         
         // Send WhatsApp if phone exists
         if (order.customerPhone != null && order.customerPhone!.isNotEmpty) {
@@ -222,8 +237,9 @@ class _OrderListTab extends ConsumerWidget {
 
     if (confirmed == true) {
       try {
+        final messenger = ScaffoldMessenger.of(context);
         await ref.read(orderRepositoryProvider).deleteOrder(order.id);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pesanan telah dihapus')));
+        messenger.showSnackBar(const SnackBar(content: Text('Pesanan telah dihapus')));
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menghapus: $e')));
       }
@@ -239,10 +255,11 @@ class _OrderListTab extends ConsumerWidget {
 
     if (updatedItem != null) {
       try {
+        final messenger = ScaffoldMessenger.of(context);
         final newItems = List<OrderItem>.from(order.items);
         newItems[itemIndex] = updatedItem;
         await ref.read(orderRepositoryProvider).updateOrderItems(order.id, newItems);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Item pesanan diperbarui')));
+        messenger.showSnackBar(const SnackBar(content: Text('Item pesanan diperbarui')));
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal memperbarui item: $e')));
       }
@@ -255,7 +272,16 @@ class _OrderListTab extends ConsumerWidget {
 
     return allOrdersAsync.when(
       data: (orders) {
-        final filtered = orders.where((o) => o.status == status).toList();
+        var filtered = orders.where((o) => o.status == status).toList();
+        
+        // Sort by queue number for Belum and Proses statuses
+        if (status == OrderStatus.belum || status == OrderStatus.proses) {
+          filtered.sort((a, b) {
+            final aQueue = a.queueNumber ?? 999999;
+            final bQueue = b.queueNumber ?? 999999;
+            return aQueue.compareTo(bQueue);
+          });
+        }
 
         if (filtered.isEmpty) {
           return Center(
@@ -278,9 +304,34 @@ class _OrderListTab extends ConsumerWidget {
               margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               elevation: 2,
               child: ExpansionTile(
-                title: Text(
-                  '${order.customerName}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                title: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${order.customerName}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    if (order.queueNumber != null) ...[
+                      const Icon(Icons.arrow_forward, size: 16, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '#${order.queueNumber}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange.shade900,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 subtitle: Text('Total: Rp ${order.total.toStringAsFixed(0)} | ${order.orderTime}'),
                 leading: CircleAvatar(
@@ -333,29 +384,42 @@ class _OrderListTab extends ConsumerWidget {
                           Text('Telp: ${order.customerPhone}', style: const TextStyle(fontSize: 12, color: Colors.blue)),
                         Row(
                           children: [
-                            if (order.status == OrderStatus.belum)
+                            if (order.status == OrderStatus.belum) ...[
+                              ElevatedButton.icon(
+                                onPressed: () => context.push('/entry/add/${order.id}'),
+                                icon: const Icon(Icons.add_shopping_cart, size: 18),
+                                label: const Text('Tambah Item'),
+                                style: ElevatedButton.styleFrom(primary: Colors.orange),
+                              ),
+                              const SizedBox(width: 8),
                               ElevatedButton(
                                 onPressed: () async {
                                   try {
+                                    final messenger = ScaffoldMessenger.of(context);
                                     await ref.read(orderRepositoryProvider).updateOrderStatus(order.id, OrderStatus.proses, order.items);
-                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pesanan sedang diproses')));
+                                    messenger.showSnackBar(const SnackBar(content: Text('Pesanan sedang diproses')));
                                   } catch (e) {
                                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal memperbarui: $e')));
                                   }
                                 },
                                 child: const Text('Proses'),
                               ),
-                            if (order.status == OrderStatus.proses)
-                              ElevatedButton(
+                            ],
+                            if (order.status == OrderStatus.proses) ...[
+                              ElevatedButton.icon(
                                 onPressed: () => _showSelesaiConfirmation(context, ref, order),
+                                icon: const Icon(Icons.check_circle_outline, size: 18),
+                                label: const Text('Selesaikan'),
                                 style: ElevatedButton.styleFrom(primary: Colors.green, onPrimary: Colors.white),
-                                child: const Text('Selesaikan'),
                               ),
-                            const SizedBox(width: 8),
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => _showDeleteConfirmation(context, ref, order),
-                            ),
+                            ],
+                            if (order.status != OrderStatus.selesai) ...[
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () => _showDeleteConfirmation(context, ref, order),
+                              ),
+                            ],
                           ],
                         ),
                       ],

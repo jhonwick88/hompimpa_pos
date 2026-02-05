@@ -1,4 +1,4 @@
-package com.example.hompimpa_pos
+package com.pintarmedia.hompimpapos
 
 import io.flutter.embedding.android.FlutterActivity
 

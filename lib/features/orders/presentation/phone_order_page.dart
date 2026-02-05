@@ -6,25 +6,29 @@ import 'package:intl/intl.dart';
 import 'package:hompimpa_pos/features/products/presentation/product_provider.dart';
 import 'package:hompimpa_pos/features/orders/presentation/cart_controller.dart';
 import 'package:hompimpa_pos/features/products/domain/product.dart';
-import 'package:hompimpa_pos/features/orders/domain/order.dart';
-import 'package:hompimpa_pos/features/orders/domain/order_item.dart';
 import 'package:hompimpa_pos/features/orders/data/order_repository.dart';
-import 'package:hompimpa_pos/core/utils/responsive_layout.dart';
 import 'package:hompimpa_pos/features/orders/presentation/widgets/mobile_action_bar.dart';
-import 'package:hompimpa_pos/features/orders/presentation/widgets/tablet_cart_panel.dart';
 import 'package:hompimpa_pos/features/orders/presentation/order_list_screen.dart';
-import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 
-class OrderEntryScreen extends ConsumerStatefulWidget {
+/// Phone-specific order entry page (< 600px)
+/// - Full-screen product grid
+/// - Cart accessed via modal bottom sheet
+/// - NO TabletCartPanel in widget tree
+class PhoneOrderPage extends ConsumerStatefulWidget {
   final bool isQuickOrder;
   final String? existingOrderId;
-  const OrderEntryScreen({Key? key, this.isQuickOrder = false, this.existingOrderId}) : super(key: key);
+  
+  const PhoneOrderPage({
+    Key? key,
+    required this.isQuickOrder,
+    this.existingOrderId,
+  }) : super(key: key);
 
   @override
-  ConsumerState<OrderEntryScreen> createState() => _OrderEntryScreenState();
+  ConsumerState<PhoneOrderPage> createState() => _PhoneOrderPageState();
 }
 
-class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
+class _PhoneOrderPageState extends ConsumerState<PhoneOrderPage> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
@@ -55,18 +59,6 @@ class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
       _nameController.clear();
     }
     setState(() {});
-  }
-
-  void _switchToQuickOrder() {
-    if (!widget.isQuickOrder) {
-      context.go('/entry?quick=true');
-    }
-  }
-
-  void _switchToManualOrder() {
-    if (widget.isQuickOrder) {
-      context.go('/entry');
-    }
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -109,7 +101,6 @@ class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
   @override
   Widget build(BuildContext context) {
     final productsAsync = ref.watch(productListProvider);
-    final isTablet = Responsive.isTablet(context);
 
     return DefaultTabController(
       length: 3,
@@ -117,12 +108,11 @@ class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
         appBar: AppBar(
           title: Text(widget.isQuickOrder ? 'Quick Order' : 'New Order'),
           actions: [
-            if (!isTablet)
-              MobileActionBar(
-                onCartPressed: () => _showMobileCart(context),
-                onManualOrderPressed: _switchToManualOrder,
-                onQuickOrderPressed: _switchToQuickOrder,
-              ),
+            MobileActionBar(
+              onCartPressed: () => _showMobileCart(context),
+              onManualOrderPressed: () {},
+              onQuickOrderPressed: () {},
+            ),
           ],
           bottom: const TabBar(
             tabs: [
@@ -132,49 +122,16 @@ class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
             ],
           ),
         ),
-        body: ResponsiveLayout(
-          phone: productsAsync.when(
-            data: (products) => TabBarView(
-              children: [
-                _ProductGrid(products: products),
-                _ProductGrid(products: products.where((p) => p.category == 'makanan').toList()),
-                _ProductGrid(products: products.where((p) => p.category == 'minuman').toList()),
-              ],
-            ),
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, st) => Center(child: Text('Error: $e')),
-          ),
-          tablet: Row(
+        body: productsAsync.when(
+          data: (products) => TabBarView(
             children: [
-              Expanded(
-                flex: 2,
-                child: productsAsync.when(
-                  data: (products) => TabBarView(
-                    children: [
-                      _ProductGrid(products: products),
-                      _ProductGrid(products: products.where((p) => p.category == 'makanan').toList()),
-                      _ProductGrid(products: products.where((p) => p.category == 'minuman').toList()),
-                    ],
-                  ),
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (e, st) => Center(child: Text('Error: $e')),
-                ),
-              ),
-              TabletCartPanel(
-                nameController: _nameController,
-                phoneController: _phoneController,
-                selectedDate: _selectedDate,
-                selectedTime: _selectedTime,
-                onSelectDate: () => _selectDate(context),
-                onSelectTime: () => _selectTime(context),
-                onManualOrder: _switchToManualOrder,
-                onQuickOrder: _switchToQuickOrder,
-                isQuickOrder: widget.isQuickOrder,
-                existingOrderId: widget.existingOrderId,
-                standardizePhoneNumber: _standardizePhoneNumber,
-              ),
+              _ProductGrid(products: products),
+              _ProductGrid(products: products.where((p) => p.category == 'makanan').toList()),
+              _ProductGrid(products: products.where((p) => p.category == 'minuman').toList()),
             ],
           ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, st) => Center(child: Text('Error: $e')),
         ),
       ),
     );
@@ -230,6 +187,7 @@ class _MobileCartView extends ConsumerWidget {
   final VoidCallback onSelectDate;
   final VoidCallback onSelectTime;
   final bool isQuickOrder;
+  final String? existingOrderId;
   final Function(String) standardizePhoneNumber;
 
   const _MobileCartView({
@@ -240,6 +198,7 @@ class _MobileCartView extends ConsumerWidget {
     required this.onSelectDate,
     required this.onSelectTime,
     required this.isQuickOrder,
+    this.existingOrderId,
     required this.standardizePhoneNumber,
   });
 
@@ -251,6 +210,7 @@ class _MobileCartView extends ConsumerWidget {
 
     return Column(
       children: [
+        // ... (title padding remains same)
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
@@ -258,12 +218,13 @@ class _MobileCartView extends ConsumerWidget {
               Icon(Icons.shopping_basket_outlined, color: Colors.orange[700]),
               const SizedBox(width: 12),
               Text(
-                'Detail Pesanan',
+                existingOrderId != null ? 'Update Pesanan' : 'Detail Pesanan',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: Colors.orange[900],
                     ),
               ),
+// ...
               const Spacer(),
               if (cart.isNotEmpty)
                 Chip(
@@ -407,29 +368,62 @@ class _MobileCartView extends ConsumerWidget {
                         ? null
                         : () async {
                             final standardizedPhone = phoneController.text.isNotEmpty ? standardizePhoneNumber(phoneController.text) : null;
+                            final messenger = ScaffoldMessenger.of(context);
 
-                            await ref.read(cartProvider.notifier).submitOrder(
-                                  ref.read(orderRepositoryProvider),
-                                  nameController.text.trim(),
-                                  customerPhone: standardizedPhone,
-                                  isQuickOrder: isQuickOrder,
-                                  pickupDate: selectedDate,
-                                  pickupTime: selectedTime.format(context),
-                                );
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                              content: Text('Pesanan berhasil dibuat!'),
-                              backgroundColor: Colors.green,
-                            ));
-                            context.pop();
+                            if (existingOrderId != null) {
+                              try {
+                                final ordersAsync = ref.read(dailyOrdersProvider);
+                                final orders = ordersAsync.value ?? [];
+                                final originalOrder = orders.firstWhere((o) => o.id == existingOrderId);
+                                
+                                await ref.read(cartProvider.notifier).updateOrder(
+                                      ref.read(orderRepositoryProvider),
+                                      originalOrder,
+                                      nameController.text.trim(),
+                                      customerPhone: standardizedPhone,
+                                      pickupDate: selectedDate,
+                                      pickupTime: selectedTime.format(context),
+                                    );
+                                    
+                                Navigator.pop(context); // Close cart sheet
+                                messenger.showSnackBar(const SnackBar(
+                                  content: Text('Pesanan berhasil diperbarui!'),
+                                  backgroundColor: Colors.blue,
+                                ));
+                                context.pop(); // Go back to list
+                              } catch (e) {
+                                messenger.showSnackBar(SnackBar(
+                                  content: Text('Gagal memperbarui pesanan: $e'),
+                                  backgroundColor: Colors.red,
+                                ));
+                              }
+                            } else {
+                              await ref.read(cartProvider.notifier).submitOrder(
+                                    ref.read(orderRepositoryProvider),
+                                    nameController.text.trim(),
+                                    customerPhone: standardizedPhone,
+                                    isQuickOrder: isQuickOrder,
+                                    pickupDate: selectedDate,
+                                    pickupTime: selectedTime.format(context),
+                                  );
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                content: Text('Pesanan berhasil dibuat!'),
+                                backgroundColor: Colors.green,
+                              ));
+                              context.pop();
+                            }
                           },
                     style: ElevatedButton.styleFrom(
-                      primary: Colors.orange[800],
+                      primary: existingOrderId != null ? Colors.blue[800] : Colors.orange[800],
                       onPrimary: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text('PROSES PESANAN', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                    child: Text(
+                      existingOrderId != null ? 'UPDATE PESANAN' : 'PROSES PESANAN',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+                    ),
                   ),
                 ),
               ],
@@ -442,7 +436,7 @@ class _MobileCartView extends ConsumerWidget {
 }
 
 class _ProductGrid extends ConsumerWidget {
-  final List<Product> products;
+  final List<dynamic> products;
   const _ProductGrid({required this.products});
 
   @override
@@ -473,7 +467,7 @@ class _ProductGrid extends ConsumerWidget {
                 if (isFood) {
                   showDialog(
                     context: context,
-                    builder: (context) => ProductOptionDialog(product: product),
+                    builder: (context) => _ProductOptionDialog(product: product),
                   );
                 } else {
                   ref.read(cartProvider.notifier).addItem(product, 1);
@@ -553,15 +547,15 @@ class _ProductGrid extends ConsumerWidget {
   }
 }
 
-class ProductOptionDialog extends ConsumerStatefulWidget {
-  final Product product;
-  const ProductOptionDialog({Key? key, required this.product}) : super(key: key);
+class _ProductOptionDialog extends ConsumerStatefulWidget {
+  final dynamic product;
+  const _ProductOptionDialog({required this.product});
 
   @override
-  ConsumerState<ProductOptionDialog> createState() => _ProductOptionDialogState();
+  ConsumerState<_ProductOptionDialog> createState() => _ProductOptionDialogState();
 }
 
-class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
+class _ProductOptionDialogState extends ConsumerState<_ProductOptionDialog> {
   int _qty = 1;
   String _sambal = 'Campur';
   double _level = 1;

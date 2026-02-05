@@ -21,6 +21,7 @@ class OrderEntity with _$OrderEntity {
     required String orderTime, // "jam"
     @Default(OrderStatus.belum) OrderStatus status,
     required List<OrderItem> items,
+    int? queueNumber, // Queue number for order tracking
     @TimestampNullableConverter() DateTime? createdAt,
     @TimestampNullableConverter() DateTime? updatedAt,
   }) = _Order;

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/products/presentation/dashboard_screen.dart';
 import '../../features/orders/presentation/order_list_screen.dart';
-import '../../features/orders/presentation/order_entry_screen.dart';
+import '../../features/orders/presentation/order_page.dart';
 import '../../features/reports/presentation/report_screen.dart';
 
 final router = GoRouter(
@@ -19,8 +19,18 @@ final router = GoRouter(
     GoRoute(
       path: '/entry',
       builder: (context, state) {
-        final quick = state.queryParams['quick'] == 'true';
-        return OrderEntryScreen(isQuickOrder: quick);
+        final isQuickOrder = state.queryParams['quick'] == 'true';
+        return OrderPage(isQuickOrder: isQuickOrder);
+      },
+    ),
+    GoRoute(
+      path: '/entry/add/:orderId',
+      builder: (context, state) {
+        final orderId = state.params['orderId']!;
+        return OrderPage(
+          isQuickOrder: false, 
+          existingOrderId: orderId
+        );
       },
     ),
     GoRoute(

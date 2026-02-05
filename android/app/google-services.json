@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "285253284489",
+    "project_id": "hompimpapos",
+    "storage_bucket": "hompimpapos.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:285253284489:android:acedd6c55e96fa40b28c58",
+        "android_client_info": {
+          "package_name": "com.pintarmedia.hompimpapos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBIwAC4C5PD-oT-VMcbR7AD-g_yFglBUd0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

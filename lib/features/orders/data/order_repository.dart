@@ -10,6 +10,7 @@ final orderRepositoryProvider = Provider<OrderRepository>((ref) {
 abstract class OrderRepository {
   Stream<List<OrderEntity>> getOrdersStream({DateTime? date, OrderStatus? status, String? searchQuery});
   Future<void> addOrder(OrderEntity order);
+  Future<void> updateOrder(OrderEntity order);
   Future<void> updateOrderStatus(String orderId, OrderStatus newStatus, List<OrderItem> items);
   Future<void> updateOrderItems(String orderId, List<OrderItem> items);
   Future<void> deleteOrder(String orderId);
@@ -73,6 +74,13 @@ class FirestoreOrderRepository implements OrderRepository {
   Future<void> addOrder(OrderEntity order) async {
     // Using explicit toJson from the generated part if it's missing on the class
     await _firestore.collection('orders').doc(order.id).set(order.toJson());
+  }
+
+  @override
+  Future<void> updateOrder(OrderEntity order) async {
+    await _firestore.collection('orders')
+        .doc(order.id)
+        .update(order.toJson());
   }
 
   @override

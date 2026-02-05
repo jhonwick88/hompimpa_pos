@@ -53,6 +53,10 @@ class CartController extends StateNotifier<List<OrderItem>> {
     state = [];
   }
 
+  void setCartItems(List<OrderItem> items) {
+    state = items;
+  }
+
   Future<void> submitOrder(
     OrderRepository repository, 
     String customerName, {
@@ -86,6 +90,33 @@ class CartController extends StateNotifier<List<OrderItem>> {
     );
 
     await repository.addOrder(order);
+    clearCart();
+  }
+
+  Future<void> updateOrder(
+    OrderRepository repository,
+    OrderEntity existingOrder,
+    String customerName, {
+    String? customerPhone,
+    required DateTime pickupDate,
+    required String pickupTime,
+  }) async {
+    if (state.isEmpty) return;
+
+    final total = state.fold<double>(0.0, (sum, item) => sum + (item.price * item.qty));
+    final now = DateTime.now();
+
+    final updatedOrder = existingOrder.copyWith(
+      customerName: customerName,
+      customerPhone: customerPhone,
+      total: total,
+      orderDate: pickupDate,
+      orderTime: pickupTime,
+      items: state,
+      updatedAt: now,
+    );
+
+    await repository.updateOrder(updatedOrder);
     clearCart();
   }
 }

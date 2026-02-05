@@ -31,6 +31,7 @@ class _$OrderEntityTearOff {
       required String orderTime,
       OrderStatus status = OrderStatus.belum,
       required List<OrderItem> items,
+      int? queueNumber,
       @TimestampNullableConverter() DateTime? createdAt,
       @TimestampNullableConverter() DateTime? updatedAt}) {
     return _Order(
@@ -42,6 +43,7 @@ class _$OrderEntityTearOff {
       orderTime: orderTime,
       status: status,
       items: items,
+      queueNumber: queueNumber,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
@@ -66,6 +68,8 @@ mixin _$OrderEntity {
   String get orderTime => throw _privateConstructorUsedError; // "jam"
   OrderStatus get status => throw _privateConstructorUsedError;
   List<OrderItem> get items => throw _privateConstructorUsedError;
+  int? get queueNumber =>
+      throw _privateConstructorUsedError; // Queue number for order tracking
   @TimestampNullableConverter()
   DateTime? get createdAt => throw _privateConstructorUsedError;
   @TimestampNullableConverter()
@@ -91,6 +95,7 @@ abstract class $OrderEntityCopyWith<$Res> {
       String orderTime,
       OrderStatus status,
       List<OrderItem> items,
+      int? queueNumber,
       @TimestampNullableConverter() DateTime? createdAt,
       @TimestampNullableConverter() DateTime? updatedAt});
 }
@@ -113,6 +118,7 @@ class _$OrderEntityCopyWithImpl<$Res> implements $OrderEntityCopyWith<$Res> {
     Object? orderTime = freezed,
     Object? status = freezed,
     Object? items = freezed,
+    Object? queueNumber = freezed,
     Object? createdAt = freezed,
     Object? updatedAt = freezed,
   }) {
@@ -149,6 +155,10 @@ class _$OrderEntityCopyWithImpl<$Res> implements $OrderEntityCopyWith<$Res> {
           ? _value.items
           : items // ignore: cast_nullable_to_non_nullable
               as List<OrderItem>,
+      queueNumber: queueNumber == freezed
+          ? _value.queueNumber
+          : queueNumber // ignore: cast_nullable_to_non_nullable
+              as int?,
       createdAt: createdAt == freezed
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -175,6 +185,7 @@ abstract class _$OrderCopyWith<$Res> implements $OrderEntityCopyWith<$Res> {
       String orderTime,
       OrderStatus status,
       List<OrderItem> items,
+      int? queueNumber,
       @TimestampNullableConverter() DateTime? createdAt,
       @TimestampNullableConverter() DateTime? updatedAt});
 }
@@ -198,6 +209,7 @@ class __$OrderCopyWithImpl<$Res> extends _$OrderEntityCopyWithImpl<$Res>
     Object? orderTime = freezed,
     Object? status = freezed,
     Object? items = freezed,
+    Object? queueNumber = freezed,
     Object? createdAt = freezed,
     Object? updatedAt = freezed,
   }) {
@@ -234,6 +246,10 @@ class __$OrderCopyWithImpl<$Res> extends _$OrderEntityCopyWithImpl<$Res>
           ? _value.items
           : items // ignore: cast_nullable_to_non_nullable
               as List<OrderItem>,
+      queueNumber: queueNumber == freezed
+          ? _value.queueNumber
+          : queueNumber // ignore: cast_nullable_to_non_nullable
+              as int?,
       createdAt: createdAt == freezed
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -259,6 +275,7 @@ class _$_Order implements _Order {
       required this.orderTime,
       this.status = OrderStatus.belum,
       required this.items,
+      this.queueNumber,
       @TimestampNullableConverter() this.createdAt,
       @TimestampNullableConverter() this.updatedAt});
 
@@ -285,6 +302,8 @@ class _$_Order implements _Order {
   @override
   final List<OrderItem> items;
   @override
+  final int? queueNumber;
+  @override // Queue number for order tracking
   @TimestampNullableConverter()
   final DateTime? createdAt;
   @override
@@ -293,7 +312,7 @@ class _$_Order implements _Order {
 
   @override
   String toString() {
-    return 'OrderEntity(id: $id, customerName: $customerName, customerPhone: $customerPhone, total: $total, orderDate: $orderDate, orderTime: $orderTime, status: $status, items: $items, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'OrderEntity(id: $id, customerName: $customerName, customerPhone: $customerPhone, total: $total, orderDate: $orderDate, orderTime: $orderTime, status: $status, items: $items, queueNumber: $queueNumber, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -311,6 +330,8 @@ class _$_Order implements _Order {
             const DeepCollectionEquality().equals(other.orderTime, orderTime) &&
             const DeepCollectionEquality().equals(other.status, status) &&
             const DeepCollectionEquality().equals(other.items, items) &&
+            const DeepCollectionEquality()
+                .equals(other.queueNumber, queueNumber) &&
             const DeepCollectionEquality().equals(other.createdAt, createdAt) &&
             const DeepCollectionEquality().equals(other.updatedAt, updatedAt));
   }
@@ -326,6 +347,7 @@ class _$_Order implements _Order {
       const DeepCollectionEquality().hash(orderTime),
       const DeepCollectionEquality().hash(status),
       const DeepCollectionEquality().hash(items),
+      const DeepCollectionEquality().hash(queueNumber),
       const DeepCollectionEquality().hash(createdAt),
       const DeepCollectionEquality().hash(updatedAt));
 
@@ -350,6 +372,7 @@ abstract class _Order implements OrderEntity {
       required String orderTime,
       OrderStatus status,
       required List<OrderItem> items,
+      int? queueNumber,
       @TimestampNullableConverter() DateTime? createdAt,
       @TimestampNullableConverter() DateTime? updatedAt}) = _$_Order;
 
@@ -373,6 +396,8 @@ abstract class _Order implements OrderEntity {
   @override
   List<OrderItem> get items;
   @override
+  int? get queueNumber;
+  @override // Queue number for order tracking
   @TimestampNullableConverter()
   DateTime? get createdAt;
   @override

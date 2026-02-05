@@ -15,9 +15,15 @@ class DefaultFirebaseOptions {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        return ios;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for ios - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.macOS:
-        return macos;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for macos - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.windows:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for windows - '
@@ -36,41 +42,20 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: "AIzaSyBR-iVzjUqDtg3BUSMqQfIwn0qReaRrKBY",
-  authDomain: "hompimpapos.firebaseapp.com",
-  projectId: "hompimpapos",
-  storageBucket: "hompimpapos.firebasestorage.app",
-  messagingSenderId: "285253284489",
-  appId: "1:285253284489:web:458ec93ef1f70bbeb28c58",
-  measurementId: "G-CQBXSZ278H"
-  
+    apiKey: 'AIzaSyBR-iVzjUqDtg3BUSMqQfIwn0qReaRrKBY',
+    appId: '1:285253284489:web:458ec93ef1f70bbeb28c58',
+    messagingSenderId: '285253284489',
+    projectId: 'hompimpapos',
+    authDomain: 'hompimpapos.firebaseapp.com',
+    storageBucket: 'hompimpapos.firebasestorage.app',
+    measurementId: 'G-CQBXSZ278H',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'REPLACE_WITH_YOUR_ANDROID_API_KEY',
-    appId: 'REPLACE_WITH_YOUR_ANDROID_APP_ID',
-    messagingSenderId: 'REPLACE_WITH_YOUR_MESSAGING_SENDER_ID',
-    projectId: 'REPLACE_WITH_YOUR_PROJECT_ID',
-    storageBucket: 'REPLACE_WITH_YOUR_PROJECT_ID.appspot.com',
-  );
-
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'REPLACE_WITH_YOUR_IOS_API_KEY',
-    appId: 'REPLACE_WITH_YOUR_IOS_APP_ID',
-    messagingSenderId: 'REPLACE_WITH_YOUR_MESSAGING_SENDER_ID',
-    projectId: 'REPLACE_WITH_YOUR_PROJECT_ID',
-    storageBucket: 'REPLACE_WITH_YOUR_PROJECT_ID.appspot.com',
-    iosClientId: 'REPLACE_WITH_YOUR_IOS_CLIENT_ID',
-    iosBundleId: 'com.example.hompimpaPos',
-  );
-
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'REPLACE_WITH_YOUR_MACOS_API_KEY',
-    appId: 'REPLACE_WITH_YOUR_MACOS_APP_ID',
-    messagingSenderId: 'REPLACE_WITH_YOUR_MESSAGING_SENDER_ID',
-    projectId: 'REPLACE_WITH_YOUR_PROJECT_ID',
-    storageBucket: 'REPLACE_WITH_YOUR_PROJECT_ID.appspot.com',
-    iosClientId: 'REPLACE_WITH_YOUR_MACOS_CLIENT_ID',
-    iosBundleId: 'com.example.hompimpaPos',
+    apiKey: 'AIzaSyBIwAC4C5PD-oT-VMcbR7AD-g_yFglBUd0',
+    appId: '1:285253284489:android:acedd6c55e96fa40b28c58',
+    messagingSenderId: '285253284489',
+    projectId: 'hompimpapos',
+    storageBucket: 'hompimpapos.firebasestorage.app',
   );
 }

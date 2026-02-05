@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../reports/presentation/daily_sales_provider.dart';
-import '../../orders/presentation/cart_controller.dart';
-import '../../orders/data/order_repository.dart';
-import '../data/product_repository.dart';
-import '../data/product_seeder.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:hompimpa_pos/features/reports/presentation/daily_sales_provider.dart';
+import 'package:hompimpa_pos/features/products/presentation/product_provider.dart';
+import 'package:hompimpa_pos/core/utils/responsive_layout.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -14,41 +13,22 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final sales = ref.watch(todaysSalesProvider);
     final ordersAsync = ref.watch(todaysOrdersProvider);
+    final productsAsync = ref.watch(productListProvider);
+    final isTablet = Responsive.isTablet(context);
+
+    // Random-ish but stable colors for summary cards
+    final summaryColors = [
+      Colors.indigo[400]!,
+      Colors.teal[400]!,
+      Colors.orange[400]!,
+      Colors.pink[400]!,
+    ];
+    final omzetColor = summaryColors[0];
+    final orderColor = summaryColors[1];
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Hompimpa POS'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.cloud_upload),
-            tooltip: 'Seed Data',
-            onPressed: () async {
-              try {
-                final repo = ref.read(productRepositoryProvider);
-                final seeder = ProductSeeder(repo);
-                await seeder.seed();
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Data seeded successfully!')));
-              } catch (e) {
-                print("DEBUG SEED ERROR: $e");
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Seed Failed: $e'),
-                    backgroundColor: Colors.red,
-                    duration: const Duration(seconds: 10),
-                  )
-                );
-              }
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.history),
-            onPressed: () => context.push('/orders'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.analytics),
-            onPressed: () => context.push('/reports'),
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -60,36 +40,45 @@ class DashboardScreen extends ConsumerWidget {
               children: [
                 Expanded(
                   child: Card(
-                    color: Theme.of(context).colorScheme.primaryContainer,
+                    elevation: 8,
+                    shadowColor: omzetColor.withOpacity(0.5),
+                    color: omzetColor,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         children: [
-                          const Text('Omzet Hari Ini', style: TextStyle(fontSize: 16)),
+                          const Text('Omzet Hari Ini', style: TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 4),
                           Text(
-                            'Rp \${sales.toStringAsFixed(0)}',
-                            style: Theme.of(context).textTheme.headlineMedium,
+                            'Rp ${sales.toStringAsFixed(0)}',
+                            style: const TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Card(
+                    elevation: 8,
+                    shadowColor: orderColor.withOpacity(0.5),
+                    color: orderColor,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         children: [
-                          const Text('Total Order', style: TextStyle(fontSize: 16)),
+                          const Text('Total Order', style: TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 4),
                           ordersAsync.when(
                             data: (data) => Text(
-                              '\${data.length}',
-                              style: Theme.of(context).textTheme.headlineMedium,
+                              '${data.length}',
+                              style: const TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold),
                             ),
-                            loading: () => const CircularProgressIndicator(),
-                            error: (_, __) => const Text('Error'),
+                            loading: () => const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
+                            error: (_, __) => const Text('Error', style: TextStyle(color: Colors.white)),
                           ),
                         ],
                       ),
@@ -98,43 +87,169 @@ class DashboardScreen extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             
-            // Quick Actions
-            ElevatedButton.icon(
-              onPressed: () {
-                // Quick Order Action
-                // 1. Generate random but valid order? 
-                // Wait, requirement is "1 klik tambah order default". 
-                // Does this mean creating an empty order or adding a default item?
-                // "1 klik tambah order dengan nama Random di awali Prefik Singkatan dari Offline Order"
-                // It likely means creating a placeholder order for walk-in customers quickly.
-                // But creating an order with 0 items? Or allows editing later?
-                // Let's assume it goes to Order Entry screen with pre-filled name logic.
-                // OR creates an order immediately. "1 klik tambah order" usually implies creation.
-                // But without items?
-                // Interpret: Open Order Screen with predefined "Quick Order" customer name.
-                context.push('/entry?quick=true');
-              },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                primary: Colors.orange,
-                onPrimary: Colors.white,
-              ),
-              icon: const Icon(Icons.flash_on, size: 32),
-              label: const Text('QUICK ORDER (Walk-in)', style: TextStyle(fontSize: 20)),
+            Text(
+              'Stok Produk',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () => context.push('/entry'),
-              style: ElevatedButton.styleFrom(
-                 padding: const EdgeInsets.symmetric(vertical: 24),
+            const SizedBox(height: 12),
+            
+            // Product Stock List
+            Expanded(
+              child: productsAsync.when(
+                data: (products) {
+                  if (products.isEmpty) {
+                    return const Center(child: Text('Belum ada produk'));
+                  }
+                  
+                  final cardColors = [
+                    Colors.orange[100],
+                    Colors.blue[100],
+                    Colors.green[100],
+                    Colors.purple[100],
+                    Colors.pink[100],
+                    Colors.amber[100],
+                    Colors.cyan[100],
+                    Colors.indigo[100],
+                  ];
+
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      final orientation = MediaQuery.of(context).orientation;
+                      int crossAxisCount;
+                      
+                      if (isTablet && orientation == Orientation.portrait) {
+                        crossAxisCount = 4; // Tablet portrait
+                      } else if (isTablet) {
+                        crossAxisCount = 6; // Tablet landscape
+                      } else {
+                        crossAxisCount = 3; // Phone
+                      }
+                      
+                      return GridView.builder(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          childAspectRatio: 0.9,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
+                        itemCount: products.length,
+                        itemBuilder: (context, index) {
+                          final product = products[index];
+                          final bgColor = cardColors[index % cardColors.length];
+                      
+                          return Card(
+                            elevation: 6,
+                            shadowColor: Colors.black26,
+                            clipBehavior: Clip.antiAlias,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            child: Stack(
+                              children: [
+                                // Main Background
+                                Container(color: bgColor),
+                                
+                                // Product Image Placeholder or Icon
+                                const Center(
+                                  child: Opacity(
+                                    opacity: 0.1,
+                                    child: Icon(Icons.fastfood, size: 64),
+                                  ),
+                                ),
+
+                                // Name Label at Bottom with Gradient
+                                Positioned(
+                                  bottom: 0,
+                                  left: 0,
+                                  right: 0,
+                                  child: Container(
+                                    decoration: const BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.bottomCenter,
+                                        end: Alignment.topCenter,
+                                        colors: [Colors.black87, Colors.transparent],
+                                      ),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                                    child: Text(
+                                      product.name,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+
+                                // Stock Badge at Top Right Edge
+                                Positioned(
+                                  top: 4,
+                                  right: 4,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red,
+                                      borderRadius: BorderRadius.circular(20), // Oval
+                                      boxShadow: const [
+                                        BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+                                      ],
+                                    ),
+                                    child: Text(
+                                      '${product.stock}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Center(child: Text('Error: $e')),
               ),
-              icon: const Icon(Icons.add_shopping_cart, size: 32),
-              label: const Text('Input Order Manual', style: TextStyle(fontSize: 20)),
             ),
           ],
         ),
+      ),
+      floatingActionButton: SpeedDial(
+        icon: Icons.menu,
+        activeIcon: Icons.close,
+        backgroundColor: Colors.orange,
+        foregroundColor: Colors.white,
+        children: [
+          SpeedDialChild(
+            child: const Icon(Icons.add_shopping_cart),
+            label: 'Input Order Manual',
+            onTap: () => context.push('/entry'),
+          ),
+          SpeedDialChild(
+            child: const Icon(Icons.bolt),
+            label: 'Quick Order',
+            onTap: () => context.push('/entry?quick=true'),
+          ),
+          SpeedDialChild(
+            child: const Icon(Icons.history),
+            label: 'Pesanan Pelanggan',
+            onTap: () => context.push('/orders'),
+          ),
+          SpeedDialChild(
+            child: const Icon(Icons.analytics),
+            label: 'Laporan Penjualan',
+            onTap: () => context.push('/reports'),
+          ),
+        ],
       ),
     );
   }
