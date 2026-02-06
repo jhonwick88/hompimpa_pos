@@ -319,16 +319,30 @@ class _ProductGrid extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Expanded(
-                      child: Container(
-                        color: isFood ? Colors.orange.shade100 : Colors.blue.shade100,
-                        child: Center(
-                          child: Icon(
-                            isFood ? Icons.fastfood : Icons.local_drink,
-                            size: 40,
-                            color: isFood ? Colors.orange : Colors.blue,
-                          ),
-                        ),
-                      ),
+                      child: product.imageUrl != null
+                          ? Image.asset(
+                              product.imageUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: isFood ? Colors.orange.shade100 : Colors.blue.shade100,
+                                  child: Center(
+                                    child: Icon(Icons.broken_image,
+                                        color: isFood ? Colors.orange : Colors.blue),
+                                  ),
+                                );
+                              },
+                            )
+                          : Container(
+                              color: isFood ? Colors.orange.shade100 : Colors.blue.shade100,
+                              child: Center(
+                                child: Icon(
+                                  isFood ? Icons.fastfood : Icons.local_drink,
+                                  size: 40,
+                                  color: isFood ? Colors.orange : Colors.blue,
+                                ),
+                              ),
+                            ),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(8.0),

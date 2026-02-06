@@ -7,12 +7,26 @@ import 'package:hompimpa_pos/features/reports/presentation/daily_sales_provider.
 import 'package:hompimpa_pos/features/products/presentation/product_provider.dart';
 import 'package:hompimpa_pos/core/utils/responsive_layout.dart';
 import 'package:hompimpa_pos/features/products/data/topping_repository.dart';
+import 'package:hompimpa_pos/features/products/data/product_repository.dart';
+import '../../auth/data/auth_repository.dart';
+import '../../auth/presentation/auth_controller.dart';
+import '../../../core/enums/user_role.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Role Guard
+    final authState = ref.watch(authStateChangesProvider);
+    authState.whenData((user) {
+      if (user != null && user.role == UserRole.user) {
+        WidgetsBinding.instance?.addPostFrameCallback((_) {
+            context.go('/orders');
+        });
+      }
+    });
+
     final sales = ref.watch(todaysSalesProvider);
     final ordersAsync = ref.watch(todaysOrdersProvider);
     final productsAsync = ref.watch(productListProvider);
@@ -31,6 +45,37 @@ class DashboardScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Hompimpa POS'),
+        actions: [
+            IconButton(
+              icon: const Icon(Icons.logout, color: Colors.white),
+              onPressed: () async {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Logout'),
+                    content: const Text('Apakah anda yakin ingin keluar?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('BATAL'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context, true),
+                         style: ElevatedButton.styleFrom(primary: Colors.red),
+                        child: const Text('KELUAR'),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirm == true) {
+                  await ref.read(authControllerProvider.notifier).signOut();
+                  // ignore: use_build_context_synchronously
+                  context.go('/login');
+                }
+              },
+            ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -153,13 +198,26 @@ class DashboardScreen extends ConsumerWidget {
                                 // Main Background
                                 Container(color: bgColor),
                                 
-                                // Product Image Placeholder or Icon
-                                const Center(
-                                  child: Opacity(
-                                    opacity: 0.1,
-                                    child: Icon(Icons.fastfood, size: 64),
+                                // Product Image or Icon
+                                if (product.imageUrl != null)
+                                  Positioned.fill(
+                                    child: Image.asset(
+                                      product.imageUrl!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return const Center(
+                                          child: Icon(Icons.broken_image,color: Colors.white54),
+                                        );
+                                      },
+                                    ),
+                                  )
+                                else
+                                  const Center(
+                                    child: Opacity(
+                                      opacity: 0.1,
+                                      child: Icon(Icons.fastfood, size: 64),
+                                    ),
                                   ),
-                                ),
 
                                 // Name Label at Bottom with Gradient
                                 Positioned(
@@ -246,41 +304,60 @@ class DashboardScreen extends ConsumerWidget {
         children: [
           SpeedDialChild(
             child: const Icon(Icons.add_shopping_cart),
-            label: 'Input Order Manual',
+            label: 'Input Order Via WA',
             onTap: () => context.push('/entry'),
           ),
-          SpeedDialChild(
-            child: const Icon(Icons.bolt),
-            label: 'Quick Order',
-            onTap: () => context.push('/entry?quick=true'),
-          ),
+          if(authState.value?.role == UserRole.dev || authState.value?.role == UserRole.admin) ...[
+            SpeedDialChild(
+              child: const Icon(Icons.analytics),
+              label: 'Laporan Penjualan',
+              onTap: () => context.push('/reports'),
+            ),
+            SpeedDialChild(
+              child: const Icon(Icons.sync),
+              label: 'Update Gambar Produk',
+              onTap: () async {
+                final repo = ref.read(productRepositoryProvider);
+                final productsStream = repo.getProducts();
+                final products = await productsStream.first;
+                
+                final imageMap = {
+                   'Mie': 'assets/images/products/mie_hompimpa.png',
+                   'Pangsit': 'assets/images/products/pangsit_goreng.png',
+                   'Jus Jambu': 'assets/images/products/jus_jambu.png',
+                   'Jus Alpukat': 'assets/images/products/jus_alpukat.png',
+                   'Jus Sirsat': 'assets/images/products/jus_sirsat.png',
+                   'Jus Buah Naga': 'assets/images/products/jus_buah_naga.png',
+                   'Jus Nanas': 'assets/images/products/jus_nanas.png',
+                   'Jus Nangka': 'assets/images/products/jus_nangka.png',
+                };
+                
+                int updatedCount = 0;
+                for (final product in products) {
+                  if (imageMap.containsKey(product.name)) {
+                    final newImage = imageMap[product.name];
+                    if (product.imageUrl != newImage) {
+                      final updated = product.copyWith(imageUrl: newImage);
+                      await repo.updateProduct(updated);
+                      updatedCount++;
+                    }
+                  }
+                }
+                
+                // ignore: use_build_context_synchronously
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Updated $updatedCount product images')),
+                );
+              },
+            ),
+          ],
           SpeedDialChild(
             child: const Icon(Icons.history),
             label: 'Pesanan Pelanggan',
             onTap: () => context.push('/orders'),
           ),
-          SpeedDialChild(
-            child: const Icon(Icons.analytics),
-            label: 'Laporan Penjualan',
-            onTap: () => context.push('/reports'),
-          ),
-          SpeedDialChild(
-            child: const Icon(Icons.cloud_upload, color: Colors.white),
-            backgroundColor: Colors.red,
-            label: 'Seed Toppings (Temp)',
-            onTap: () async {
-              try {
-                await ref.read(toppingRepositoryProvider).seedToppings();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Toppings seeded successfully!')),
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error: $e')),
-                );
-              }
-            },
-          ),
+          
+        
         ],
       ),
     );

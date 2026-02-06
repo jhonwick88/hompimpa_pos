@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
+import '../../auth/presentation/auth_controller.dart';
 import '../../orders/data/order_repository.dart';
 import '../../orders/domain/order.dart';
 import '../../orders/domain/order_item.dart';
@@ -81,6 +82,7 @@ class OrderListScreen extends ConsumerWidget {
                 }
               },
             ),
+           
             IconButton(
               icon: const Icon(Icons.calendar_today),
               onPressed: () async {
@@ -94,6 +96,43 @@ class OrderListScreen extends ConsumerWidget {
                   ref.read(orderDateFilterProvider.notifier).state = picked;
                 }
               },
+            ),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              onSelected: (value) async {
+                if (value == 'logout') {
+                   final confirm = await showDialog<bool>(
+                     context: context,
+                     builder: (context) => AlertDialog(
+                       title: const Text('Logout'),
+                       content: const Text('Apakah anda yakin ingin keluar?'),
+                       actions: [
+                         TextButton(
+                           child: const Text('BATAL'),
+                           onPressed: () => Navigator.pop(context, false),
+                         ),
+                         ElevatedButton(
+                           style: ElevatedButton.styleFrom(primary: Colors.red),
+                           child: const Text('KELUAR'),
+                           onPressed: () => Navigator.pop(context, true),
+                         ),
+                       ],
+                     ),
+                   );
+
+                   if (confirm == true) {
+                     await ref.read(authControllerProvider.notifier).signOut();
+                     // ignore: use_build_context_synchronously
+                     context.go('/login');
+                   }
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'logout',
+                  child: Text('Logout'),
+                ),
+              ],
             ),
           ],
           bottom: TabBar(
@@ -170,12 +209,18 @@ class _OrderListTab extends ConsumerWidget {
         "Silakan konfirmasi jika ada yang perlu dikoreksi. Terima Kasih dan sehat selalu :).";
 
     final encodedMessage = Uri.encodeComponent(message);
-    final url = "https://wa.me/${order.customerPhone}?text=$encodedMessage";
+    final uri = Uri.parse("https://wa.me/${order.customerPhone}?text=$encodedMessage");
     
-    // ignore: deprecated_member_use
-    if (await canLaunch(url)) {
-      // ignore: deprecated_member_use
-      await launch(url);
+    try {
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+         throw 'Could not launch $uri';
+      }
+    } catch (e) {
+      // debugPrint('Could not launch WhatsApp: $e');
+      // Fallback for some devices/browsers
+      if (!await launchUrl(uri, mode: LaunchMode.platformDefault)) {
+         // show error
+      }
     }
   }
 

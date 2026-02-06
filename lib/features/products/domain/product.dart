@@ -11,6 +11,7 @@ class Product with _$Product {
     required String category,
     required double price,
     required int stock,
+    String? imageUrl,
     @Default(true) bool isActive,
   }) = _Product;
 

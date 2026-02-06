@@ -232,6 +232,7 @@ class _MobileCartView extends ConsumerWidget {
   final VoidCallback onSelectDate;
   final VoidCallback onSelectTime;
   final bool isQuickOrder;
+  final String? existingOrderId;
   final Function(String) standardizePhoneNumber;
 
   const _MobileCartView({
@@ -242,6 +243,7 @@ class _MobileCartView extends ConsumerWidget {
     required this.onSelectDate,
     required this.onSelectTime,
     required this.isQuickOrder,
+    this.existingOrderId,
     required this.standardizePhoneNumber,
   });
 

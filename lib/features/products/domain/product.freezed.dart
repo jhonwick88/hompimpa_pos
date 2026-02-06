@@ -28,6 +28,7 @@ class _$ProductTearOff {
       required String category,
       required double price,
       required int stock,
+      String? imageUrl,
       bool isActive = true}) {
     return _Product(
       id: id,
@@ -35,6 +36,7 @@ class _$ProductTearOff {
       category: category,
       price: price,
       stock: stock,
+      imageUrl: imageUrl,
       isActive: isActive,
     );
   }
@@ -54,6 +56,7 @@ mixin _$Product {
   String get category => throw _privateConstructorUsedError;
   double get price => throw _privateConstructorUsedError;
   int get stock => throw _privateConstructorUsedError;
+  String? get imageUrl => throw _privateConstructorUsedError;
   bool get isActive => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -71,6 +74,7 @@ abstract class $ProductCopyWith<$Res> {
       String category,
       double price,
       int stock,
+      String? imageUrl,
       bool isActive});
 }
 
@@ -89,6 +93,7 @@ class _$ProductCopyWithImpl<$Res> implements $ProductCopyWith<$Res> {
     Object? category = freezed,
     Object? price = freezed,
     Object? stock = freezed,
+    Object? imageUrl = freezed,
     Object? isActive = freezed,
   }) {
     return _then(_value.copyWith(
@@ -112,6 +117,10 @@ class _$ProductCopyWithImpl<$Res> implements $ProductCopyWith<$Res> {
           ? _value.stock
           : stock // ignore: cast_nullable_to_non_nullable
               as int,
+      imageUrl: imageUrl == freezed
+          ? _value.imageUrl
+          : imageUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
       isActive: isActive == freezed
           ? _value.isActive
           : isActive // ignore: cast_nullable_to_non_nullable
@@ -131,6 +140,7 @@ abstract class _$ProductCopyWith<$Res> implements $ProductCopyWith<$Res> {
       String category,
       double price,
       int stock,
+      String? imageUrl,
       bool isActive});
 }
 
@@ -150,6 +160,7 @@ class __$ProductCopyWithImpl<$Res> extends _$ProductCopyWithImpl<$Res>
     Object? category = freezed,
     Object? price = freezed,
     Object? stock = freezed,
+    Object? imageUrl = freezed,
     Object? isActive = freezed,
   }) {
     return _then(_Product(
@@ -173,6 +184,10 @@ class __$ProductCopyWithImpl<$Res> extends _$ProductCopyWithImpl<$Res>
           ? _value.stock
           : stock // ignore: cast_nullable_to_non_nullable
               as int,
+      imageUrl: imageUrl == freezed
+          ? _value.imageUrl
+          : imageUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
       isActive: isActive == freezed
           ? _value.isActive
           : isActive // ignore: cast_nullable_to_non_nullable
@@ -190,6 +205,7 @@ class _$_Product implements _Product {
       required this.category,
       required this.price,
       required this.stock,
+      this.imageUrl,
       this.isActive = true});
 
   factory _$_Product.fromJson(Map<String, dynamic> json) =>
@@ -205,13 +221,15 @@ class _$_Product implements _Product {
   final double price;
   @override
   final int stock;
+  @override
+  final String? imageUrl;
   @JsonKey()
   @override
   final bool isActive;
 
   @override
   String toString() {
-    return 'Product(id: $id, name: $name, category: $category, price: $price, stock: $stock, isActive: $isActive)';
+    return 'Product(id: $id, name: $name, category: $category, price: $price, stock: $stock, imageUrl: $imageUrl, isActive: $isActive)';
   }
 
   @override
@@ -224,6 +242,7 @@ class _$_Product implements _Product {
             const DeepCollectionEquality().equals(other.category, category) &&
             const DeepCollectionEquality().equals(other.price, price) &&
             const DeepCollectionEquality().equals(other.stock, stock) &&
+            const DeepCollectionEquality().equals(other.imageUrl, imageUrl) &&
             const DeepCollectionEquality().equals(other.isActive, isActive));
   }
 
@@ -235,6 +254,7 @@ class _$_Product implements _Product {
       const DeepCollectionEquality().hash(category),
       const DeepCollectionEquality().hash(price),
       const DeepCollectionEquality().hash(stock),
+      const DeepCollectionEquality().hash(imageUrl),
       const DeepCollectionEquality().hash(isActive));
 
   @JsonKey(ignore: true)
@@ -255,6 +275,7 @@ abstract class _Product implements Product {
       required String category,
       required double price,
       required int stock,
+      String? imageUrl,
       bool isActive}) = _$_Product;
 
   factory _Product.fromJson(Map<String, dynamic> json) = _$_Product.fromJson;
@@ -269,6 +290,8 @@ abstract class _Product implements Product {
   double get price;
   @override
   int get stock;
+  @override
+  String? get imageUrl;
   @override
   bool get isActive;
   @override

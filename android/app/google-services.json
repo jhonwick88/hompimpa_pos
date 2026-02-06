@@ -12,7 +12,20 @@
           "package_name": "com.pintarmedia.hompimpapos"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "285253284489-5vg79a7q5ht47t8fsgn6e58h260dsskc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pintarmedia.hompimpapos",
+            "certificate_hash": "1241023b7d4646efdda401ebd27cfcc742defb94"
+          }
+        },
+        {
+          "client_id": "285253284489-acloimhpb140n9o07n85gmn323e49p9o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBIwAC4C5PD-oT-VMcbR7AD-g_yFglBUd0"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "285253284489-acloimhpb140n9o07n85gmn323e49p9o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

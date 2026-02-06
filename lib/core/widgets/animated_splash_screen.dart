@@ -1,8 +1,12 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../features/auth/data/auth_repository.dart';
+import '../../core/enums/user_role.dart';
 
-class AnimatedSplashScreen extends StatefulWidget {
+class AnimatedSplashScreen extends ConsumerStatefulWidget {
   final String nextRoutePath;
 
   const AnimatedSplashScreen({
@@ -11,10 +15,10 @@ class AnimatedSplashScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _AnimatedSplashScreenState createState() => _AnimatedSplashScreenState();
+  ConsumerState<AnimatedSplashScreen> createState() => _AnimatedSplashScreenState();
 }
 
-class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
+class _AnimatedSplashScreenState extends ConsumerState<AnimatedSplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
@@ -42,19 +46,33 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
       ),
     );
 
-    _controller.forward().then((_) {
-      // Small delay before moving to next screen
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) {
-          context.go(widget.nextRoutePath);
-        }
-      });
+    _controller.forward().then((_) async {
+      await _checkAuthAndNavigate();
     });
 
-    // Remove native splash after the first frame
     WidgetsBinding.instance?.addPostFrameCallback((_) {
       FlutterNativeSplash.remove();
     });
+  }
+
+  Future<void> _checkAuthAndNavigate() async {
+    // 1. Check if user is logged in
+    final authRepo = ref.read(authRepositoryProvider);
+    final user = await authRepo.getCurrentUser();
+
+    if (!mounted) return;
+
+    if (user != null) {
+      // 2. Check role
+      if (user.role == UserRole.dev || user.role == UserRole.admin) {
+        context.go('/'); // Dashboard
+      } else {
+        context.go('/orders'); // Orders Page
+      }
+    } else {
+      // Not logged in or error fetching user
+      context.go('/login');
+    }
   }
 
   @override
