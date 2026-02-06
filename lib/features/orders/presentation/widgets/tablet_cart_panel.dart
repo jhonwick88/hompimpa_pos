@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hompimpa_pos/features/orders/presentation/cart_controller.dart';
 import 'package:hompimpa_pos/features/orders/data/order_repository.dart';
+import 'package:hompimpa_pos/features/products/data/topping_repository.dart';
 import 'package:hompimpa_pos/features/orders/presentation/widgets/pos_action_buttons.dart';
 
 import 'package:hompimpa_pos/features/orders/presentation/order_list_screen.dart';
@@ -223,6 +224,7 @@ class TabletCartPanel extends ConsumerWidget {
                                 
                                 await ref.read(cartProvider.notifier).updateOrder(
                                       ref.read(orderRepositoryProvider),
+                                      ref.read(toppingRepositoryProvider), // Added
                                       originalOrder,
                                       nameController.text.trim(),
                                       customerPhone: standardizedPhone,
@@ -234,7 +236,7 @@ class TabletCartPanel extends ConsumerWidget {
                                   content: Text('Pesanan berhasil diperbarui!'),
                                   backgroundColor: Colors.blue,
                                 ));
-                                context.pop();
+                                context.go('/orders');
                               } catch (e) {
                                 messenger.showSnackBar(SnackBar(
                                   content: Text('Gagal memperbarui pesanan: $e'),
@@ -244,6 +246,7 @@ class TabletCartPanel extends ConsumerWidget {
                             } else {
                               await ref.read(cartProvider.notifier).submitOrder(
                                     ref.read(orderRepositoryProvider),
+                                    ref.read(toppingRepositoryProvider), // Added
                                     nameController.text.trim(),
                                     customerPhone: standardizedPhone,
                                     isQuickOrder: isQuickOrder,
@@ -254,7 +257,7 @@ class TabletCartPanel extends ConsumerWidget {
                                 content: Text('Pesanan berhasil dibuat!'),
                                 backgroundColor: Colors.green,
                               ));
-                              context.pop();
+                              context.go('/orders');
                             }
                           },
                     style: ElevatedButton.styleFrom(

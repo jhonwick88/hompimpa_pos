@@ -14,6 +14,8 @@ import 'package:hompimpa_pos/features/orders/presentation/widgets/mobile_action_
 import 'package:hompimpa_pos/features/orders/presentation/widgets/tablet_cart_panel.dart';
 import 'package:hompimpa_pos/features/orders/presentation/order_list_screen.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:hompimpa_pos/features/products/data/topping_repository.dart';
+import 'package:hompimpa_pos/features/orders/presentation/widgets/product_option_dialog.dart';
 
 class OrderEntryScreen extends ConsumerStatefulWidget {
   final bool isQuickOrder;
@@ -410,6 +412,7 @@ class _MobileCartView extends ConsumerWidget {
 
                             await ref.read(cartProvider.notifier).submitOrder(
                                   ref.read(orderRepositoryProvider),
+                                  ref.read(toppingRepositoryProvider), // Added
                                   nameController.text.trim(),
                                   customerPhone: standardizedPhone,
                                   isQuickOrder: isQuickOrder,
@@ -421,7 +424,7 @@ class _MobileCartView extends ConsumerWidget {
                               content: Text('Pesanan berhasil dibuat!'),
                               backgroundColor: Colors.green,
                             ));
-                            context.pop();
+                            context.go('/orders');
                           },
                     style: ElevatedButton.styleFrom(
                       primary: Colors.orange[800],
@@ -553,116 +556,3 @@ class _ProductGrid extends ConsumerWidget {
   }
 }
 
-class ProductOptionDialog extends ConsumerStatefulWidget {
-  final Product product;
-  const ProductOptionDialog({Key? key, required this.product}) : super(key: key);
-
-  @override
-  ConsumerState<ProductOptionDialog> createState() => _ProductOptionDialogState();
-}
-
-class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
-  int _qty = 1;
-  String _sambal = 'Campur';
-  double _level = 1;
-  final _noteController = TextEditingController();
-
-  Color _getSliderColor() {
-    if (_level <= 2) return Colors.green;
-    if (_level <= 4) return Colors.amber;
-    if (_level <= 6) return Colors.orange;
-    return Colors.red;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Customization: ${widget.product.name}'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Jumlah (Qty)', style: TextStyle(fontWeight: FontWeight.bold)),
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.remove_circle_outline),
-                  onPressed: _qty > 1 ? () => setState(() => _qty--) : null,
-                ),
-                Text('$_qty', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                IconButton(
-                  icon: const Icon(Icons.add_circle_outline),
-                  onPressed: () => setState(() => _qty++),
-                ),
-              ],
-            ),
-            const Divider(),
-            const Text('Opsi Sambal', style: TextStyle(fontWeight: FontWeight.bold)),
-            Row(
-              children: [
-                Radio<String>(
-                  value: 'Campur',
-                  groupValue: _sambal,
-                  onChanged: (v) => setState(() => _sambal = v!),
-                ),
-                const Text('Campur'),
-                Radio<String>(
-                  value: 'Pisah',
-                  groupValue: _sambal,
-                  onChanged: (v) => setState(() => _sambal = v!),
-                ),
-                const Text('Pisah'),
-              ],
-            ),
-            const Divider(),
-            Text('Level Pedas: ${_level.toInt()}', style: const TextStyle(fontWeight: FontWeight.bold)),
-            SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                activeTrackColor: _getSliderColor(),
-                thumbColor: _getSliderColor(),
-                overlayColor: _getSliderColor().withOpacity(0.2),
-              ),
-              child: Slider(
-                value: _level,
-                min: 1,
-                max: 7,
-                divisions: 6,
-                label: _level.toInt().toString(),
-                onChanged: (v) => setState(() => _level = v),
-              ),
-            ),
-            const Divider(),
-            const Text('Catatan (Note)', style: TextStyle(fontWeight: FontWeight.bold)),
-            TextField(
-              controller: _noteController,
-              decoration: const InputDecoration(
-                hintText: 'Contoh: Tanpa daun bawang',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('CANCEL'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            ref.read(cartProvider.notifier).addItem(
-              widget.product,
-              _qty,
-              level: _level.toInt().toString(),
-              sambal: _sambal,
-              note: _noteController.text.isNotEmpty ? _noteController.text : null,
-            );
-            Navigator.pop(context);
-          },
-          child: const Text('SUBMIT'),
-        ),
-      ],
-    );
-  }
-}

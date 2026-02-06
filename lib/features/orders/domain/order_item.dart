@@ -1,3 +1,4 @@
+import "../../products/domain/topping.dart";
 import 'package:json_annotation/json_annotation.dart';
 
 part 'order_item.g.dart';
@@ -10,7 +11,8 @@ class OrderItem {
   final double price;
   final String? level;
   final String? sambal;
-  final String? note;
+  final String? note; // Added missing field
+  final List<Topping>? toppings;
 
   OrderItem({
     required this.productId,
@@ -20,6 +22,7 @@ class OrderItem {
     this.level,
     this.sambal,
     this.note,
+    this.toppings,
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
@@ -32,7 +35,13 @@ class OrderItem {
     return _$OrderItemFromJson(normalized);
   }
 
-  Map<String, dynamic> toJson() => _$OrderItemToJson(this);
+  Map<String, dynamic> toJson() {
+    final json = _$OrderItemToJson(this);
+    if (toppings != null) {
+      json['toppings'] = toppings!.map((t) => t.toJson()).toList();
+    }
+    return json;
+  }
 
   OrderItem copyWith({
     String? productId,
@@ -42,6 +51,7 @@ class OrderItem {
     String? level,
     String? sambal,
     String? note,
+    List<Topping>? toppings,
   }) {
     return OrderItem(
       productId: productId ?? this.productId,
@@ -51,6 +61,7 @@ class OrderItem {
       level: level ?? this.level,
       sambal: sambal ?? this.sambal,
       note: note ?? this.note,
+      toppings: toppings ?? this.toppings,
     );
   }
 }

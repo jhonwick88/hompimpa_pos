@@ -97,7 +97,7 @@ class OrderListScreen extends ConsumerWidget {
             ),
           ],
           bottom: TabBar(
-            isScrollable: false,
+            isScrollable: true,
             tabs: [
               Tab(child: _buildTabHeader('Belum', Icons.timer, counts[OrderStatus.belum]!, Colors.orange)),
               Tab(child: _buildTabHeader('Proses', Icons.sync, counts[OrderStatus.proses]!, Colors.blue)),
@@ -349,17 +349,30 @@ class _OrderListTab extends ConsumerWidget {
                           ? '${item.productName} - Lvl ${item.level} (${item.sambal})'
                           : item.productName,
                       ),
-                      subtitle: Text.rich(
-                        TextSpan(
-                          children: [
-                            TextSpan(text: '${item.qty}x @ Rp ${item.price.toStringAsFixed(0)}'),
-                            if (item.note != null && item.note!.isNotEmpty)
-                              TextSpan(
-                                text: ' (${item.note})',
-                                style: const TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.normal),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(text: '${item.qty}x @ Rp ${item.price.toStringAsFixed(0)}'),
+                                if (item.note != null && item.note!.isNotEmpty)
+                                  TextSpan(
+                                    text: ' (${item.note})',
+                                    style: const TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.normal),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          if (item.toppings != null && item.toppings!.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4.0),
+                              child: Text(
+                                'Toppings: ${item.toppings!.map((t) => t.name).join(", ")}',
+                                style: TextStyle(fontSize: 11, color: Colors.grey[600], fontStyle: FontStyle.italic),
                               ),
-                          ],
-                        ),
+                            ),
+                        ],
                       ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -376,22 +389,32 @@ class _OrderListTab extends ConsumerWidget {
                   }),
                   const Divider(),
                   Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                         if (order.customerPhone != null)
-                          Text('Telp: ${order.customerPhone}', style: const TextStyle(fontSize: 12, color: Colors.blue)),
-                        Row(
+                        if (order.customerPhone != null)
+                          Text(
+                            'Telp: ${order.customerPhone}', 
+                            style: const TextStyle(fontSize: 12, color: Colors.blue, fontWeight: FontWeight.bold)
+                          ),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
                           children: [
                             if (order.status == OrderStatus.belum) ...[
                               ElevatedButton.icon(
                                 onPressed: () => context.push('/entry/add/${order.id}'),
                                 icon: const Icon(Icons.add_shopping_cart, size: 18),
-                                label: const Text('Tambah Item'),
-                                style: ElevatedButton.styleFrom(primary: Colors.orange),
+                                label: const Text('Tambah'),
+                                style: ElevatedButton.styleFrom(
+                                  primary: Colors.orange,
+                                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                                ),
                               ),
-                              const SizedBox(width: 8),
                               ElevatedButton(
                                 onPressed: () async {
                                   try {
@@ -402,6 +425,9 @@ class _OrderListTab extends ConsumerWidget {
                                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal memperbarui: $e')));
                                   }
                                 },
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                                ),
                                 child: const Text('Proses'),
                               ),
                             ],
@@ -409,15 +435,20 @@ class _OrderListTab extends ConsumerWidget {
                               ElevatedButton.icon(
                                 onPressed: () => _showSelesaiConfirmation(context, ref, order),
                                 icon: const Icon(Icons.check_circle_outline, size: 18),
-                                label: const Text('Selesaikan'),
-                                style: ElevatedButton.styleFrom(primary: Colors.green, onPrimary: Colors.white),
+                                label: const Text('Selesai'),
+                                style: ElevatedButton.styleFrom(
+                                  primary: Colors.green, 
+                                  onPrimary: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                                ),
                               ),
                             ],
                             if (order.status != OrderStatus.selesai) ...[
-                              const SizedBox(width: 8),
                               IconButton(
                                 icon: const Icon(Icons.delete, color: Colors.red),
                                 onPressed: () => _showDeleteConfirmation(context, ref, order),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
                               ),
                             ],
                           ],

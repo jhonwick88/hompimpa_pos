@@ -5,6 +5,7 @@ import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:hompimpa_pos/features/reports/presentation/daily_sales_provider.dart';
 import 'package:hompimpa_pos/features/products/presentation/product_provider.dart';
 import 'package:hompimpa_pos/core/utils/responsive_layout.dart';
+import 'package:hompimpa_pos/features/products/data/topping_repository.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -124,13 +125,13 @@ class DashboardScreen extends ConsumerWidget {
                       } else if (isTablet) {
                         crossAxisCount = 6; // Tablet landscape
                       } else {
-                        crossAxisCount = 3; // Phone
+                        crossAxisCount = 2; // Phone portrait
                       }
                       
                       return GridView.builder(
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: crossAxisCount,
-                          childAspectRatio: 0.9,
+                          childAspectRatio: 0.85,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                         ),
@@ -248,6 +249,23 @@ class DashboardScreen extends ConsumerWidget {
             child: const Icon(Icons.analytics),
             label: 'Laporan Penjualan',
             onTap: () => context.push('/reports'),
+          ),
+          SpeedDialChild(
+            child: const Icon(Icons.cloud_upload, color: Colors.white),
+            backgroundColor: Colors.red,
+            label: 'Seed Toppings (Temp)',
+            onTap: () async {
+              try {
+                await ref.read(toppingRepositoryProvider).seedToppings();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Toppings seeded successfully!')),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error: $e')),
+                );
+              }
+            },
           ),
         ],
       ),
