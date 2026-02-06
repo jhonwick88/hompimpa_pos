@@ -5,15 +5,27 @@ class Responsive {
   /// 
   /// IMPORTANT: Only call this within a [build] method or where 
   /// [MediaQuery.of(context)] is safe to access (e.g., within [LayoutBuilder]).
-  static bool isPhone(BuildContext context) =>
-      MediaQuery.of(context).size.shortestSide < 600;
+  static bool isPhone(BuildContext context) {
+    try {
+      final size = MediaQuery.of(context).size;
+      return size.shortestSide < 600;
+    } catch (e) {
+      return true; // Default to phone if context is unstable
+    }
+  }
 
   /// Check if the device is tablet-class based on shortestSide.
   /// 
   /// IMPORTANT: Only call this within a [build] method or where 
   /// [MediaQuery.of(context)] is safe to access (e.g., within [LayoutBuilder]).
-  static bool isTablet(BuildContext context) =>
-      MediaQuery.of(context).size.shortestSide >= 600;
+  static bool isTablet(BuildContext context) {
+    try {
+      final size = MediaQuery.of(context).size;
+      return size.shortestSide >= 600;
+    } catch (e) {
+      return false; // Default to phone if context is unstable
+    }
+  }
 
   /// Helper to return a value based on device type.
   /// 

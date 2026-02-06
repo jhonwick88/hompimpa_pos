@@ -5,9 +5,15 @@ import '../../features/orders/presentation/order_list_screen.dart';
 import '../../features/orders/presentation/order_page.dart';
 import '../../features/reports/presentation/report_screen.dart';
 
+import '../core/widgets/animated_splash_screen.dart';
+
 final router = GoRouter(
-  initialLocation: '/',
+  initialLocation: '/splash',
   routes: [
+    GoRoute(
+      path: '/splash',
+      builder: (context, state) => const AnimatedSplashScreen(nextRoutePath: '/'),
+    ),
     GoRoute(
       path: '/',
       builder: (context, state) => const DashboardScreen(),

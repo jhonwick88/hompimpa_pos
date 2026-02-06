@@ -2,11 +2,14 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'firebase_options.dart';
 import 'core/router.dart';
-import 'firebase_options.dart'; 
+import 'core/widgets/animated_splash_screen.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   
   try {
      // Web Safety: initialization using explicit options for Web
@@ -19,6 +22,8 @@ void main() async {
   } catch (e) {
      print("Firebase init failed: $e");
      runApp(ErrorApp(message: e.toString()));
+     // Remove splash if we hit an error so user sees the error screen
+     FlutterNativeSplash.remove();
   }
 }
 
@@ -69,14 +74,12 @@ class HompimpaApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
       title: 'Hompimpa POS',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // useMaterial3: true, (Material 3 might not be fully supported in Flutter 2.10, removed to be safe or keep if it works)
-        // Flutter 2.10 doesn't have useMaterial3.
         primarySwatch: Colors.orange,
       ),
       routeInformationParser: router.routeInformationParser,
       routerDelegate: router.routerDelegate,
-      // routeInformationProvider: router.routeInformationProvider, // Removed for compat
     );
   }
 }

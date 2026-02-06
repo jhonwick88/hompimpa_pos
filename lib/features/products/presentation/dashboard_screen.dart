@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hompimpa_pos/core/widgets/skeleton.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
@@ -51,10 +52,12 @@ class DashboardScreen extends ConsumerWidget {
                         children: [
                           const Text('Omzet Hari Ini', style: TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 4),
-                          Text(
-                            'Rp ${sales.toStringAsFixed(0)}',
-                            style: const TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
-                          ),
+                          sales == 0 
+                            ? const Skeleton(width: 100, height: 24)
+                            : Text(
+                                'Rp ${sales.toStringAsFixed(0)}',
+                                style: const TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
+                              ),
                         ],
                       ),
                     ),
@@ -78,7 +81,7 @@ class DashboardScreen extends ConsumerWidget {
                               '${data.length}',
                               style: const TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold),
                             ),
-                            loading: () => const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
+                            loading: () => const Skeleton(width: 40, height: 28),
                             error: (_, __) => const Text('Error', style: TextStyle(color: Colors.white)),
                           ),
                         ],
@@ -217,7 +220,18 @@ class DashboardScreen extends ConsumerWidget {
                     },
                   );
                 },
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.85,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                  ),
+                  itemCount: 6,
+                  itemBuilder: (_, __) => const Skeleton(width: double.infinity, height: double.infinity, borderRadius: 16),
+                ),
                 error: (e, _) => Center(child: Text('Error: $e')),
               ),
             ),
