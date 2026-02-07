@@ -19,6 +19,8 @@ _$_Order _$$_OrderFromJson(Map<String, dynamic> json) => _$_Order(
           .map((e) => OrderItem.fromJson(e as Map<String, dynamic>))
           .toList(),
       queueNumber: json['queueNumber'] as int?,
+      executorName: json['executorName'] as String?,
+      executorId: json['executorId'] as String?,
       createdAt: const TimestampNullableConverter().fromJson(json['createdAt']),
       updatedAt: const TimestampNullableConverter().fromJson(json['updatedAt']),
     );
@@ -33,6 +35,8 @@ Map<String, dynamic> _$$_OrderToJson(_$_Order instance) => <String, dynamic>{
       'status': _$OrderStatusEnumMap[instance.status]!,
       'items': instance.items.map((e) => e.toJson()).toList(),
       'queueNumber': instance.queueNumber,
+      'executorName': instance.executorName,
+      'executorId': instance.executorId,
       'createdAt':
           const TimestampNullableConverter().toJson(instance.createdAt),
       'updatedAt':

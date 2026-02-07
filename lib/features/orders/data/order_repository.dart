@@ -11,7 +11,7 @@ abstract class OrderRepository {
   Stream<List<OrderEntity>> getOrdersStream({DateTime? date, OrderStatus? status, String? searchQuery});
   Future<void> addOrder(OrderEntity order);
   Future<void> updateOrder(OrderEntity order);
-  Future<void> updateOrderStatus(String orderId, OrderStatus newStatus, List<OrderItem> items);
+  Future<void> updateOrderStatus(String orderId, OrderStatus newStatus, List<OrderItem> items, {String? executorName, String? executorId});
   Future<void> updateOrderItems(String orderId, List<OrderItem> items);
   Future<void> deleteOrder(String orderId);
 }
@@ -84,31 +84,34 @@ class FirestoreOrderRepository implements OrderRepository {
   }
 
   @override
-  Future<void> updateOrderStatus(String orderId, OrderStatus newStatus, List<OrderItem> items) async {
+  Future<void> updateOrderStatus(String orderId, OrderStatus newStatus, List<OrderItem> items, {String? executorName, String? executorId}) async {
     final orderRef = _firestore.collection('orders').doc(orderId);
-    final statusValue = newStatus.name; // 'selesai', 'proses', 'belum'
-    final statusDisplay = statusValue[0].toUpperCase() + statusValue.substring(1); // 'Selesai', 'Proses', 'Belum'
+    final statusValue = newStatus.name;
+    final statusDisplay = statusValue[0].toUpperCase() + statusValue.substring(1);
 
     print('DEBUG: Updating order $orderId to status $statusValue ($statusDisplay)');
 
+    final updateData = <String, dynamic>{
+      'status': statusValue,
+      'Status': statusDisplay,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+
+    if (executorName != null) updateData['executorName'] = executorName;
+    if (executorId != null) updateData['executorId'] = executorId;
+
     try {
       if (newStatus == OrderStatus.selesai) {
-        // Transactional update: Set status AND reduce stock
         await _firestore.runTransaction((transaction) async {
-          // 1. COLLECT ALL READS FIRST (Product snapshots)
+          // 1. COLLECT ALL READS
           final productSnapshots = <String, DocumentSnapshot>{};
           for (final item in items) {
             final productRef = _firestore.collection('products').doc(item.productId);
             productSnapshots[item.productId] = await transaction.get(productRef);
           }
 
-          // 2. PERFORM ALL WRITES
-          // Update Order Status
-          transaction.update(orderRef, {
-            'status': statusValue,
-            'Status': statusDisplay,
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
+          // 2. WRITES
+          transaction.update(orderRef, updateData); // Use common updateData
 
           // Update Stocks and Logs
           for (final item in items) {
@@ -131,11 +134,7 @@ class FirestoreOrderRepository implements OrderRepository {
         });
       } else {
         // Just update status
-        await orderRef.update({
-          'status': statusValue,
-          'Status': statusDisplay,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
+        await orderRef.update(updateData);
       }
       print('DEBUG: Successfully updated order $orderId');
     } catch (e) {

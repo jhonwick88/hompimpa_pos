@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
 import '../../auth/presentation/auth_controller.dart';
+import '../../auth/data/auth_repository.dart';
 import '../../orders/data/order_repository.dart';
 import '../../orders/domain/order.dart';
 import '../../orders/domain/order_item.dart';
@@ -179,7 +180,7 @@ class OrderListScreen extends ConsumerWidget {
             ),
             child: Text(
               '$count',
-              style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -201,10 +202,10 @@ class _OrderListTab extends ConsumerWidget {
     final message = "*Hi, Hompier !*\n"
         "Terima kasih telah memesan *Hompimpa Mie & Pangsit*.\n\n"
         "Detail Pesanan :\n"
-        "Tanggal: $dateStr\n"
-        "Jam: ${order.orderTime}\n"
-        "Item Order:\n$itemsSummary\n\n"
-        "Total Pembayaran: *Rp ${order.total.toStringAsFixed(0)}*\n\n"
+        "- Tanggal: $dateStr\n"
+        "- Jam: ${order.orderTime}\n"
+        "- Item Order:\n$itemsSummary\n\n"
+        "- Total Pembayaran: *Rp ${order.total.toStringAsFixed(0)}*\n\n"
         "*Sudah Bisa diambil*.\n\n"
         "Silakan konfirmasi jika ada yang perlu dikoreksi. Terima Kasih dan sehat selalu :).";
 
@@ -352,9 +353,19 @@ class _OrderListTab extends ConsumerWidget {
                 title: Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        '${order.customerName}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${order.customerName}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          if (order.executorName != null)
+                             Text(
+                               'Eksekutor : ${order.executorName}',
+                               style: const TextStyle(fontSize: 10, color: Colors.indigo, fontStyle: FontStyle.italic),
+                             ),
+                        ],
                       ),
                     ),
                     if (order.queueNumber != null) ...[
@@ -392,7 +403,7 @@ class _OrderListTab extends ConsumerWidget {
                       title: Text(
                         item.level != null 
                           ? '${item.productName} - Lvl ${item.level} (${item.sambal})'
-                          : item.productName,
+                          : item.productName, style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),
                       ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -404,7 +415,7 @@ class _OrderListTab extends ConsumerWidget {
                                 if (item.note != null && item.note!.isNotEmpty)
                                   TextSpan(
                                     text: ' (${item.note})',
-                                    style: const TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.normal),
+                                    style: const TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.bold, fontSize: 12),
                                   ),
                               ],
                             ),
@@ -414,7 +425,7 @@ class _OrderListTab extends ConsumerWidget {
                               padding: const EdgeInsets.only(top: 4.0),
                               child: Text(
                                 'Toppings: ${item.toppings!.map((t) => t.name).join(", ")}',
-                                style: TextStyle(fontSize: 11, color: Colors.grey[600], fontStyle: FontStyle.italic),
+                                style: TextStyle(fontSize: 11, color: Colors.grey[900], fontStyle: FontStyle.italic),
                               ),
                             ),
                         ],
@@ -439,13 +450,9 @@ class _OrderListTab extends ConsumerWidget {
                       spacing: 8,
                       runSpacing: 8,
                       alignment: WrapAlignment.spaceBetween,
-                      crossAxisAlignment: WrapCrossAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.start,
                       children: [
-                        if (order.customerPhone != null)
-                          Text(
-                            'Telp: ${order.customerPhone}', 
-                            style: const TextStyle(fontSize: 12, color: Colors.blue, fontWeight: FontWeight.bold)
-                          ),
+                       
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
@@ -464,7 +471,16 @@ class _OrderListTab extends ConsumerWidget {
                                 onPressed: () async {
                                   try {
                                     final messenger = ScaffoldMessenger.of(context);
-                                    await ref.read(orderRepositoryProvider).updateOrderStatus(order.id, OrderStatus.proses, order.items);
+                                    final authState = ref.read(authStateChangesProvider);
+                                    final user = authState.value;
+                                    
+                                    await ref.read(orderRepositoryProvider).updateOrderStatus(
+                                      order.id, 
+                                      OrderStatus.proses, 
+                                      order.items,
+                                      executorName: user?.displayName ?? 'Admin',
+                                      executorId: user?.uid
+                                    );
                                     messenger.showSnackBar(const SnackBar(content: Text('Pesanan sedang diproses')));
                                   } catch (e) {
                                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal memperbarui: $e')));

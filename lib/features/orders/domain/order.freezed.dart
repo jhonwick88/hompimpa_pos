@@ -32,6 +32,8 @@ class _$OrderEntityTearOff {
       OrderStatus status = OrderStatus.belum,
       required List<OrderItem> items,
       int? queueNumber,
+      String? executorName,
+      String? executorId,
       @TimestampNullableConverter() DateTime? createdAt,
       @TimestampNullableConverter() DateTime? updatedAt}) {
     return _Order(
@@ -44,6 +46,8 @@ class _$OrderEntityTearOff {
       status: status,
       items: items,
       queueNumber: queueNumber,
+      executorName: executorName,
+      executorId: executorId,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
@@ -70,6 +74,10 @@ mixin _$OrderEntity {
   List<OrderItem> get items => throw _privateConstructorUsedError;
   int? get queueNumber =>
       throw _privateConstructorUsedError; // Queue number for order tracking
+  String? get executorName =>
+      throw _privateConstructorUsedError; // Name of the user who processed the order
+  String? get executorId =>
+      throw _privateConstructorUsedError; // ID of the user who processed the order
   @TimestampNullableConverter()
   DateTime? get createdAt => throw _privateConstructorUsedError;
   @TimestampNullableConverter()
@@ -96,6 +104,8 @@ abstract class $OrderEntityCopyWith<$Res> {
       OrderStatus status,
       List<OrderItem> items,
       int? queueNumber,
+      String? executorName,
+      String? executorId,
       @TimestampNullableConverter() DateTime? createdAt,
       @TimestampNullableConverter() DateTime? updatedAt});
 }
@@ -119,6 +129,8 @@ class _$OrderEntityCopyWithImpl<$Res> implements $OrderEntityCopyWith<$Res> {
     Object? status = freezed,
     Object? items = freezed,
     Object? queueNumber = freezed,
+    Object? executorName = freezed,
+    Object? executorId = freezed,
     Object? createdAt = freezed,
     Object? updatedAt = freezed,
   }) {
@@ -159,6 +171,14 @@ class _$OrderEntityCopyWithImpl<$Res> implements $OrderEntityCopyWith<$Res> {
           ? _value.queueNumber
           : queueNumber // ignore: cast_nullable_to_non_nullable
               as int?,
+      executorName: executorName == freezed
+          ? _value.executorName
+          : executorName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      executorId: executorId == freezed
+          ? _value.executorId
+          : executorId // ignore: cast_nullable_to_non_nullable
+              as String?,
       createdAt: createdAt == freezed
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -186,6 +206,8 @@ abstract class _$OrderCopyWith<$Res> implements $OrderEntityCopyWith<$Res> {
       OrderStatus status,
       List<OrderItem> items,
       int? queueNumber,
+      String? executorName,
+      String? executorId,
       @TimestampNullableConverter() DateTime? createdAt,
       @TimestampNullableConverter() DateTime? updatedAt});
 }
@@ -210,6 +232,8 @@ class __$OrderCopyWithImpl<$Res> extends _$OrderEntityCopyWithImpl<$Res>
     Object? status = freezed,
     Object? items = freezed,
     Object? queueNumber = freezed,
+    Object? executorName = freezed,
+    Object? executorId = freezed,
     Object? createdAt = freezed,
     Object? updatedAt = freezed,
   }) {
@@ -250,6 +274,14 @@ class __$OrderCopyWithImpl<$Res> extends _$OrderEntityCopyWithImpl<$Res>
           ? _value.queueNumber
           : queueNumber // ignore: cast_nullable_to_non_nullable
               as int?,
+      executorName: executorName == freezed
+          ? _value.executorName
+          : executorName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      executorId: executorId == freezed
+          ? _value.executorId
+          : executorId // ignore: cast_nullable_to_non_nullable
+              as String?,
       createdAt: createdAt == freezed
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -276,6 +308,8 @@ class _$_Order implements _Order {
       this.status = OrderStatus.belum,
       required this.items,
       this.queueNumber,
+      this.executorName,
+      this.executorId,
       @TimestampNullableConverter() this.createdAt,
       @TimestampNullableConverter() this.updatedAt});
 
@@ -304,6 +338,10 @@ class _$_Order implements _Order {
   @override
   final int? queueNumber;
   @override // Queue number for order tracking
+  final String? executorName;
+  @override // Name of the user who processed the order
+  final String? executorId;
+  @override // ID of the user who processed the order
   @TimestampNullableConverter()
   final DateTime? createdAt;
   @override
@@ -312,7 +350,7 @@ class _$_Order implements _Order {
 
   @override
   String toString() {
-    return 'OrderEntity(id: $id, customerName: $customerName, customerPhone: $customerPhone, total: $total, orderDate: $orderDate, orderTime: $orderTime, status: $status, items: $items, queueNumber: $queueNumber, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'OrderEntity(id: $id, customerName: $customerName, customerPhone: $customerPhone, total: $total, orderDate: $orderDate, orderTime: $orderTime, status: $status, items: $items, queueNumber: $queueNumber, executorName: $executorName, executorId: $executorId, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -332,6 +370,10 @@ class _$_Order implements _Order {
             const DeepCollectionEquality().equals(other.items, items) &&
             const DeepCollectionEquality()
                 .equals(other.queueNumber, queueNumber) &&
+            const DeepCollectionEquality()
+                .equals(other.executorName, executorName) &&
+            const DeepCollectionEquality()
+                .equals(other.executorId, executorId) &&
             const DeepCollectionEquality().equals(other.createdAt, createdAt) &&
             const DeepCollectionEquality().equals(other.updatedAt, updatedAt));
   }
@@ -348,6 +390,8 @@ class _$_Order implements _Order {
       const DeepCollectionEquality().hash(status),
       const DeepCollectionEquality().hash(items),
       const DeepCollectionEquality().hash(queueNumber),
+      const DeepCollectionEquality().hash(executorName),
+      const DeepCollectionEquality().hash(executorId),
       const DeepCollectionEquality().hash(createdAt),
       const DeepCollectionEquality().hash(updatedAt));
 
@@ -373,6 +417,8 @@ abstract class _Order implements OrderEntity {
       OrderStatus status,
       required List<OrderItem> items,
       int? queueNumber,
+      String? executorName,
+      String? executorId,
       @TimestampNullableConverter() DateTime? createdAt,
       @TimestampNullableConverter() DateTime? updatedAt}) = _$_Order;
 
@@ -398,6 +444,10 @@ abstract class _Order implements OrderEntity {
   @override
   int? get queueNumber;
   @override // Queue number for order tracking
+  String? get executorName;
+  @override // Name of the user who processed the order
+  String? get executorId;
+  @override // ID of the user who processed the order
   @TimestampNullableConverter()
   DateTime? get createdAt;
   @override

@@ -22,6 +22,8 @@ class OrderEntity with _$OrderEntity {
     @Default(OrderStatus.belum) OrderStatus status,
     required List<OrderItem> items,
     int? queueNumber, // Queue number for order tracking
+    String? executorName, // Name of the user who processed the order
+    String? executorId, // ID of the user who processed the order
     @TimestampNullableConverter() DateTime? createdAt,
     @TimestampNullableConverter() DateTime? updatedAt,
   }) = _Order;

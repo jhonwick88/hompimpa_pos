@@ -83,61 +83,63 @@ class DashboardScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Summary Cards
-            Row(
-              children: [
-                Expanded(
-                  child: Card(
-                    elevation: 8,
-                    shadowColor: omzetColor.withOpacity(0.5),
-                    color: omzetColor,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          const Text('Omzet Hari Ini', style: TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 4),
-                          sales == 0 
-                            ? const Skeleton(width: 100, height: 24)
-                            : Text(
-                                'Rp ${sales.toStringAsFixed(0)}',
-                                style: const TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
+            // Summary Cards
+            if (authState.value?.role == UserRole.dev) ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: Card(
+                      elevation: 8,
+                      shadowColor: omzetColor.withOpacity(0.5),
+                      color: omzetColor,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            const Text('Omzet Hari Ini', style: TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 4),
+                            sales == 0 
+                              ? const Skeleton(width: 100, height: 24)
+                              : Text(
+                                  'Rp ${sales.toStringAsFixed(0)}',
+                                  style: const TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
+                                ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Card(
+                      elevation: 8,
+                      shadowColor: orderColor.withOpacity(0.5),
+                      color: orderColor,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            const Text('Total Order', style: TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 4),
+                            ordersAsync.when(
+                              data: (data) => Text(
+                                '${data.length}',
+                                style: const TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold),
                               ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Card(
-                    elevation: 8,
-                    shadowColor: orderColor.withOpacity(0.5),
-                    color: orderColor,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          const Text('Total Order', style: TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 4),
-                          ordersAsync.when(
-                            data: (data) => Text(
-                              '${data.length}',
-                              style: const TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold),
+                              loading: () => const Skeleton(width: 40, height: 28),
+                              error: (_, __) => const Text('Error', style: TextStyle(color: Colors.white)),
                             ),
-                            loading: () => const Skeleton(width: 40, height: 28),
-                            error: (_, __) => const Text('Error', style: TextStyle(color: Colors.white)),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            
+                ],
+              ),
+              const SizedBox(height: 24),
+            ],
             Text(
               'Stok Produk',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
