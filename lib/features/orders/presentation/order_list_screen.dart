@@ -318,16 +318,15 @@ class _OrderListTab extends ConsumerWidget {
 
     return allOrdersAsync.when(
       data: (orders) {
-        var filtered = orders.where((o) => o.status == status).toList();
+        // Filter by status
+        final filtered = orders.where((o) => o.status == status).toList();
         
-        // Sort by queue number for Belum and Proses statuses
-        if (status == OrderStatus.belum || status == OrderStatus.proses) {
-          filtered.sort((a, b) {
-            final aQueue = a.queueNumber ?? 999999;
-            final bQueue = b.queueNumber ?? 999999;
-            return aQueue.compareTo(bQueue);
-          });
-        }
+        // Sort by time/creation
+        filtered.sort((a, b) {
+            final dateA = a.createdAt ?? a.orderDate;
+            final dateB = b.createdAt ?? b.orderDate;
+            return dateA.compareTo(dateB);
+        });
 
         if (filtered.isEmpty) {
           return Center(
@@ -346,6 +345,9 @@ class _OrderListTab extends ConsumerWidget {
           itemCount: filtered.length,
           itemBuilder: (context, index) {
             final order = filtered[index];
+            // Queue number 1, 2, 3...
+            final queueNumber = index + 1;
+
             return Card(
               margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               elevation: 2,
@@ -368,25 +370,23 @@ class _OrderListTab extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    if (order.queueNumber != null) ...[
-                      const Icon(Icons.arrow_forward, size: 16, color: Colors.grey),
-                      const SizedBox(width: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.shade100,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          '#${order.queueNumber}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orange.shade900,
-                            fontSize: 14,
-                          ),
+                    const Icon(Icons.arrow_forward, size: 16, color: Colors.grey),
+                    const SizedBox(width: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '#$queueNumber',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange,
+                          fontSize: 14,
                         ),
                       ),
-                    ],
+                    ),
                   ],
                 ),
                 subtitle: Text('Total: Rp ${order.total.toStringAsFixed(0)} | ${order.orderTime}'),
@@ -450,7 +450,7 @@ class _OrderListTab extends ConsumerWidget {
                       spacing: 8,
                       runSpacing: 8,
                       alignment: WrapAlignment.spaceBetween,
-                      crossAxisAlignment: WrapCrossAlignment.start,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                        
                         Wrap(

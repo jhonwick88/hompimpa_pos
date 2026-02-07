@@ -11,7 +11,8 @@ import 'package:hompimpa_pos/features/products/data/product_repository.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../../core/enums/user_role.dart';
-
+import '../../auth/domain/user_model.dart';
+import '../domain/product.dart';
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({Key? key}) : super(key: key);
 
@@ -46,6 +47,23 @@ class DashboardScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Hompimpa POS'),
         actions: [
+          Padding(
+      padding: const EdgeInsets.only(right: 16),
+      child: Center(
+        child: RichText(
+          text: TextSpan(
+            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            children: [
+              WidgetSpan(
+                alignment: PlaceholderAlignment.middle,
+                child: Icon(Icons.person, size: 18, color: Colors.white),
+              ),
+              TextSpan(text: authState.asData?.value?.displayName ?? '',),
+            ],
+          ),
+        ),
+      ),
+    ), 
             IconButton(
               icon: const Icon(Icons.logout, color: Colors.white),
               onPressed: () async {
@@ -195,84 +213,105 @@ class DashboardScreen extends ConsumerWidget {
                             shadowColor: Colors.black26,
                             clipBehavior: Clip.antiAlias,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            child: Stack(
-                              children: [
-                                // Main Background
-                                Container(color: bgColor),
-                                
-                                // Product Image or Icon
-                                if (product.imageUrl != null)
-                                  Positioned.fill(
-                                    child: Image.asset(
-                                      product.imageUrl!,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return const Center(
-                                          child: Icon(Icons.broken_image,color: Colors.white54),
-                                        );
-                                      },
-                                    ),
-                                  )
-                                else
-                                  const Center(
-                                    child: Opacity(
-                                      opacity: 0.1,
-                                      child: Icon(Icons.fastfood, size: 64),
-                                    ),
-                                  ),
-
-                                // Name Label at Bottom with Gradient
-                                Positioned(
-                                  bottom: 0,
-                                  left: 0,
-                                  right: 0,
-                                  child: Container(
-                                    decoration: const BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.bottomCenter,
-                                        end: Alignment.topCenter,
-                                        colors: [Colors.black87, Colors.transparent],
+                            child: InkWell(
+                              onTap: () {
+                                final authState = ref.read(authStateChangesProvider);
+                                final user = authState.value;
+                                if (user != null && user.role == UserRole.dev) {
+                                  _showUpdateStockDialog(context, ref, product, user);
+                                }
+                              },
+                              child: Stack(
+                                children: [
+                                  // Main Background
+                                  Container(color: bgColor),
+                                  
+                                  // Product Image or Icon
+                                  if (product.imageUrl != null)
+                                    Positioned.fill(
+                                      child: Image.asset(
+                                        product.imageUrl!,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return const Center(
+                                            child: Icon(Icons.broken_image,color: Colors.white54),
+                                          );
+                                        },
+                                      ),
+                                    )
+                                  else
+                                    const Center(
+                                      child: Opacity(
+                                        opacity: 0.1,
+                                        child: Icon(Icons.fastfood, size: 64),
                                       ),
                                     ),
-                                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                                    child: Text(
-                                      product.name,
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
+                            
+                                  // Name Label at Bottom with Gradient
+                                  Positioned(
+                                    bottom: 0,
+                                    left: 0,
+                                    right: 0,
+                                    child: Container(
+                                      decoration: const BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.bottomCenter,
+                                          end: Alignment.topCenter,
+                                          colors: [Colors.black87, Colors.transparent],
+                                        ),
                                       ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ),
-
-                                // Stock Badge at Top Right Edge
-                                Positioned(
-                                  top: 4,
-                                  right: 4,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red,
-                                      borderRadius: BorderRadius.circular(20), // Oval
-                                      boxShadow: const [
-                                        BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
-                                      ],
-                                    ),
-                                    child: Text(
-                                      '${product.stock}',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
+                                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                                      child: Text(
+                                        product.name,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
+                            
+                                  // Stock Badge at Top Right Edge
+                                  Positioned(
+                                    top: 4,
+                                    right: 4,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red,
+                                        borderRadius: BorderRadius.circular(20), // Oval
+                                        boxShadow: const [
+                                          BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+                                        ],
+                                      ),
+                                      child: Text(
+                                        '${product.stock}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  
+                                  // Edit Icon for Dev
+                                  if (ref.watch(authStateChangesProvider).value?.role == UserRole.dev)
+                                    const Positioned(
+                                      top: 4,
+                                      left: 4,
+                                      child: CircleAvatar(
+                                        backgroundColor: Colors.white70,
+                                        radius: 12,
+                                        child: Icon(Icons.edit, size: 14, color: Colors.black87),
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
                           );
                         },
@@ -315,43 +354,7 @@ class DashboardScreen extends ConsumerWidget {
               label: 'Laporan Penjualan',
               onTap: () => context.push('/reports'),
             ),
-            SpeedDialChild(
-              child: const Icon(Icons.sync),
-              label: 'Update Gambar Produk',
-              onTap: () async {
-                final repo = ref.read(productRepositoryProvider);
-                final productsStream = repo.getProducts();
-                final products = await productsStream.first;
-                
-                final imageMap = {
-                   'Mie': 'assets/images/products/mie_hompimpa.png',
-                   'Pangsit': 'assets/images/products/pangsit_goreng.png',
-                   'Jus Jambu': 'assets/images/products/jus_jambu.png',
-                   'Jus Alpukat': 'assets/images/products/jus_alpukat.png',
-                   'Jus Sirsat': 'assets/images/products/jus_sirsat.png',
-                   'Jus Buah Naga': 'assets/images/products/jus_buah_naga.png',
-                   'Jus Nanas': 'assets/images/products/jus_nanas.png',
-                   'Jus Nangka': 'assets/images/products/jus_nangka.png',
-                };
-                
-                int updatedCount = 0;
-                for (final product in products) {
-                  if (imageMap.containsKey(product.name)) {
-                    final newImage = imageMap[product.name];
-                    if (product.imageUrl != newImage) {
-                      final updated = product.copyWith(imageUrl: newImage);
-                      await repo.updateProduct(updated);
-                      updatedCount++;
-                    }
-                  }
-                }
-                
-                // ignore: use_build_context_synchronously
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Updated $updatedCount product images')),
-                );
-              },
-            ),
+           
           ],
           SpeedDialChild(
             child: const Icon(Icons.history),
@@ -362,6 +365,65 @@ class DashboardScreen extends ConsumerWidget {
         
         ],
       ),
+    );
+  }
+
+  void _showUpdateStockDialog(BuildContext context, WidgetRef ref, Product product, AppUser user) {
+    final stockController = TextEditingController(text: product.stock.toString());
+    final reasonController = TextEditingController(text: 'Manual by ${user.displayName ?? 'Admin'}');
+
+    showDialog(
+      context: context,
+      builder: (contextDialog) {
+        return AlertDialog(
+          title: Text('Update Stock: ${product.name}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: stockController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'New Stock'),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: reasonController,
+                decoration: const InputDecoration(labelText: 'Reason'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(contextDialog),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final newStock = int.tryParse(stockController.text);
+                if (newStock == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid stock number')));
+                  return;
+                }
+
+                try {
+                  await ref.read(productRepositoryProvider).updateStock(
+                    product.id,
+                    newStock,
+                    reason: reasonController.text,
+                    username: user.displayName ?? 'Admin',
+                  );
+                  Navigator.pop(contextDialog);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Stock updated successfully')));
+                } catch (e) {
+                  Navigator.pop(contextDialog);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update stock: $e')));
+                }
+              },
+              child: const Text('Update'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -12,7 +12,7 @@ abstract class ProductRepository {
   Future<void> addProduct(Product product);
   Future<void> updateProduct(Product product);
   Future<void> deleteProduct(String id);
-  Future<void> updateStock(String productId, int newStock);
+  Future<void> updateStock(String productId, int newStock, {String? reason, String? username});
 }
 
 class FirestoreProductRepository implements ProductRepository {
@@ -48,7 +48,32 @@ class FirestoreProductRepository implements ProductRepository {
   }
 
   @override
-  Future<void> updateStock(String productId, int newStock) async {
-    await _firestore.collection('products').doc(productId).update({'stock': newStock});
+  Future<void> updateStock(String productId, int newStock, {String? reason, String? username}) async {
+    await _firestore.runTransaction((transaction) async {
+      final productRef = _firestore.collection('products').doc(productId);
+      final productDoc = await transaction.get(productRef);
+      
+      if (!productDoc.exists) {
+        throw Exception("Product not found");
+      }
+
+      final currentStock = (productDoc.data() as Map<String, dynamic>)['stock'] as int? ?? 0;
+      final qtyChange = newStock - currentStock;
+
+      // 1. Update Product Stock
+      transaction.update(productRef, {'stock': newStock});
+
+      // 2. Create Stock Log
+      final logRef = _firestore.collection('stock_logs').doc();
+      transaction.set(logRef, {
+        'id': logRef.id,
+        'productId': productId,
+        'qtyChange': qtyChange,
+        'newStock': newStock,
+        'reason': reason ?? 'Manual Update',
+        'username': username ?? 'Unknown',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    });
   }
 }

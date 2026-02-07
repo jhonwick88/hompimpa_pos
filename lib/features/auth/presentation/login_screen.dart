@@ -24,61 +24,80 @@ class LoginScreen extends ConsumerWidget {
     final isLoading = authState is AsyncLoading;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Logo
-               Image.asset(
-                'assets/images/logo.png',
-                height: 120,
-              ),
-              const SizedBox(height: 40),
-              
-              Text(
-                'Hompimpa POS',
-                style: Theme.of(context).textTheme.headline5?.copyWith( // headlineMedium -> headline5 in old flutter
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFFFF6B00),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFB71C1C), // Red 900
+              Color(0xFFFF6B00), // Fire Orange
+            ],
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView( // Added scroll view for safety on small screens
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Logo
+                 Image.asset(
+                  'assets/images/logo.png',
+                  height: 350, // 2x larger (approx)
                 ),
-              ),
-               const SizedBox(height: 10),
-               Text(
-                'Sign in to continue',
-                style: Theme.of(context).textTheme.bodyText1?.copyWith( // bodyLarge -> bodyText1
-                  color: Colors.grey[600],
+                const SizedBox(height: 20),
+                
+                Text(
+                  'Hompimpa POS',
+                  style: Theme.of(context).textTheme.headline5?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 32, // Increased size slightly to match large logo
+                    color: Colors.white, // White text for contrast
+                    shadows: [
+                      const Shadow(
+                        offset: Offset(0, 2),
+                        blurRadius: 4.0,
+                        color: Colors.black26,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+                 const SizedBox(height: 60),
+                 Text(
+                  'Sign in to continue',
+                  style: Theme.of(context).textTheme.bodyText1?.copyWith(
+                    color: Colors.white70, // Lighter white
+                    fontSize: 16,
+                  ),
+                ),
 
-              const SizedBox(height: 60),
+                const SizedBox(height: 30),
 
-              if (isLoading)
-                const CircularProgressIndicator(color: Color(0xFFFF6B00))
-              else
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      ref.read(authControllerProvider.notifier).signInWithGoogle();
-                    },
-                    icon: const Icon(Icons.login), 
-                    // Note: In a real app, use a Google Logo asset
-                    label: const Text('Sign in with Google'),
-                    style: ElevatedButton.styleFrom(
-                      primary: Colors.white,
-                      onPrimary: Colors.black87,
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                if (isLoading)
+                  const CircularProgressIndicator(color: Colors.white)
+                else
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        ref.read(authControllerProvider.notifier).signInWithGoogle();
+                      },
+                      icon: const Icon(Icons.login), 
+                      label: const Text('Sign in with Google'),
+                      style: ElevatedButton.styleFrom(
+                        primary: Colors.white, // White button
+                        onPrimary: const Color(0xFFB71C1C), // Red text
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
