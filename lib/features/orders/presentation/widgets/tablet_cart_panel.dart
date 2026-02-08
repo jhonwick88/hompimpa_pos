@@ -8,6 +8,7 @@ import 'package:hompimpa_pos/features/products/data/topping_repository.dart';
 import 'package:hompimpa_pos/features/orders/presentation/widgets/pos_action_buttons.dart';
 
 import 'package:hompimpa_pos/features/orders/presentation/order_list_screen.dart';
+import '../../domain/order.dart';
 
 class TabletCartPanel extends ConsumerWidget {
   final TextEditingController nameController;
@@ -20,6 +21,7 @@ class TabletCartPanel extends ConsumerWidget {
   final VoidCallback onQuickOrder;
   final bool isQuickOrder;
   final String? existingOrderId;
+  final OrderEntity? existingOrder;
   final Function(String) standardizePhoneNumber;
 
   const TabletCartPanel({
@@ -34,6 +36,7 @@ class TabletCartPanel extends ConsumerWidget {
     required this.onQuickOrder,
     required this.isQuickOrder,
     this.existingOrderId,
+    this.existingOrder,
     required this.standardizePhoneNumber,
   }) : super(key: key);
 
@@ -159,9 +162,10 @@ class TabletCartPanel extends ConsumerWidget {
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text(
-                            '${item.qty}x @ Rp ${item.price.toStringAsFixed(0)} ${item.note != null ? '(${item.note})' : ''}',
-                            style: TextStyle(color: Colors.orange[800]),
+                            '${item.qty}x @ Rp ${item.price.toStringAsFixed(0)} ${item.note != null ? '(${item.note})' : ''}\n${item.toppings != null && item.toppings!.isNotEmpty ? '+ ${item.toppings!.map((t) => t.name).join(", ")}' : ''}',
+                            style: TextStyle(color: Colors.orange[800], fontSize: 13),
                           ),
+                          isThreeLine: true,
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -216,16 +220,12 @@ class TabletCartPanel extends ConsumerWidget {
                             final standardizedPhone = phoneController.text.isNotEmpty ? standardizePhoneNumber(phoneController.text) : null;
                             final messenger = ScaffoldMessenger.of(context);
 
-                            if (existingOrderId != null) {
+                            if (existingOrderId != null && existingOrder != null) {
                               try {
-                                final ordersAsync = ref.read(dailyOrdersProvider);
-                                final orders = ordersAsync.value ?? [];
-                                final originalOrder = orders.firstWhere((o) => o.id == existingOrderId);
-                                
                                 await ref.read(cartProvider.notifier).updateOrder(
                                       ref.read(orderRepositoryProvider),
                                       ref.read(toppingRepositoryProvider), // Added
-                                      originalOrder,
+                                      existingOrder!,
                                       nameController.text.trim(),
                                       customerPhone: standardizedPhone,
                                       pickupDate: selectedDate,

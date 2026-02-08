@@ -14,6 +14,7 @@ abstract class OrderRepository {
   Future<void> updateOrderStatus(String orderId, OrderStatus newStatus, List<OrderItem> items, {String? executorName, String? executorId});
   Future<void> updateOrderItems(String orderId, List<OrderItem> items);
   Future<void> deleteOrder(String orderId);
+  Future<OrderEntity?> getOrder(String orderId);
 }
 
 class FirestoreOrderRepository implements OrderRepository {
@@ -39,11 +40,12 @@ class FirestoreOrderRepository implements OrderRepository {
       var filtered = List<OrderEntity>.from(baseOrders);
       // Client-side filtering
       if (date != null) {
-        filtered = filtered.where((o) => 
-          o.orderDate.year == date.year &&
-          o.orderDate.month == date.month &&
-          o.orderDate.day == date.day
-        ).toList();
+        filtered = filtered.where((o) {
+          final localDate = o.orderDate.toLocal();
+          return localDate.year == date.year &&
+                 localDate.month == date.month &&
+                 localDate.day == date.day;
+        }).toList();
       }
 
       if (status != null) {
@@ -160,5 +162,17 @@ class FirestoreOrderRepository implements OrderRepository {
   @override
   Future<void> deleteOrder(String orderId) async {
     await _firestore.collection('orders').doc(orderId).delete();
+  }
+
+  @override
+  Future<OrderEntity?> getOrder(String orderId) async {
+    try {
+      final doc = await _firestore.collection('orders').doc(orderId).get();
+      if (!doc.exists) return null;
+      return OrderEntity.fromJsonRobust({...doc.data() as Map<String, dynamic>, 'id': doc.id});
+    } catch (e) {
+      print('Error fetching order $orderId: $e');
+      return null;
+    }
   }
 }

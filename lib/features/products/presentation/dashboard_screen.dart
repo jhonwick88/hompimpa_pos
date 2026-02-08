@@ -241,105 +241,124 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               shadowColor: Colors.black26,
                               clipBehavior: Clip.antiAlias,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                              child: InkWell(
-                                onTap: () {
-                                  final authState = ref.read(authStateChangesProvider);
-                                  final user = authState.value;
-                                  if (user != null && user.role == UserRole.dev) {
-                                    _showUpdateStockDialog(context, ref, product, user);
-                                  }
-                                },
-                                child: Stack(
-                                  children: [
-                                    // Main Background
-                                    Container(color: bgColor),
-                                    
-                                    // Product Image or Icon
-                                    if (product.imageUrl != null)
-                                      Positioned.fill(
-                                        child: Image.asset(
-                                          product.imageUrl!,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) {
-                                            return const Center(
-                                              child: Icon(Icons.broken_image,color: Colors.white54),
-                                            );
-                                          },
-                                        ),
-                                      )
-                                    else
-                                      const Center(
-                                        child: Opacity(
-                                          opacity: 0.1,
-                                          child: Icon(Icons.fastfood, size: 64),
-                                        ),
-                                      ),
-                              
-                                    // Name Label at Bottom with Gradient
-                                    Positioned(
-                                      bottom: 0,
-                                      left: 0,
-                                      right: 0,
-                                      child: Container(
-                                        decoration: const BoxDecoration(
-                                          gradient: LinearGradient(
-                                            begin: Alignment.bottomCenter,
-                                            end: Alignment.topCenter,
-                                            colors: [Colors.black87, Colors.transparent],
-                                          ),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                                        child: Text(
-                                          product.name,
-                                          textAlign: TextAlign.center,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 14,
-                                          ),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ),
-                              
-                                    // Stock Badge at Top Right Edge
-                                    Positioned(
-                                      top: 4,
-                                      right: 4,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: Colors.red,
-                                          borderRadius: BorderRadius.circular(20), // Oval
-                                          boxShadow: const [
-                                            BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+                              child: Stack(
+                                children: [
+                                  // Content Layer
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
+                                      Expanded(
+                                        child: Stack(
+                                          children: [
+                                            // Main Background
+                                            Container(color: bgColor),
+                                            
+                                            // Product Image or Icon
+                                            if (product.imageUrl != null)
+                                              Positioned.fill(
+                                                child: Image.asset(
+                                                  product.imageUrl!,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (context, error, stackTrace) {
+                                                    return const Center(
+                                                      child: Icon(Icons.broken_image,color: Colors.white54),
+                                                    );
+                                                  },
+                                                ),
+                                              )
+                                            else
+                                              const Center(
+                                                child: Opacity(
+                                                  opacity: 0.1,
+                                                  child: Icon(Icons.fastfood, size: 64),
+                                                ),
+                                              ),
+                                      
+                                            // Name Label at Bottom with Gradient
+                                            Positioned(
+                                              bottom: 0,
+                                              left: 0,
+                                              right: 0,
+                                              child: Container(
+                                                decoration: const BoxDecoration(
+                                                  gradient: LinearGradient(
+                                                    begin: Alignment.bottomCenter,
+                                                    end: Alignment.topCenter,
+                                                    colors: [Colors.black87, Colors.transparent],
+                                                  ),
+                                                ),
+                                                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                                                child: Text(
+                                                  product.name,
+                                                  textAlign: TextAlign.center,
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 14,
+                                                  ),
+                                                  maxLines: 2,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ),
+                                      
+                                            // Stock Badge at Top Right Edge
+                                            Positioned(
+                                              top: 4,
+                                              right: 4,
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.red,
+                                                  borderRadius: BorderRadius.circular(20), // Oval
+                                                  boxShadow: const [
+                                                    BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+                                                  ],
+                                                ),
+                                                child: Text(
+                                                  '${product.stock}',
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            
+                                            // Edit Icon for Dev
+                                            if (ref.watch(authStateChangesProvider).value?.role == UserRole.dev)
+                                              const Positioned(
+                                                top: 4,
+                                                left: 4,
+                                                child: CircleAvatar(
+                                                  backgroundColor: Colors.white70,
+                                                  radius: 12,
+                                                  child: Icon(Icons.edit, size: 14, color: Colors.black87),
+                                                ),
+                                              ),
                                           ],
                                         ),
-                                        child: Text(
-                                          '${product.stock}',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  // Ripple Layer
+                                  Positioned.fill(
+                                    child: Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        onTap: () {
+                                          final authState = ref.read(authStateChangesProvider);
+                                          final user = authState.value;
+                                          if (user != null && user.role == UserRole.dev) {
+                                            _showUpdateStockDialog(context, ref, product, user);
+                                          }
+                                        },
                                       ),
                                     ),
-                                    
-                                    // Edit Icon for Dev
-                                    if (ref.watch(authStateChangesProvider).value?.role == UserRole.dev)
-                                      const Positioned(
-                                        top: 4,
-                                        left: 4,
-                                        child: CircleAvatar(
-                                          backgroundColor: Colors.white70,
-                                          radius: 12,
-                                          child: Icon(Icons.edit, size: 14, color: Colors.black87),
-                                        ),
-                                      ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             );
                           },

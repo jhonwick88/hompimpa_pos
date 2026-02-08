@@ -69,7 +69,7 @@ class CartController extends StateNotifier<List<OrderItem>> {
   }
 
   void setCartItems(List<OrderItem> items) {
-    state = items;
+    state = List<OrderItem>.from(items);
   }
 
   Future<void> submitOrder(
@@ -88,7 +88,7 @@ class CartController extends StateNotifier<List<OrderItem>> {
 
     // Quick Order Logic Prefix
     String finalCustomerName = customerName;
-    if (isQuickOrder) {
+    if (isQuickOrder && finalCustomerName.isEmpty) {
        finalCustomerName = "Offline Order - ${const Uuid().v4().substring(0, 4)}";
     }
 

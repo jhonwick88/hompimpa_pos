@@ -479,77 +479,75 @@ class _OrderListTab extends ConsumerWidget {
                     );
                   }),
                   const Divider(),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      alignment: WrapAlignment.spaceBetween,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                       
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            if (order.status == OrderStatus.belum) ...[
-                              ElevatedButton.icon(
-                                onPressed: () => context.push('/entry/add/${order.id}'),
-                                icon: const Icon(Icons.add_shopping_cart, size: 18),
-                                label: const Text('Tambah'),
-                                style: ElevatedButton.styleFrom(
-                                  primary: Colors.orange,
-                                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                                ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          if (order.status == OrderStatus.belum) ...[
+                            ElevatedButton.icon(
+                              onPressed: () => context.push('/entry/add/${order.id}'),
+                              icon: const Icon(Icons.add_shopping_cart, size: 18),
+                              label: const Text('Tambah'),
+                              style: ElevatedButton.styleFrom(
+                                primary: Colors.orange,
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
                               ),
-                              ElevatedButton(
-                                onPressed: () async {
-                                  try {
-                                    final messenger = ScaffoldMessenger.of(context);
-                                    final authState = ref.read(authStateChangesProvider);
-                                    final user = authState.value;
-                                    
-                                    await ref.read(orderRepositoryProvider).updateOrderStatus(
-                                      order.id, 
-                                      OrderStatus.proses, 
-                                      order.items,
-                                      executorName: user?.displayName ?? 'Admin',
-                                      executorId: user?.uid
-                                    );
-                                    messenger.showSnackBar(const SnackBar(content: Text('Pesanan sedang diproses')));
-                                  } catch (e) {
-                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal memperbarui: $e')));
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                                ),
-                                child: const Text('Proses'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () async {
+                                try {
+                                  final messenger = ScaffoldMessenger.of(context);
+                                  final authState = ref.read(authStateChangesProvider);
+                                  final user = authState.value;
+                                  
+                                  await ref.read(orderRepositoryProvider).updateOrderStatus(
+                                    order.id, 
+                                    OrderStatus.proses, 
+                                    order.items,
+                                    executorName: user?.displayName ?? 'Admin',
+                                    executorId: user?.uid
+                                  );
+                                  messenger.showSnackBar(const SnackBar(content: Text('Pesanan sedang diproses')));
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal memperbarui: $e')));
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
                               ),
-                            ],
-                            if (order.status == OrderStatus.proses) ...[
-                              ElevatedButton.icon(
-                                onPressed: () => _showSelesaiConfirmation(context, ref, order),
-                                icon: const Icon(Icons.check_circle_outline, size: 18),
-                                label: const Text('Selesai'),
-                                style: ElevatedButton.styleFrom(
-                                  primary: Colors.green, 
-                                  onPrimary: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                                ),
-                              ),
-                            ],
-                            if (order.status != OrderStatus.selesai) ...[
-                              IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _showDeleteConfirmation(context, ref, order),
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                              ),
-                            ],
+                              child: const Text('Proses'),
+                            ),
                           ],
-                        ),
-                      ],
+                          if (order.status == OrderStatus.proses) ...[
+                            ElevatedButton.icon(
+                              onPressed: () => _showSelesaiConfirmation(context, ref, order),
+                              icon: const Icon(Icons.check_circle_outline, size: 18),
+                              label: const Text('Selesai'),
+                              style: ElevatedButton.styleFrom(
+                                primary: Colors.green, 
+                                onPrimary: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                              ),
+                            ),
+                          ],
+                          if (order.status != OrderStatus.selesai) ...[
+                            ElevatedButton.icon(
+                              onPressed: () => _showDeleteConfirmation(context, ref, order),
+                              icon: const Icon(Icons.delete, size: 18),
+                              label: const Text('Hapus'),
+                              style: ElevatedButton.styleFrom(
+                                primary: Colors.red,
+                                onPrimary: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
                   ),
                 ],

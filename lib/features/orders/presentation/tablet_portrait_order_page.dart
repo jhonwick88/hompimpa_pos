@@ -10,6 +10,7 @@ import 'package:hompimpa_pos/features/orders/data/order_repository.dart';
 import 'package:hompimpa_pos/features/orders/presentation/widgets/tablet_cart_panel.dart';
 import 'package:hompimpa_pos/features/orders/presentation/order_list_screen.dart';
 import 'package:hompimpa_pos/features/orders/presentation/widgets/product_option_dialog.dart';
+import 'package:hompimpa_pos/features/orders/domain/order.dart';
 
 /// Tablet portrait order entry page with expandable cart
 /// - Cart panel is collapsible to maximize product grid space
@@ -34,45 +35,81 @@ class _TabletPortraitOrderPageState extends ConsumerState<TabletPortraitOrderPag
   final _phoneController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
+  OrderEntity? _existingOrder;
   bool _cartExpanded = false; // Cart starts collapsed
   
   @override
   void initState() {
     super.initState();
     _initOrderType();
-    _loadExistingOrder();
+  }
+
+  @override
+  void didUpdateWidget(TabletPortraitOrderPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.existingOrderId != oldWidget.existingOrderId) {
+      _initOrderType();
+    }
   }
 
   void _initOrderType() {
-    if (widget.isQuickOrder) {
-      _nameController.text = "Offline - ${const Uuid().v4().substring(0,4)}";
-    } else {
-      _nameController.clear();
-    }
-    setState(() {});
-  }
-
-  TimeOfDay _parseTime(String timeStr) {
-    final parts = timeStr.split(':');
-    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
-  }
-
-  Future<void> _loadExistingOrder() async {
-    if (widget.existingOrderId != null) {
-      WidgetsBinding.instance?.addPostFrameCallback((_) {
-        final ordersAsync = ref.read(dailyOrdersProvider);
-        ordersAsync.whenData((orders) {
-          final order = orders.firstWhere((o) => o.id == widget.existingOrderId);
+    // 1. Always clear cart first
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      ref.read(cartProvider.notifier).clearCart();
+      
+      // 2. Fetch if editing
+      if (widget.existingOrderId != null) {
+        final repository = ref.read(orderRepositoryProvider);
+        final order = await repository.getOrder(widget.existingOrderId!);
+        
+        if (mounted && order != null) {
           _nameController.text = order.customerName;
           _phoneController.text = order.customerPhone ?? '';
           _selectedDate = order.orderDate;
           _selectedTime = _parseTime(order.orderTime);
+          _existingOrder = order;
           ref.read(cartProvider.notifier).setCartItems(order.items);
           setState(() {
-            _cartExpanded = true; // Auto expand cart when editing
+            _cartExpanded = true;
           });
-        });
-      });
+        } else if (mounted) {
+             ScaffoldMessenger.of(context).showSnackBar(
+               const SnackBar(content: Text('Order not found')),
+             );
+             context.pop();
+        }
+      }
+    });
+
+    // 3. Setup form
+    if (widget.isQuickOrder) {
+      _nameController.text = "Offline - ${const Uuid().v4().substring(0,4)}";
+    } else if (widget.existingOrderId == null) {
+      _nameController.clear();
+    }
+    setState(() {});
+  }
+  
+
+
+
+  TimeOfDay _parseTime(String timeStr) {
+    try {
+      if (timeStr.contains(':')) {
+        final parts = timeStr.split(':');
+        final hour = int.tryParse(parts[0].trim());
+        final minute = int.tryParse(parts[1].split(' ')[0].trim());
+        
+        if (hour != null && minute != null) {
+          if (timeStr.toLowerCase().contains('pm') && hour < 12) {
+             return TimeOfDay(hour: hour + 12, minute: minute);
+          }
+          return TimeOfDay(hour: hour, minute: minute);
+        }
+      }
+      return TimeOfDay.now();
+    } catch (e) {
+      return TimeOfDay.now();
     }
   }
 
@@ -195,6 +232,7 @@ class _TabletPortraitOrderPageState extends ConsumerState<TabletPortraitOrderPag
                   onQuickOrder: _switchToQuickOrder,
                   isQuickOrder: widget.isQuickOrder,
                   existingOrderId: widget.existingOrderId,
+                  existingOrder: _existingOrder,
                   standardizePhoneNumber: _standardizePhoneNumber,
                 ),
               ),
@@ -306,96 +344,105 @@ class _ProductGrid extends ConsumerWidget {
             final product = products[index];
             final isFood = product.category == 'makanan';
             
-            return GestureDetector(
-              onTap: () {
-                if (isFood) {
-                  showDialog(
-                    context: context,
-                    builder: (context) => ProductOptionDialog(product: product),
-                  );
-                } else {
-                  ref.read(cartProvider.notifier).addItem(product, 1);
-                }
-              },
-              child: Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                clipBehavior: Clip.antiAlias,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: product.imageUrl != null
-                          ? Image.asset(
-                              product.imageUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: isFood ? Colors.orange.shade100 : Colors.blue.shade100,
-                                  child: Center(
-                                    child: Icon(Icons.broken_image,
-                                        color: isFood ? Colors.orange : Colors.blue),
+            return Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              clipBehavior: Clip.antiAlias,
+              child: Stack(
+                children: [
+                   Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: product.imageUrl != null
+                            ? Image.asset(
+                                product.imageUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: isFood ? Colors.orange.shade100 : Colors.blue.shade100,
+                                    child: Center(
+                                      child: Icon(Icons.broken_image,
+                                          color: isFood ? Colors.orange : Colors.blue),
+                                    ),
+                                  );
+                                },
+                              )
+                            : Container(
+                                color: isFood ? Colors.orange.shade100 : Colors.blue.shade100,
+                                child: Center(
+                                  child: Icon(
+                                    isFood ? Icons.fastfood : Icons.local_drink,
+                                    size: 40,
+                                    color: isFood ? Colors.orange : Colors.blue,
                                   ),
-                                );
-                              },
-                            )
-                          : Container(
-                              color: isFood ? Colors.orange.shade100 : Colors.blue.shade100,
-                              child: Center(
-                                child: Icon(
-                                  isFood ? Icons.fastfood : Icons.local_drink,
-                                  size: 40,
-                                  color: isFood ? Colors.orange : Colors.blue,
                                 ),
+                              ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              product.name,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Rp ${product.price.toStringAsFixed(0)}',
+                                  style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade200,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    product.category,
+                                    style: TextStyle(fontSize: 10, color: Colors.grey.shade700),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Stok: ${product.stock}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: product.stock < 10 ? Colors.red : Colors.grey.shade600,
+                                fontWeight: product.stock < 10 ? FontWeight.bold : FontWeight.normal,
                               ),
                             ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            product.name,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Rp ${product.price.toStringAsFixed(0)}',
-                                style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade200,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  product.category,
-                                  style: TextStyle(fontSize: 10, color: Colors.grey.shade700),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Stok: ${product.stock}',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: product.stock < 10 ? Colors.red : Colors.grey.shade600,
-                              fontWeight: product.stock < 10 ? FontWeight.bold : FontWeight.normal,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  Positioned.fill(
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          if (isFood) {
+                            showDialog(
+                              context: context,
+                              builder: (context) => ProductOptionDialog(product: product),
+                            );
+                          } else {
+                            ref.read(cartProvider.notifier).addItem(product, 1);
+                          }
+                        },
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             );
           },
