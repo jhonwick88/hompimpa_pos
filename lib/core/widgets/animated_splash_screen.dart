@@ -4,6 +4,7 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/data/auth_repository.dart';
+import '../services/notification_service.dart';
 import '../../core/enums/user_role.dart';
 
 class AnimatedSplashScreen extends ConsumerStatefulWidget {
@@ -61,6 +62,9 @@ class _AnimatedSplashScreenState extends ConsumerState<AnimatedSplashScreen>
     final user = await authRepo.getCurrentUser();
 
     if (!mounted) return;
+
+    // Request notification permissions
+    await ref.read(notificationServiceProvider).requestPermissions();
 
     if (user != null) {
       // 2. Check role

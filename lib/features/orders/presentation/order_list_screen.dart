@@ -8,6 +8,7 @@ import '../../auth/data/auth_repository.dart';
 import '../../orders/data/order_repository.dart';
 import '../../orders/domain/order.dart';
 import '../../orders/domain/order_item.dart';
+import '../../../core/enums/user_role.dart';
 
 // Providers for filtering
 final orderStatusFilterProvider = StateProvider<OrderStatus?>((ref) => null);
@@ -29,11 +30,41 @@ final dailyOrdersProvider = StreamProvider<List<OrderEntity>>((ref) {
   return repository.getOrdersStream(date: date);
 });
 
-class OrderListScreen extends ConsumerWidget {
+class OrderListScreen extends ConsumerStatefulWidget {
   const OrderListScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OrderListScreen> createState() => _OrderListScreenState();
+}
+
+class _OrderListScreenState extends ConsumerState<OrderListScreen> {
+  DateTime? currentBackPressTime;
+
+  Future<bool> _onWillPop() async {
+    final user = ref.read(authStateChangesProvider).value;
+
+    if (user != null && (user.role == UserRole.admin || user.role == UserRole.dev)) {
+      context.go('/');
+      return Future.value(false);
+    }
+
+    DateTime now = DateTime.now();
+    if (currentBackPressTime == null || 
+        now.difference(currentBackPressTime!) > const Duration(seconds: 2)) {
+      currentBackPressTime = now;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tekan sekali lagi untuk keluar'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return Future.value(false);
+    }
+    return Future.value(true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final isSearchMode = ref.watch(isSearchModeProvider);
     final selectedDate = ref.watch(orderDateFilterProvider);
     final dailyOrdersAsync = ref.watch(dailyOrdersProvider);
@@ -48,115 +79,119 @@ class OrderListScreen extends ConsumerWidget {
       error: (_, __) => {OrderStatus.belum: 0, OrderStatus.proses: 0, OrderStatus.selesai: 0},
     );
 
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          title: isSearchMode 
-            ? TextField(
-                autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: 'Cari Nama / No Telp...',
-                  border: InputBorder.none,
-                  hintStyle: TextStyle(color: Colors.white70),
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: DefaultTabController(
+        length: 3,
+        child: Scaffold(
+          appBar: AppBar(
+            title: isSearchMode 
+              ? TextField(
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    hintText: 'Cari Nama / No Telp...',
+                    border: InputBorder.none,
+                    hintStyle: TextStyle(color: Colors.white70),
+                  ),
+                  style: const TextStyle(color: Colors.white),
+                  onChanged: (val) => ref.read(orderSearchQueryProvider.notifier).state = val,
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                     const Text('Pesanan Pelanggan'),
+                     Text(
+                       DateFormat('dd-MM-yyyy').format(selectedDate),
+                       style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+                     ),
+                  ],
                 ),
-                style: const TextStyle(color: Colors.white),
-                onChanged: (val) => ref.read(orderSearchQueryProvider.notifier).state = val,
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                   const Text('Pesanan Pelanggan'),
-                   Text(
-                     DateFormat('dd-MM-yyyy').format(selectedDate),
-                     style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
-                   ),
+            actions: [
+              IconButton(
+                icon: Icon(isSearchMode ? Icons.close : Icons.search),
+                onPressed: () {
+                  ref.read(isSearchModeProvider.notifier).state = !isSearchMode;
+                  if (isSearchMode) {
+                    ref.read(orderSearchQueryProvider.notifier).state = '';
+                  }
+                },
+              ),
+             
+              IconButton(
+                icon: const Icon(Icons.calendar_today),
+                onPressed: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: selectedDate,
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime(2101),
+                  );
+                  if (picked != null) {
+                    ref.read(orderDateFilterProvider.notifier).state = picked;
+                  }
+                },
+              ),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert),
+                onSelected: (value) async {
+                  if (value == 'logout') {
+                     final confirm = await showDialog<bool>(
+                       context: context,
+                       builder: (context) => AlertDialog(
+                         title: const Text('Logout'),
+                         content: const Text('Apakah anda yakin ingin keluar?'),
+                         actions: [
+                           TextButton(
+                             child: const Text('BATAL'),
+                             onPressed: () => Navigator.pop(context, false),
+                           ),
+                           ElevatedButton(
+                             style: ElevatedButton.styleFrom(primary: Colors.red),
+                             child: const Text('KELUAR'),
+                             onPressed: () => Navigator.pop(context, true),
+                           ),
+                         ],
+                       ),
+                     );
+
+                     if (confirm == true) {
+                       await ref.read(authControllerProvider.notifier).signOut();
+                       if (mounted) {
+                        context.go('/login');
+                       }
+                     }
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'logout',
+                    child: Text('Logout'),
+                  ),
                 ],
               ),
-          actions: [
-            IconButton(
-              icon: Icon(isSearchMode ? Icons.close : Icons.search),
-              onPressed: () {
-                ref.read(isSearchModeProvider.notifier).state = !isSearchMode;
-                if (isSearchMode) {
-                  ref.read(orderSearchQueryProvider.notifier).state = '';
-                }
-              },
-            ),
-           
-            IconButton(
-              icon: const Icon(Icons.calendar_today),
-              onPressed: () async {
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate: selectedDate,
-                  firstDate: DateTime(2020),
-                  lastDate: DateTime(2101),
-                );
-                if (picked != null) {
-                  ref.read(orderDateFilterProvider.notifier).state = picked;
-                }
-              },
-            ),
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert),
-              onSelected: (value) async {
-                if (value == 'logout') {
-                   final confirm = await showDialog<bool>(
-                     context: context,
-                     builder: (context) => AlertDialog(
-                       title: const Text('Logout'),
-                       content: const Text('Apakah anda yakin ingin keluar?'),
-                       actions: [
-                         TextButton(
-                           child: const Text('BATAL'),
-                           onPressed: () => Navigator.pop(context, false),
-                         ),
-                         ElevatedButton(
-                           style: ElevatedButton.styleFrom(primary: Colors.red),
-                           child: const Text('KELUAR'),
-                           onPressed: () => Navigator.pop(context, true),
-                         ),
-                       ],
-                     ),
-                   );
-
-                   if (confirm == true) {
-                     await ref.read(authControllerProvider.notifier).signOut();
-                     // ignore: use_build_context_synchronously
-                     context.go('/login');
-                   }
-                }
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'logout',
-                  child: Text('Logout'),
-                ),
+            ],
+            bottom: TabBar(
+              isScrollable: true,
+              tabs: [
+                Tab(child: _buildTabHeader('Belum', Icons.timer, counts[OrderStatus.belum]!, Colors.orange)),
+                Tab(child: _buildTabHeader('Proses', Icons.sync, counts[OrderStatus.proses]!, Colors.blue)),
+                Tab(child: _buildTabHeader('Selesai', Icons.check_circle, counts[OrderStatus.selesai]!, Colors.green)),
               ],
             ),
-          ],
-          bottom: TabBar(
-            isScrollable: true,
-            tabs: [
-              Tab(child: _buildTabHeader('Belum', Icons.timer, counts[OrderStatus.belum]!, Colors.orange)),
-              Tab(child: _buildTabHeader('Proses', Icons.sync, counts[OrderStatus.proses]!, Colors.blue)),
-              Tab(child: _buildTabHeader('Selesai', Icons.check_circle, counts[OrderStatus.selesai]!, Colors.green)),
+          ),
+          body: const TabBarView(
+            children: [
+              _OrderListTab(status: OrderStatus.belum),
+              _OrderListTab(status: OrderStatus.proses),
+              _OrderListTab(status: OrderStatus.selesai),
             ],
           ),
-        ),
-        body: const TabBarView(
-          children: [
-            _OrderListTab(status: OrderStatus.belum),
-            _OrderListTab(status: OrderStatus.proses),
-            _OrderListTab(status: OrderStatus.selesai),
-          ],
-        ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () => context.push('/entry?quick=true'),
-          label: const Text('Quick Order'),
-          icon: const Icon(Icons.flash_on),
-          backgroundColor: Colors.orange,
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () => context.push('/entry?quick=true'),
+            label: const Text('Quick Order'),
+            icon: const Icon(Icons.flash_on),
+            backgroundColor: Colors.orange,
+          ),
         ),
       ),
     );

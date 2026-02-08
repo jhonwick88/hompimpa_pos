@@ -6,9 +6,13 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'firebase_options.dart';
 import 'core/router.dart';
 import 'core/widgets/animated_splash_screen.dart';
+import 'core/services/notification_service.dart';
+import 'core/services/order_notification_controller.dart';
 
 void main() async {
+  print('APP_START: main() function called');
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  print('APP_START: WidgetsBinding initialized');
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   
   try {
@@ -17,7 +21,9 @@ void main() async {
        options: kIsWeb 
          ? DefaultFirebaseOptions.web 
          : DefaultFirebaseOptions.currentPlatform,
-     );
+     ).timeout(const Duration(seconds: 10), onTimeout: () {
+        throw 'Firebase Initialization Timed Out after 10 seconds. Check your network connection or Firebase configuration.';
+     });
      runApp(const ProviderScope(child: HompimpaApp()));
   } catch (e) {
      print("Firebase init failed: $e");
@@ -67,11 +73,37 @@ class ErrorApp extends StatelessWidget {
   }
 }
 
-class HompimpaApp extends ConsumerWidget {
+class HompimpaApp extends ConsumerStatefulWidget {
   const HompimpaApp({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HompimpaApp> createState() => _HompimpaAppState();
+}
+
+class _HompimpaAppState extends ConsumerState<HompimpaApp> {
+  @override
+  void initState() {
+    super.initState();
+    _initNotifications();
+  }
+
+  Future<void> _initNotifications() async {
+    // Check if Android and NOT web
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+        final notificationService = ref.read(notificationServiceProvider);
+        await notificationService.initialize((payload) {
+             // Navigate to order list
+             // Ideally we'd highlight the order, but for now just go there
+             ref.read(routerProvider).go('/orders'); 
+        });
+        
+        // Start monitoring
+        ref.read(orderNotificationControllerProvider).startMonitoring();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
     return MaterialApp.router(
       title: 'Hompimpa POS',
