@@ -40,6 +40,11 @@ class _TabletOrderPageState extends ConsumerState<TabletOrderPage> {
     _initOrderType();
   }
 
+  TimeOfDay _parseTime(String timeStr) {
+    final parts = timeStr.split(':');
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+  }
+
   void _initOrderType() {
     if (widget.existingOrderId != null) {
       // Find the specific order from the list of orders
@@ -54,6 +59,7 @@ class _TabletOrderPageState extends ConsumerState<TabletOrderPage> {
           _phoneController.text = order.customerPhone ?? '';
           _selectedDate = order.orderDate;
           // Time parsing helper would be better, but simple string update for now
+          _selectedTime = _parseTime(order.orderTime);
           ref.read(cartProvider.notifier).setCartItems(order.items);
           setState(() {});
         });

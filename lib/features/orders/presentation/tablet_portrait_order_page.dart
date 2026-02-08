@@ -52,6 +52,11 @@ class _TabletPortraitOrderPageState extends ConsumerState<TabletPortraitOrderPag
     setState(() {});
   }
 
+  TimeOfDay _parseTime(String timeStr) {
+    final parts = timeStr.split(':');
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+  }
+
   Future<void> _loadExistingOrder() async {
     if (widget.existingOrderId != null) {
       WidgetsBinding.instance?.addPostFrameCallback((_) {
@@ -61,6 +66,7 @@ class _TabletPortraitOrderPageState extends ConsumerState<TabletPortraitOrderPag
           _nameController.text = order.customerName;
           _phoneController.text = order.customerPhone ?? '';
           _selectedDate = order.orderDate;
+          _selectedTime = _parseTime(order.orderTime);
           ref.read(cartProvider.notifier).setCartItems(order.items);
           setState(() {
             _cartExpanded = true; // Auto expand cart when editing

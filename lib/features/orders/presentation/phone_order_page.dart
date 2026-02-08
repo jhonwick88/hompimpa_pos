@@ -42,6 +42,11 @@ class _PhoneOrderPageState extends ConsumerState<PhoneOrderPage> {
     _initOrderType();
   }
 
+  TimeOfDay _parseTime(String timeStr) {
+    final parts = timeStr.split(':');
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+  }
+
   void _initOrderType() {
     if (widget.existingOrderId != null) {
       WidgetsBinding.instance?.addPostFrameCallback((_) {
@@ -51,6 +56,7 @@ class _PhoneOrderPageState extends ConsumerState<PhoneOrderPage> {
           _nameController.text = order.customerName;
           _phoneController.text = order.customerPhone ?? '';
           _selectedDate = order.orderDate;
+          _selectedTime = _parseTime(order.orderTime); // Parse existing time
           ref.read(cartProvider.notifier).setCartItems(order.items);
           setState(() {});
         });
@@ -144,38 +150,70 @@ class _PhoneOrderPageState extends ConsumerState<PhoneOrderPage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.85,
-        decoration: BoxDecoration(
-          color: Theme.of(context).canvasColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.85,
+            decoration: BoxDecoration(
+              color: Theme.of(context).canvasColor,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             ),
-            Expanded(
-              child: _MobileCartView(
-                nameController: _nameController,
-                phoneController: _phoneController,
-                selectedDate: _selectedDate,
-                selectedTime: _selectedTime,
-                onSelectDate: () => _selectDate(context),
-                onSelectTime: () => _selectTime(context),
-                isQuickOrder: widget.isQuickOrder,
-                existingOrderId: widget.existingOrderId,
-                standardizePhoneNumber: _standardizePhoneNumber,
-              ),
+            child: Column(
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Expanded(
+                  child: _MobileCartView(
+                    nameController: _nameController,
+                    phoneController: _phoneController,
+                    selectedDate: _selectedDate,
+                    selectedTime: _selectedTime,
+                    onSelectDate: () async {
+                      final DateTime? picked = await showDatePicker(
+                        context: context,
+                        initialDate: _selectedDate,
+                        firstDate: DateTime.now().subtract(const Duration(days: 1)),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                      );
+                      if (picked != null && picked != _selectedDate) {
+                        setModalState(() {
+                          _selectedDate = picked;
+                        });
+                        setState(() {
+                          _selectedDate = picked;
+                        });
+                      }
+                    },
+                    onSelectTime: () async {
+                      final TimeOfDay? picked = await showTimePicker(
+                        context: context,
+                        initialTime: _selectedTime,
+                      );
+                      if (picked != null && picked != _selectedTime) {
+                         setModalState(() {
+                          _selectedTime = picked;
+                        });
+                        setState(() {
+                          _selectedTime = picked;
+                        });
+                      }
+                    },
+                    isQuickOrder: widget.isQuickOrder,
+                    existingOrderId: widget.existingOrderId,
+                    standardizePhoneNumber: _standardizePhoneNumber,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        }
       ),
     );
   }
