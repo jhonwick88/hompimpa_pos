@@ -9,6 +9,7 @@ import '../../orders/data/order_repository.dart';
 import '../../orders/domain/order.dart';
 import '../../orders/domain/order_item.dart';
 import '../../../core/enums/user_role.dart';
+import 'widgets/nota_preview_dialog.dart';
 
 // Providers for filtering
 final orderStatusFilterProvider = StateProvider<OrderStatus?>((ref) => null);
@@ -529,6 +530,18 @@ class _OrderListTab extends ConsumerWidget {
                               ),
                             ),
                           ],
+                          if (order.status == OrderStatus.selesai) ...[
+                             ElevatedButton.icon(
+                               onPressed: () => _showPrintPreview(context, order),
+                               icon: const Icon(Icons.print, size: 18),
+                               label: const Text('Print'),
+                               style: ElevatedButton.styleFrom(
+                                 primary: Colors.blueGrey, 
+                                 onPrimary: Colors.white,
+                                 padding: const EdgeInsets.symmetric(horizontal: 8),
+                               ),
+                             ),
+                          ],
                           if (order.status != OrderStatus.selesai) ...[
                             ElevatedButton.icon(
                               onPressed: () => _showVoidDialog(context, ref, order),
@@ -572,6 +585,13 @@ class _OrderListTab extends ConsumerWidget {
       case OrderStatus.selesai: return Icons.check_circle;
       default: return Icons.cancel;
     }
+  }
+
+  void _showPrintPreview(BuildContext context, OrderEntity order) {
+    showDialog(
+      context: context,
+      builder: (context) => NotaPreviewDialog(order: order),
+    );
   }
 }
 

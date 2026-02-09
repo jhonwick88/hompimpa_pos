@@ -26,6 +26,9 @@ _$_Order _$$_OrderFromJson(Map<String, dynamic> json) => _$_Order(
       voidReason: json['voidReason'] as String?,
       voidBy: json['voidBy'] as String?,
       voidAt: const TimestampNullableConverter().fromJson(json['voidAt']),
+      paymentMethod: json['paymentMethod'] as String? ?? 'Cash',
+      paidAmount: (json['paidAmount'] as num?)?.toDouble(),
+      changeAmount: (json['changeAmount'] as num?)?.toDouble(),
     );
 
 Map<String, dynamic> _$$_OrderToJson(_$_Order instance) => <String, dynamic>{
@@ -47,6 +50,9 @@ Map<String, dynamic> _$$_OrderToJson(_$_Order instance) => <String, dynamic>{
       'voidReason': instance.voidReason,
       'voidBy': instance.voidBy,
       'voidAt': const TimestampNullableConverter().toJson(instance.voidAt),
+      'paymentMethod': instance.paymentMethod,
+      'paidAmount': instance.paidAmount,
+      'changeAmount': instance.changeAmount,
     };
 
 const _$OrderStatusEnumMap = {

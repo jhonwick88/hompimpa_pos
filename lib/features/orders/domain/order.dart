@@ -29,6 +29,9 @@ class OrderEntity with _$OrderEntity {
     String? voidReason,
     String? voidBy,
     @TimestampNullableConverter() DateTime? voidAt,
+    @Default('Cash') String paymentMethod,
+    double? paidAmount,
+    double? changeAmount,
   }) = _Order;
 
   factory OrderEntity.fromJson(Map<String, dynamic> json) => _$OrderEntityFromJson(json);
@@ -43,6 +46,11 @@ class OrderEntity with _$OrderEntity {
     normalized['orderDate'] ??= json['Tanggal'] ?? json['Date'];
     normalized['orderTime'] ??= json['Jam'] ?? json['Time'] ?? '';
     
+    // Payment Fields
+    normalized['paymentMethod'] ??= json['MetodePembayaran'] ?? json['PaymentMethod'] ?? 'Cash';
+    normalized['paidAmount'] ??= (json['Bayar'] ?? json['PaidAmount'])?.toDouble();
+    normalized['changeAmount'] ??= (json['Kembali'] ?? json['ChangeAmount'])?.toDouble();
+
     if (normalized['status'] == null) {
       final statusStr = (json['Status'] ?? json['status'] ?? '').toString().toLowerCase();
       if (statusStr.contains('selesai')) normalized['status'] = 'selesai';

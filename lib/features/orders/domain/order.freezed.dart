@@ -38,7 +38,10 @@ class _$OrderEntityTearOff {
       @TimestampNullableConverter() DateTime? updatedAt,
       String? voidReason,
       String? voidBy,
-      @TimestampNullableConverter() DateTime? voidAt}) {
+      @TimestampNullableConverter() DateTime? voidAt,
+      String paymentMethod = 'Cash',
+      double? paidAmount,
+      double? changeAmount}) {
     return _Order(
       id: id,
       customerName: customerName,
@@ -56,6 +59,9 @@ class _$OrderEntityTearOff {
       voidReason: voidReason,
       voidBy: voidBy,
       voidAt: voidAt,
+      paymentMethod: paymentMethod,
+      paidAmount: paidAmount,
+      changeAmount: changeAmount,
     );
   }
 
@@ -92,6 +98,9 @@ mixin _$OrderEntity {
   String? get voidBy => throw _privateConstructorUsedError;
   @TimestampNullableConverter()
   DateTime? get voidAt => throw _privateConstructorUsedError;
+  String get paymentMethod => throw _privateConstructorUsedError;
+  double? get paidAmount => throw _privateConstructorUsedError;
+  double? get changeAmount => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -120,7 +129,10 @@ abstract class $OrderEntityCopyWith<$Res> {
       @TimestampNullableConverter() DateTime? updatedAt,
       String? voidReason,
       String? voidBy,
-      @TimestampNullableConverter() DateTime? voidAt});
+      @TimestampNullableConverter() DateTime? voidAt,
+      String paymentMethod,
+      double? paidAmount,
+      double? changeAmount});
 }
 
 /// @nodoc
@@ -149,6 +161,9 @@ class _$OrderEntityCopyWithImpl<$Res> implements $OrderEntityCopyWith<$Res> {
     Object? voidReason = freezed,
     Object? voidBy = freezed,
     Object? voidAt = freezed,
+    Object? paymentMethod = freezed,
+    Object? paidAmount = freezed,
+    Object? changeAmount = freezed,
   }) {
     return _then(_value.copyWith(
       id: id == freezed
@@ -215,6 +230,18 @@ class _$OrderEntityCopyWithImpl<$Res> implements $OrderEntityCopyWith<$Res> {
           ? _value.voidAt
           : voidAt // ignore: cast_nullable_to_non_nullable
               as DateTime?,
+      paymentMethod: paymentMethod == freezed
+          ? _value.paymentMethod
+          : paymentMethod // ignore: cast_nullable_to_non_nullable
+              as String,
+      paidAmount: paidAmount == freezed
+          ? _value.paidAmount
+          : paidAmount // ignore: cast_nullable_to_non_nullable
+              as double?,
+      changeAmount: changeAmount == freezed
+          ? _value.changeAmount
+          : changeAmount // ignore: cast_nullable_to_non_nullable
+              as double?,
     ));
   }
 }
@@ -240,7 +267,10 @@ abstract class _$OrderCopyWith<$Res> implements $OrderEntityCopyWith<$Res> {
       @TimestampNullableConverter() DateTime? updatedAt,
       String? voidReason,
       String? voidBy,
-      @TimestampNullableConverter() DateTime? voidAt});
+      @TimestampNullableConverter() DateTime? voidAt,
+      String paymentMethod,
+      double? paidAmount,
+      double? changeAmount});
 }
 
 /// @nodoc
@@ -270,6 +300,9 @@ class __$OrderCopyWithImpl<$Res> extends _$OrderEntityCopyWithImpl<$Res>
     Object? voidReason = freezed,
     Object? voidBy = freezed,
     Object? voidAt = freezed,
+    Object? paymentMethod = freezed,
+    Object? paidAmount = freezed,
+    Object? changeAmount = freezed,
   }) {
     return _then(_Order(
       id: id == freezed
@@ -336,6 +369,18 @@ class __$OrderCopyWithImpl<$Res> extends _$OrderEntityCopyWithImpl<$Res>
           ? _value.voidAt
           : voidAt // ignore: cast_nullable_to_non_nullable
               as DateTime?,
+      paymentMethod: paymentMethod == freezed
+          ? _value.paymentMethod
+          : paymentMethod // ignore: cast_nullable_to_non_nullable
+              as String,
+      paidAmount: paidAmount == freezed
+          ? _value.paidAmount
+          : paidAmount // ignore: cast_nullable_to_non_nullable
+              as double?,
+      changeAmount: changeAmount == freezed
+          ? _value.changeAmount
+          : changeAmount // ignore: cast_nullable_to_non_nullable
+              as double?,
     ));
   }
 }
@@ -360,7 +405,10 @@ class _$_Order implements _Order {
       @TimestampNullableConverter() this.updatedAt,
       this.voidReason,
       this.voidBy,
-      @TimestampNullableConverter() this.voidAt});
+      @TimestampNullableConverter() this.voidAt,
+      this.paymentMethod = 'Cash',
+      this.paidAmount,
+      this.changeAmount});
 
   factory _$_Order.fromJson(Map<String, dynamic> json) =>
       _$$_OrderFromJson(json);
@@ -403,10 +451,17 @@ class _$_Order implements _Order {
   @override
   @TimestampNullableConverter()
   final DateTime? voidAt;
+  @JsonKey()
+  @override
+  final String paymentMethod;
+  @override
+  final double? paidAmount;
+  @override
+  final double? changeAmount;
 
   @override
   String toString() {
-    return 'OrderEntity(id: $id, customerName: $customerName, customerPhone: $customerPhone, total: $total, orderDate: $orderDate, orderTime: $orderTime, status: $status, items: $items, queueNumber: $queueNumber, executorName: $executorName, executorId: $executorId, createdAt: $createdAt, updatedAt: $updatedAt, voidReason: $voidReason, voidBy: $voidBy, voidAt: $voidAt)';
+    return 'OrderEntity(id: $id, customerName: $customerName, customerPhone: $customerPhone, total: $total, orderDate: $orderDate, orderTime: $orderTime, status: $status, items: $items, queueNumber: $queueNumber, executorName: $executorName, executorId: $executorId, createdAt: $createdAt, updatedAt: $updatedAt, voidReason: $voidReason, voidBy: $voidBy, voidAt: $voidAt, paymentMethod: $paymentMethod, paidAmount: $paidAmount, changeAmount: $changeAmount)';
   }
 
   @override
@@ -435,28 +490,38 @@ class _$_Order implements _Order {
             const DeepCollectionEquality()
                 .equals(other.voidReason, voidReason) &&
             const DeepCollectionEquality().equals(other.voidBy, voidBy) &&
-            const DeepCollectionEquality().equals(other.voidAt, voidAt));
+            const DeepCollectionEquality().equals(other.voidAt, voidAt) &&
+            const DeepCollectionEquality()
+                .equals(other.paymentMethod, paymentMethod) &&
+            const DeepCollectionEquality()
+                .equals(other.paidAmount, paidAmount) &&
+            const DeepCollectionEquality()
+                .equals(other.changeAmount, changeAmount));
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      const DeepCollectionEquality().hash(id),
-      const DeepCollectionEquality().hash(customerName),
-      const DeepCollectionEquality().hash(customerPhone),
-      const DeepCollectionEquality().hash(total),
-      const DeepCollectionEquality().hash(orderDate),
-      const DeepCollectionEquality().hash(orderTime),
-      const DeepCollectionEquality().hash(status),
-      const DeepCollectionEquality().hash(items),
-      const DeepCollectionEquality().hash(queueNumber),
-      const DeepCollectionEquality().hash(executorName),
-      const DeepCollectionEquality().hash(executorId),
-      const DeepCollectionEquality().hash(createdAt),
-      const DeepCollectionEquality().hash(updatedAt),
-      const DeepCollectionEquality().hash(voidReason),
-      const DeepCollectionEquality().hash(voidBy),
-      const DeepCollectionEquality().hash(voidAt));
+  int get hashCode => Object.hashAll([
+        runtimeType,
+        const DeepCollectionEquality().hash(id),
+        const DeepCollectionEquality().hash(customerName),
+        const DeepCollectionEquality().hash(customerPhone),
+        const DeepCollectionEquality().hash(total),
+        const DeepCollectionEquality().hash(orderDate),
+        const DeepCollectionEquality().hash(orderTime),
+        const DeepCollectionEquality().hash(status),
+        const DeepCollectionEquality().hash(items),
+        const DeepCollectionEquality().hash(queueNumber),
+        const DeepCollectionEquality().hash(executorName),
+        const DeepCollectionEquality().hash(executorId),
+        const DeepCollectionEquality().hash(createdAt),
+        const DeepCollectionEquality().hash(updatedAt),
+        const DeepCollectionEquality().hash(voidReason),
+        const DeepCollectionEquality().hash(voidBy),
+        const DeepCollectionEquality().hash(voidAt),
+        const DeepCollectionEquality().hash(paymentMethod),
+        const DeepCollectionEquality().hash(paidAmount),
+        const DeepCollectionEquality().hash(changeAmount)
+      ]);
 
   @JsonKey(ignore: true)
   @override
@@ -486,7 +551,10 @@ abstract class _Order implements OrderEntity {
       @TimestampNullableConverter() DateTime? updatedAt,
       String? voidReason,
       String? voidBy,
-      @TimestampNullableConverter() DateTime? voidAt}) = _$_Order;
+      @TimestampNullableConverter() DateTime? voidAt,
+      String paymentMethod,
+      double? paidAmount,
+      double? changeAmount}) = _$_Order;
 
   factory _Order.fromJson(Map<String, dynamic> json) = _$_Order.fromJson;
 
@@ -526,6 +594,12 @@ abstract class _Order implements OrderEntity {
   @override
   @TimestampNullableConverter()
   DateTime? get voidAt;
+  @override
+  String get paymentMethod;
+  @override
+  double? get paidAmount;
+  @override
+  double? get changeAmount;
   @override
   @JsonKey(ignore: true)
   _$OrderCopyWith<_Order> get copyWith => throw _privateConstructorUsedError;
