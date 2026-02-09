@@ -38,6 +38,27 @@ class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
     _initOrderType();
   }
 
+  TimeOfDay _parseTime(String timeStr) {
+    if (timeStr.isEmpty) return TimeOfDay.now();
+    try {
+      // Handle "10:30", "10:30 PM", "22:30"
+      final parts = timeStr.trim().split(' ')[0].split(':');
+      if (parts.length >= 2) {
+        int hour = int.parse(parts[0]);
+        int minute = int.parse(parts[1]);
+        
+        final lowerStr = timeStr.toLowerCase();
+        if (lowerStr.contains('pm') && hour < 12) hour += 12;
+        if (lowerStr.contains('am') && hour == 12) hour = 0;
+        
+        return TimeOfDay(hour: hour, minute: minute);
+      }
+    } catch (e) {
+      debugPrint('Error parsing time: $timeStr');
+    }
+    return TimeOfDay.now();
+  }
+
   void _initOrderType() {
     if (widget.existingOrderId != null) {
       WidgetsBinding.instance?.addPostFrameCallback((_) {
@@ -47,6 +68,7 @@ class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
           _nameController.text = order.customerName;
           _phoneController.text = order.customerPhone ?? '';
           _selectedDate = order.orderDate;
+          _selectedTime = _parseTime(order.orderTime);
           ref.read(cartProvider.notifier).setCartItems(order.items);
           setState(() {});
         });
@@ -55,6 +77,9 @@ class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
       _nameController.text = "Offline - ${const Uuid().v4().substring(0,4)}";
     } else {
       _nameController.clear();
+      // Ensure defaults are fresh for new manual order if widget is reused
+      _selectedDate = DateTime.now();
+      _selectedTime = TimeOfDay.now();
     }
     setState(() {});
   }
