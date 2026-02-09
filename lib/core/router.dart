@@ -10,6 +10,7 @@ import '../../features/products/presentation/dashboard_screen.dart';
 import '../../features/orders/presentation/order_list_screen.dart';
 import '../../features/orders/presentation/order_page.dart';
 import '../../features/reports/presentation/report_screen.dart';
+import '../../features/orders/presentation/void_orders_screen.dart'; // Add this line
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/data/auth_repository.dart';
 import '../core/widgets/animated_splash_screen.dart';
@@ -76,6 +77,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/reports',
         builder: (context, state) => const ReportsScreen(),
+      ),
+      GoRoute(
+        path: '/void-orders',
+        builder: (context, state) => const VoidOrdersScreen(),
       ),
     ],
   );

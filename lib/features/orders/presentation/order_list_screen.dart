@@ -296,33 +296,26 @@ class _OrderListTab extends ConsumerWidget {
     }
   }
 
-  Future<void> _showDeleteConfirmation(BuildContext context, WidgetRef ref, OrderEntity order) async {
-    final confirmed = await showDialog<bool>(
+  Future<void> _showVoidDialog(BuildContext context, WidgetRef ref, OrderEntity order) async {
+    final result = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Hapus Pesanan'),
-        content: Text('Apakah Anda yakin ingin menghapus pesanan ${order.customerName}? Tindakan ini tidak dapat dibatalkan.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('BATAL'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(primary: Colors.red),
-            child: const Text('HAPUS'),
-          ),
-        ],
-      ),
+      barrierDismissible: false,
+      builder: (context) => _VoidOrderDialog(order: order),
     );
 
-    if (confirmed == true) {
+    if (result != null && result.isNotEmpty) {
       try {
         final messenger = ScaffoldMessenger.of(context);
-        await ref.read(orderRepositoryProvider).deleteOrder(order.id);
-        messenger.showSnackBar(const SnackBar(content: Text('Pesanan telah dihapus')));
+        final user = ref.read(authStateChangesProvider).value;
+        final voidBy = user?.displayName ?? user?.email ?? 'Unknown';
+
+        await ref.read(orderRepositoryProvider).voidOrder(order.id, result, voidBy);
+        messenger.showSnackBar(const SnackBar(
+          content: Text('Order berhasil divoid'),
+          backgroundColor: Colors.red,
+        ));
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menghapus: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal void order: $e')));
       }
     }
   }
@@ -353,7 +346,9 @@ class _OrderListTab extends ConsumerWidget {
 
     return allOrdersAsync.when(
       data: (orders) {
-        // Filter by status
+        // Filter by status (exclude void/batal if not in standard tabs)
+        // Tabs are Belum, Proses, Selesai. Batal won't match any unless we handled it.
+        // Assuming 'status' arg is one of the visible ones.
         final filtered = orders.where((o) => o.status == status).toList();
         
         // Sort by time/creation
@@ -536,9 +531,9 @@ class _OrderListTab extends ConsumerWidget {
                           ],
                           if (order.status != OrderStatus.selesai) ...[
                             ElevatedButton.icon(
-                              onPressed: () => _showDeleteConfirmation(context, ref, order),
-                              icon: const Icon(Icons.delete, size: 18),
-                              label: const Text('Hapus'),
+                              onPressed: () => _showVoidDialog(context, ref, order),
+                              icon: const Icon(Icons.delete_forever, size: 18),
+                              label: const Text('Void Order'),
                               style: ElevatedButton.styleFrom(
                                 primary: Colors.red,
                                 onPrimary: Colors.white,
@@ -566,6 +561,7 @@ class _OrderListTab extends ConsumerWidget {
       case OrderStatus.belum: return Colors.orange;
       case OrderStatus.proses: return Colors.blue;
       case OrderStatus.selesai: return Colors.green;
+      default: return Colors.grey;
     }
   }
 
@@ -574,7 +570,114 @@ class _OrderListTab extends ConsumerWidget {
       case OrderStatus.belum: return Icons.timer;
       case OrderStatus.proses: return Icons.sync;
       case OrderStatus.selesai: return Icons.check_circle;
+      default: return Icons.cancel;
     }
+  }
+}
+
+class _VoidOrderDialog extends StatefulWidget {
+  final OrderEntity order;
+  const _VoidOrderDialog({Key? key, required this.order}) : super(key: key);
+
+  @override
+  State<_VoidOrderDialog> createState() => _VoidOrderDialogState();
+}
+
+class _VoidOrderDialogState extends State<_VoidOrderDialog> {
+  String? _selectedReason;
+  late TextEditingController _reasonController;
+  final List<String> _reasons = [
+    "Salah input",
+    "Pesanan dibatalkan customer",
+    "Item tidak tersedia",
+    "Duplikat order",
+    "Lainnya"
+  ];
+  bool _isOther = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _reasonController = TextEditingController();
+  }
+
+  bool get _isValid {
+    if (_selectedReason == null) return false;
+    if (_isOther && _reasonController.text.trim().isEmpty) return false;
+    return true;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('Void Order', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text(
+            'Order ID: ${widget.order.id.substring(0, 8)}...', 
+            style: Theme.of(context).textTheme.bodySmall
+          ),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Pilih Alasan Void (Wajib):', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              value: _selectedReason,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+              items: _reasons.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedReason = value;
+                  _isOther = value == "Lainnya";
+                });
+              },
+              hint: const Text('Pilih alasan...'),
+            ),
+            if (_isOther) ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: _reasonController,
+                decoration: const InputDecoration(
+                  labelText: 'Masukkan alasan lainnya...',
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (_) => setState(() {}), // Trigger rebuild for validation
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('BATAL', style: TextStyle(color: Colors.grey)),
+        ),
+        ElevatedButton(
+          onPressed: _isValid
+              ? () {
+                  final finalReason = _isOther ? _reasonController.text.trim() : _selectedReason!;
+                  Navigator.pop(context, finalReason);
+                }
+              : null,
+          style: ElevatedButton.styleFrom(
+            primary: Colors.red,
+            onPrimary: Colors.white,
+          ),
+          child: const Text('KONFIRMASI VOID'),
+        ),
+      ],
+    );
   }
 }
 

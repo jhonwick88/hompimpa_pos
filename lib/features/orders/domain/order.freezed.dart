@@ -35,7 +35,10 @@ class _$OrderEntityTearOff {
       String? executorName,
       String? executorId,
       @TimestampNullableConverter() DateTime? createdAt,
-      @TimestampNullableConverter() DateTime? updatedAt}) {
+      @TimestampNullableConverter() DateTime? updatedAt,
+      String? voidReason,
+      String? voidBy,
+      @TimestampNullableConverter() DateTime? voidAt}) {
     return _Order(
       id: id,
       customerName: customerName,
@@ -50,6 +53,9 @@ class _$OrderEntityTearOff {
       executorId: executorId,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      voidReason: voidReason,
+      voidBy: voidBy,
+      voidAt: voidAt,
     );
   }
 
@@ -82,6 +88,10 @@ mixin _$OrderEntity {
   DateTime? get createdAt => throw _privateConstructorUsedError;
   @TimestampNullableConverter()
   DateTime? get updatedAt => throw _privateConstructorUsedError;
+  String? get voidReason => throw _privateConstructorUsedError;
+  String? get voidBy => throw _privateConstructorUsedError;
+  @TimestampNullableConverter()
+  DateTime? get voidAt => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -107,7 +117,10 @@ abstract class $OrderEntityCopyWith<$Res> {
       String? executorName,
       String? executorId,
       @TimestampNullableConverter() DateTime? createdAt,
-      @TimestampNullableConverter() DateTime? updatedAt});
+      @TimestampNullableConverter() DateTime? updatedAt,
+      String? voidReason,
+      String? voidBy,
+      @TimestampNullableConverter() DateTime? voidAt});
 }
 
 /// @nodoc
@@ -133,6 +146,9 @@ class _$OrderEntityCopyWithImpl<$Res> implements $OrderEntityCopyWith<$Res> {
     Object? executorId = freezed,
     Object? createdAt = freezed,
     Object? updatedAt = freezed,
+    Object? voidReason = freezed,
+    Object? voidBy = freezed,
+    Object? voidAt = freezed,
   }) {
     return _then(_value.copyWith(
       id: id == freezed
@@ -187,6 +203,18 @@ class _$OrderEntityCopyWithImpl<$Res> implements $OrderEntityCopyWith<$Res> {
           ? _value.updatedAt
           : updatedAt // ignore: cast_nullable_to_non_nullable
               as DateTime?,
+      voidReason: voidReason == freezed
+          ? _value.voidReason
+          : voidReason // ignore: cast_nullable_to_non_nullable
+              as String?,
+      voidBy: voidBy == freezed
+          ? _value.voidBy
+          : voidBy // ignore: cast_nullable_to_non_nullable
+              as String?,
+      voidAt: voidAt == freezed
+          ? _value.voidAt
+          : voidAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ));
   }
 }
@@ -209,7 +237,10 @@ abstract class _$OrderCopyWith<$Res> implements $OrderEntityCopyWith<$Res> {
       String? executorName,
       String? executorId,
       @TimestampNullableConverter() DateTime? createdAt,
-      @TimestampNullableConverter() DateTime? updatedAt});
+      @TimestampNullableConverter() DateTime? updatedAt,
+      String? voidReason,
+      String? voidBy,
+      @TimestampNullableConverter() DateTime? voidAt});
 }
 
 /// @nodoc
@@ -236,6 +267,9 @@ class __$OrderCopyWithImpl<$Res> extends _$OrderEntityCopyWithImpl<$Res>
     Object? executorId = freezed,
     Object? createdAt = freezed,
     Object? updatedAt = freezed,
+    Object? voidReason = freezed,
+    Object? voidBy = freezed,
+    Object? voidAt = freezed,
   }) {
     return _then(_Order(
       id: id == freezed
@@ -290,6 +324,18 @@ class __$OrderCopyWithImpl<$Res> extends _$OrderEntityCopyWithImpl<$Res>
           ? _value.updatedAt
           : updatedAt // ignore: cast_nullable_to_non_nullable
               as DateTime?,
+      voidReason: voidReason == freezed
+          ? _value.voidReason
+          : voidReason // ignore: cast_nullable_to_non_nullable
+              as String?,
+      voidBy: voidBy == freezed
+          ? _value.voidBy
+          : voidBy // ignore: cast_nullable_to_non_nullable
+              as String?,
+      voidAt: voidAt == freezed
+          ? _value.voidAt
+          : voidAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ));
   }
 }
@@ -311,7 +357,10 @@ class _$_Order implements _Order {
       this.executorName,
       this.executorId,
       @TimestampNullableConverter() this.createdAt,
-      @TimestampNullableConverter() this.updatedAt});
+      @TimestampNullableConverter() this.updatedAt,
+      this.voidReason,
+      this.voidBy,
+      @TimestampNullableConverter() this.voidAt});
 
   factory _$_Order.fromJson(Map<String, dynamic> json) =>
       _$$_OrderFromJson(json);
@@ -347,10 +396,17 @@ class _$_Order implements _Order {
   @override
   @TimestampNullableConverter()
   final DateTime? updatedAt;
+  @override
+  final String? voidReason;
+  @override
+  final String? voidBy;
+  @override
+  @TimestampNullableConverter()
+  final DateTime? voidAt;
 
   @override
   String toString() {
-    return 'OrderEntity(id: $id, customerName: $customerName, customerPhone: $customerPhone, total: $total, orderDate: $orderDate, orderTime: $orderTime, status: $status, items: $items, queueNumber: $queueNumber, executorName: $executorName, executorId: $executorId, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'OrderEntity(id: $id, customerName: $customerName, customerPhone: $customerPhone, total: $total, orderDate: $orderDate, orderTime: $orderTime, status: $status, items: $items, queueNumber: $queueNumber, executorName: $executorName, executorId: $executorId, createdAt: $createdAt, updatedAt: $updatedAt, voidReason: $voidReason, voidBy: $voidBy, voidAt: $voidAt)';
   }
 
   @override
@@ -375,7 +431,11 @@ class _$_Order implements _Order {
             const DeepCollectionEquality()
                 .equals(other.executorId, executorId) &&
             const DeepCollectionEquality().equals(other.createdAt, createdAt) &&
-            const DeepCollectionEquality().equals(other.updatedAt, updatedAt));
+            const DeepCollectionEquality().equals(other.updatedAt, updatedAt) &&
+            const DeepCollectionEquality()
+                .equals(other.voidReason, voidReason) &&
+            const DeepCollectionEquality().equals(other.voidBy, voidBy) &&
+            const DeepCollectionEquality().equals(other.voidAt, voidAt));
   }
 
   @override
@@ -393,7 +453,10 @@ class _$_Order implements _Order {
       const DeepCollectionEquality().hash(executorName),
       const DeepCollectionEquality().hash(executorId),
       const DeepCollectionEquality().hash(createdAt),
-      const DeepCollectionEquality().hash(updatedAt));
+      const DeepCollectionEquality().hash(updatedAt),
+      const DeepCollectionEquality().hash(voidReason),
+      const DeepCollectionEquality().hash(voidBy),
+      const DeepCollectionEquality().hash(voidAt));
 
   @JsonKey(ignore: true)
   @override
@@ -420,7 +483,10 @@ abstract class _Order implements OrderEntity {
       String? executorName,
       String? executorId,
       @TimestampNullableConverter() DateTime? createdAt,
-      @TimestampNullableConverter() DateTime? updatedAt}) = _$_Order;
+      @TimestampNullableConverter() DateTime? updatedAt,
+      String? voidReason,
+      String? voidBy,
+      @TimestampNullableConverter() DateTime? voidAt}) = _$_Order;
 
   factory _Order.fromJson(Map<String, dynamic> json) = _$_Order.fromJson;
 
@@ -453,6 +519,13 @@ abstract class _Order implements OrderEntity {
   @override
   @TimestampNullableConverter()
   DateTime? get updatedAt;
+  @override
+  String? get voidReason;
+  @override
+  String? get voidBy;
+  @override
+  @TimestampNullableConverter()
+  DateTime? get voidAt;
   @override
   @JsonKey(ignore: true)
   _$OrderCopyWith<_Order> get copyWith => throw _privateConstructorUsedError;

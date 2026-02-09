@@ -7,7 +7,7 @@ import 'order_item.dart';
 part 'order.freezed.dart';
 part 'order.g.dart';
 
-enum OrderStatus { belum, proses, selesai }
+enum OrderStatus { belum, proses, selesai, batal }
 
 @freezed
 class OrderEntity with _$OrderEntity {
@@ -26,6 +26,9 @@ class OrderEntity with _$OrderEntity {
     String? executorId, // ID of the user who processed the order
     @TimestampNullableConverter() DateTime? createdAt,
     @TimestampNullableConverter() DateTime? updatedAt,
+    String? voidReason,
+    String? voidBy,
+    @TimestampNullableConverter() DateTime? voidAt,
   }) = _Order;
 
   factory OrderEntity.fromJson(Map<String, dynamic> json) => _$OrderEntityFromJson(json);
@@ -44,6 +47,7 @@ class OrderEntity with _$OrderEntity {
       final statusStr = (json['Status'] ?? json['status'] ?? '').toString().toLowerCase();
       if (statusStr.contains('selesai')) normalized['status'] = 'selesai';
       else if (statusStr.contains('proses')) normalized['status'] = 'proses';
+      else if (statusStr.contains('batal') || statusStr.contains('void')) normalized['status'] = 'batal';
       else normalized['status'] = 'belum';
     }
     

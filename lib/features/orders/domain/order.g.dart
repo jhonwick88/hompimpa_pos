@@ -23,6 +23,9 @@ _$_Order _$$_OrderFromJson(Map<String, dynamic> json) => _$_Order(
       executorId: json['executorId'] as String?,
       createdAt: const TimestampNullableConverter().fromJson(json['createdAt']),
       updatedAt: const TimestampNullableConverter().fromJson(json['updatedAt']),
+      voidReason: json['voidReason'] as String?,
+      voidBy: json['voidBy'] as String?,
+      voidAt: const TimestampNullableConverter().fromJson(json['voidAt']),
     );
 
 Map<String, dynamic> _$$_OrderToJson(_$_Order instance) => <String, dynamic>{
@@ -41,10 +44,14 @@ Map<String, dynamic> _$$_OrderToJson(_$_Order instance) => <String, dynamic>{
           const TimestampNullableConverter().toJson(instance.createdAt),
       'updatedAt':
           const TimestampNullableConverter().toJson(instance.updatedAt),
+      'voidReason': instance.voidReason,
+      'voidBy': instance.voidBy,
+      'voidAt': const TimestampNullableConverter().toJson(instance.voidAt),
     };
 
 const _$OrderStatusEnumMap = {
   OrderStatus.belum: 'belum',
   OrderStatus.proses: 'proses',
   OrderStatus.selesai: 'selesai',
+  OrderStatus.batal: 'batal',
 };

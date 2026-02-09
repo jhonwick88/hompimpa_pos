@@ -14,6 +14,8 @@ abstract class OrderRepository {
   Future<void> updateOrderStatus(String orderId, OrderStatus newStatus, List<OrderItem> items, {String? executorName, String? executorId});
   Future<void> updateOrderItems(String orderId, List<OrderItem> items);
   Future<void> deleteOrder(String orderId);
+  Future<void> voidOrder(String orderId, String reason, String voidBy);
+  Future<void> bulkDeleteOrders(List<String> orderIds);
   Future<OrderEntity?> getOrder(String orderId);
 }
 
@@ -33,7 +35,7 @@ class FirestoreOrderRepository implements OrderRepository {
           final data = doc.data() as Map<String, dynamic>;
           baseOrders.add(OrderEntity.fromJsonRobust({...data, 'id': doc.id}));
         } catch (e) {
-          print("DEBUG: Failed to parse order \${doc.id}: \$e");
+          print("DEBUG: Failed to parse order ${doc.id}: $e");
         }
       }
 
@@ -162,6 +164,28 @@ class FirestoreOrderRepository implements OrderRepository {
   @override
   Future<void> deleteOrder(String orderId) async {
     await _firestore.collection('orders').doc(orderId).delete();
+  }
+
+  @override
+  Future<void> voidOrder(String orderId, String reason, String voidBy) async {
+    final orderRef = _firestore.collection('orders').doc(orderId);
+    await orderRef.update({
+      'status': 'batal',
+      'Status': 'Batal',
+      'voidReason': reason,
+      'voidBy': voidBy,
+      'voidAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+  
+  @override
+  Future<void> bulkDeleteOrders(List<String> orderIds) async {
+    final batch = _firestore.batch();
+    for (final id in orderIds) {
+      batch.delete(_firestore.collection('orders').doc(id));
+    }
+    await batch.commit();
   }
 
   @override

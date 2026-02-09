@@ -13,6 +13,8 @@ import '../../auth/presentation/auth_controller.dart';
 import '../../../core/enums/user_role.dart';
 import '../../auth/domain/user_model.dart';
 import '../domain/product.dart';
+import '../../orders/domain/order.dart';
+
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
 
@@ -183,6 +185,43 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 12),
+                InkWell(
+                  onTap: () => context.push('/void-orders'),
+                  child: Card(
+                    elevation: 8,
+                    shadowColor: Colors.red.withOpacity(0.5),
+                    color: Colors.red[700],
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                           Column(
+                             crossAxisAlignment: CrossAxisAlignment.start,
+                             children: [
+                               const Text('Void / Batal (Hari Ini)', style: TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.bold)),
+                               const SizedBox(height: 4),
+                               ordersAsync.when(
+                                 data: (orders) {
+                                   final voidCount = orders.where((o) => o.status == OrderStatus.batal).length;
+                                   return Text(
+                                     '$voidCount Order',
+                                     style: const TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
+                                   );
+                                 },
+                                 loading: () => const Skeleton(width: 40, height: 24),
+                                 error: (_, __) => const Text('-', style: TextStyle(color: Colors.white)),
+                               ),
+                             ],
+                           ),
+                           const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 16),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 24),
               ],
