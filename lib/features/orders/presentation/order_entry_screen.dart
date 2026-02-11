@@ -500,6 +500,17 @@ class _ProductGrid extends ConsumerWidget {
             
             return GestureDetector(
               onTap: () {
+                if (product.stock <= 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Stok ${product.name} habis!'),
+                      backgroundColor: Colors.red,
+                      duration: const Duration(seconds: 1),
+                    ),
+                  );
+                  return;
+                }
+
                 if (isFood) {
                   showDialog(
                     context: context,
