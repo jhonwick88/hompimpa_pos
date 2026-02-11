@@ -330,13 +330,39 @@ class _ProductGrid extends ConsumerWidget {
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: () {
+                          print('DEBUG: Tablet Tapped ${product.name}, Stock: ${product.stock}');
+
+                          if (product.stock <= 0) {
+                             ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                             ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Stok ${product.name} habis!', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                backgroundColor: Colors.red,
+                                duration: const Duration(seconds: 2),
+                                behavior: SnackBarBehavior.floating,
+                                margin: const EdgeInsets.all(20),
+                              ),
+                            );
+                            return;
+                          }
+
                           if (isFood) {
                             showDialog(
                               context: context,
                               builder: (context) => ProductOptionDialog(product: product),
                             );
                           } else {
-                            ref.read(cartProvider.notifier).addItem(product, 1);
+                            try {
+                              ref.read(cartProvider.notifier).addItem(product, 1);
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(e.toString().replaceAll('Exception: ', '')),
+                                  behavior: SnackBarBehavior.floating,
+                                  margin: const EdgeInsets.all(20),
+                                ),
+                              );
+                            }
                           }
                         },
                       ),

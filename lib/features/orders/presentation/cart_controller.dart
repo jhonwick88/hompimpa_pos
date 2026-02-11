@@ -38,6 +38,13 @@ class CartController extends StateNotifier<List<OrderItem>> {
       }
     }
 
+    // Check total stock for this product across all variations
+    final totalQtyInCart = state.where((i) => i.productId == product.id).fold<int>(0, (sum, i) => sum + i.qty);
+    
+    if (totalQtyInCart + qty > product.stock) {
+      throw Exception('Stok tidak cukup! (Total di keranjang: $totalQtyInCart, Stok: ${product.stock})');
+    }
+
     if (existingIndex != -1) {
       final existingItem = state[existingIndex];
       // Note: If toppings match, price should match too.

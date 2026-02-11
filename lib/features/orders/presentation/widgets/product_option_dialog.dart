@@ -151,7 +151,15 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
                   Text('$_qty', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   IconButton(
                     icon: const Icon(Icons.add_circle_outline),
-                    onPressed: () => setState(() => _qty++),
+                    onPressed: () {
+                      if (_qty + 1 > widget.product.stock) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Stok tidak cukup! Maks: ${widget.product.stock}')),
+                        );
+                        return;
+                      }
+                      setState(() => _qty++);
+                    },
                   ),
                 ],
               ),
@@ -385,15 +393,21 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
                     }
                 });
 
-                ref.read(cartProvider.notifier).addItem(
-                  widget.product,
-                  _qty,
-                  level: _level.toInt().toString(),
-                  sambal: _sambal,
-                  note: _noteController.text.isNotEmpty ? _noteController.text : null,
-                  toppings: finalToppings.isNotEmpty ? finalToppings : null,
-                );
-                Navigator.pop(context);
+                try {
+                  ref.read(cartProvider.notifier).addItem(
+                    widget.product,
+                    _qty,
+                    level: _level.toInt().toString(),
+                    sambal: _sambal,
+                    note: _noteController.text.isNotEmpty ? _noteController.text : null,
+                    toppings: finalToppings.isNotEmpty ? finalToppings : null,
+                  );
+                  Navigator.pop(context);
+                } catch (e) {
+                   ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+                   );
+                }
               },
               child: const Text('SUBMIT'),
             ),

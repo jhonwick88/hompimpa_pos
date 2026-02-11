@@ -29,7 +29,13 @@ class AuthRepository {
   Stream<AppUser?> authStateChanges() {
     return _auth.authStateChanges().asyncMap((firebaseUser) async {
       if (firebaseUser == null) return null;
-      return await _getUserData(firebaseUser.uid);
+      final user = await _getUserData(firebaseUser.uid);
+      if (user == null) {
+        // User exists in Auth but not in Firestore -> Force Logout
+        await _auth.signOut(); 
+        return null;
+      }
+      return user;
     });
   }
 
@@ -70,17 +76,11 @@ class AuthRepository {
       if (userCredential.user != null) {
         final user = userCredential.user!;
         
-        // Check if user exists, if not create with default 'user' role
+        // CHECK Firestore ONLY
         final doc = await _firestore.collection('users').doc(user.uid).get();
         if (!doc.exists) {
-          final newUser = AppUser(
-            uid: user.uid,
-            email: user.email ?? '',
-            displayName: user.displayName,
-            role: UserRole.user, // Default role
-          );
-          await _firestore.collection('users').doc(user.uid).set(newUser.toMap());
-          return newUser;
+           await signOut(); // Force signout immediately
+           throw Exception('Akses Ditolak: Akun Anda tidak terdaftar di sistem.');
         } else {
            return AppUser.fromMap(doc.data()!, user.uid);
         }

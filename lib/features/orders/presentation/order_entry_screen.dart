@@ -498,32 +498,43 @@ class _ProductGrid extends ConsumerWidget {
             final product = products[index];
             final isFood = product.category == 'makanan';
             
-            return GestureDetector(
-              onTap: () {
-                if (product.stock <= 0) {
+            return Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: () {
+                  print('DEBUG: Tapped ${product.name}, Stock: ${product.stock}'); // Changed to print for visibility
+                  
+                  if (product.stock <= 0) {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Stok ${product.name} habis!'),
+                      content: Text('Stok ${product.name} habis!', style: const TextStyle(fontWeight: FontWeight.bold)),
                       backgroundColor: Colors.red,
-                      duration: const Duration(seconds: 1),
+                      duration: const Duration(seconds: 2),
+                      behavior: SnackBarBehavior.floating,
+                      margin: const EdgeInsets.all(20),
                     ),
                   );
                   return;
-                }
+                  }
 
-                if (isFood) {
-                  showDialog(
-                    context: context,
-                    builder: (context) => ProductOptionDialog(product: product),
-                  );
-                } else {
-                  ref.read(cartProvider.notifier).addItem(product, 1);
-                }
-              },
-              child: Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                clipBehavior: Clip.antiAlias,
+                  if (isFood) {
+                    showDialog(
+                      context: context,
+                      builder: (context) => ProductOptionDialog(product: product),
+                    );
+                  } else {
+                    try {
+                      ref.read(cartProvider.notifier).addItem(product, 1);
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+                      );
+                    }
+                  }
+                },
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
