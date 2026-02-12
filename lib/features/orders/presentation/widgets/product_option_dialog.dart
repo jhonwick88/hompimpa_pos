@@ -108,6 +108,12 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
        unitPrice += topping.price * qty;
     });
 
+    // Spicy Level Charge
+    // "Level Pedas Mie atau Pangsit adalah 6 atau 7 maka Harga + 1000"
+    if ((isMie || widget.product.category.toLowerCase().contains('pangsit') || widget.product.name.toLowerCase().contains('pangsit')) && _level >= 6) {
+      unitPrice += 1000;
+    }
+
     return unitPrice * _qty;
   }
 
@@ -198,7 +204,7 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
                     value: _level,
                     min: 0,
                     max: 7,
-                    divisions: 6,
+                    divisions: 7,
                     label: _level.toInt().toString(),
                     onChanged: (v) => setState(() => _level = v),
                   ),

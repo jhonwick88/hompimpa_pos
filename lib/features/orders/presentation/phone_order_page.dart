@@ -455,7 +455,8 @@ class _MobileCartView extends ConsumerWidget {
 
                             if (existingOrderId != null && existingOrder != null) {
                               try {
-                                await ref.read(cartProvider.notifier).updateOrder(
+                                final CartController controller = ref.read(cartProvider.notifier);
+                                await controller.updateOrder(
                                       ref.read(orderRepositoryProvider),
                                       ref.read(toppingRepositoryProvider), // Added
                                       existingOrder!,
@@ -479,7 +480,8 @@ class _MobileCartView extends ConsumerWidget {
                               }
                             } else {
                               try {
-                                await ref.read(cartProvider.notifier).submitOrder(
+                                final CartController controller = ref.read(cartProvider.notifier);
+                                await controller.submitOrder(
                                       ref.read(orderRepositoryProvider),
                                       ref.read(toppingRepositoryProvider), // Added
                                       nameController.text.trim(),

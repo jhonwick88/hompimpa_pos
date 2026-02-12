@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hompimpa_pos/features/orders/presentation/cart_controller.dart';
+import 'package:hompimpa_pos/features/orders/presentation/cart_controller.dart' as cc;
 import 'package:hompimpa_pos/features/orders/data/order_repository.dart';
 import 'package:hompimpa_pos/features/products/data/topping_repository.dart';
 import 'package:hompimpa_pos/features/orders/presentation/widgets/pos_action_buttons.dart';
@@ -42,8 +42,8 @@ class TabletCartPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cart = ref.watch(cartProvider);
-    final cartTotal = ref.watch(cartTotalProvider);
+    final cart = ref.watch(cc.cartProvider);
+    final cartTotal = ref.watch(cc.cartTotalProvider);
     bool isNameFilled = nameController.text.trim().isNotEmpty;
 
     return Container(
@@ -175,7 +175,10 @@ class TabletCartPanel extends ConsumerWidget {
                               ),
                               IconButton(
                                 icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
-                                onPressed: () => ref.read(cartProvider.notifier).removeItem(item),
+                                onPressed: () {
+                                final cc.CartController controller = ref.read(cc.cartProvider.notifier);
+                                controller.removeItem(item);
+                              },
                               ),
                             ],
                           ),
@@ -222,7 +225,8 @@ class TabletCartPanel extends ConsumerWidget {
 
                             if (existingOrderId != null && existingOrder != null) {
                               try {
-                                await ref.read(cartProvider.notifier).updateOrder(
+                                final cc.CartController controller = ref.read(cc.cartProvider.notifier);
+                                await controller.updateOrder(
                                       ref.read(orderRepositoryProvider),
                                       ref.read(toppingRepositoryProvider), // Added
                                       existingOrder!,
@@ -244,7 +248,8 @@ class TabletCartPanel extends ConsumerWidget {
                                 ));
                               }
                             } else {
-                              await ref.read(cartProvider.notifier).submitOrder(
+                              final cc.CartController controller = ref.read(cc.cartProvider.notifier);
+                              await controller.submitOrder(
                                     ref.read(orderRepositoryProvider),
                                     ref.read(toppingRepositoryProvider), // Added
                                     nameController.text.trim(),

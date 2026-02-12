@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
 import 'package:hompimpa_pos/features/products/presentation/product_provider.dart';
-import 'package:hompimpa_pos/features/orders/presentation/cart_controller.dart';
+import 'package:hompimpa_pos/features/orders/presentation/cart_controller.dart' as cc;
 import 'package:hompimpa_pos/features/products/domain/product.dart';
 import 'package:hompimpa_pos/features/orders/data/order_repository.dart';
 import 'package:hompimpa_pos/features/orders/presentation/widgets/tablet_cart_panel.dart';
@@ -55,7 +55,8 @@ class _TabletPortraitOrderPageState extends ConsumerState<TabletPortraitOrderPag
   void _initOrderType() {
     // 1. Always clear cart first
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      ref.read(cartProvider.notifier).clearCart();
+      final cc.CartController controller = ref.read(cc.cartProvider.notifier);
+      controller.clearCart();
       
       // 2. Fetch if editing
       if (widget.existingOrderId != null) {
@@ -68,7 +69,8 @@ class _TabletPortraitOrderPageState extends ConsumerState<TabletPortraitOrderPag
           _selectedDate = order.orderDate;
           _selectedTime = _parseTime(order.orderTime);
           _existingOrder = order;
-          ref.read(cartProvider.notifier).setCartItems(order.items);
+          final cc.CartController controller = ref.read(cc.cartProvider.notifier);
+          controller.setCartItems(order.items);
           setState(() {
             _cartExpanded = true;
           });
@@ -277,7 +279,7 @@ class _TabletPortraitOrderPageState extends ConsumerState<TabletPortraitOrderPag
                           const SizedBox(height: 4),
                           Consumer(
                             builder: (context, ref, _) {
-                              final cart = ref.watch(cartProvider);
+                              final cart = ref.watch(cc.cartProvider);
                               if (cart.isEmpty) return const SizedBox.shrink();
                               return Container(
                                 padding: const EdgeInsets.all(4),
@@ -436,7 +438,7 @@ class _ProductGrid extends ConsumerWidget {
                               builder: (context) => ProductOptionDialog(product: product),
                             );
                           } else {
-                            ref.read(cartProvider.notifier).addItem(product, 1);
+                            ref.read(cc.cartProvider.notifier).addItem(product, 1);
                           }
                         },
                       ),

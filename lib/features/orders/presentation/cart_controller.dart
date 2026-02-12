@@ -8,6 +8,7 @@ import '../../products/domain/topping.dart';
 import '../../products/data/topping_repository.dart';
 import 'package:collection/collection.dart';
 
+// Provider definition
 final cartProvider = StateNotifierProvider<CartController, List<OrderItem>>((ref) {
   return CartController();
 });
@@ -36,6 +37,18 @@ class CartController extends StateNotifier<List<OrderItem>> {
       for (var t in toppings) {
         unitPrice += t.price;
       }
+    }
+    // Spicy Level Charge
+    // Only applies if product is Mie/Pangsit and level >= 6
+    if (level != null && (int.tryParse(level) ?? 0) >= 6) {
+       final isMiePangsit = product.category.toLowerCase().contains('mie') || 
+                            product.name.toLowerCase().contains('mie') ||
+                            product.category.toLowerCase().contains('pangsit') ||
+                            product.name.toLowerCase().contains('pangsit');
+       
+       if (isMiePangsit) {
+         unitPrice += 1000;
+       }
     }
 
     // Check total stock for this product across all variations

@@ -14,6 +14,8 @@ import '../../../core/enums/user_role.dart';
 import '../../auth/domain/user_model.dart';
 import '../domain/product.dart';
 import '../../orders/domain/order.dart';
+import 'package:uuid/uuid.dart';
+import '../domain/topping.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -58,7 +60,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final authState = ref.watch(authStateChangesProvider);
     final sales = ref.watch(todaysSalesProvider);
     final ordersAsync = ref.watch(todaysOrdersProvider);
+
     final productsAsync = ref.watch(productListProvider);
+    final toppingsAsync = ref.watch(toppingListProvider);
     final isTablet = Responsive.isTablet(context);
 
     // Random-ish but stable colors for summary cards
@@ -126,7 +130,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           ],
         ),
-        body: Padding(
+        body: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -225,6 +229,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
                 const SizedBox(height: 24),
               ],
+              if(authState.value?.role == UserRole.dev) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 50,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _showAddProductDialog(context, ref),
+                    icon: const Icon(Icons.add_box),
+                    label: const Text('TAMBAH PRODUK BARU'),
+                    style: ElevatedButton.styleFrom(
+                      primary: Colors.green[700],
+                      onPrimary: Colors.white,
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
               Text(
                 'Stok Produk',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
@@ -232,8 +254,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               const SizedBox(height: 12),
               
               // Product Stock List
-              Expanded(
-                child: productsAsync.when(
+              productsAsync.when(
                   data: (products) {
                     if (products.isEmpty) {
                       return const Center(child: Text('Belum ada produk'));
@@ -264,6 +285,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         }
                         
                         return GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
                           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: crossAxisCount,
                             childAspectRatio: 0.85,
@@ -419,7 +442,75 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                   error: (e, _) => Center(child: Text('Error: $e')),
                 ),
+
+              const SizedBox(height: 32),
+              Text(
+                'Stok Topping',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
+              const SizedBox(height: 12),
+
+              // Topping Stock List
+              toppingsAsync.when(
+                data: (toppings) {
+                   if (toppings.isEmpty) {
+                      return const Center(child: Text('Belum ada topping'));
+                   }
+                   
+                   return GridView.builder(
+                     physics: const NeverScrollableScrollPhysics(),
+                     shrinkWrap: true,
+                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2, // Keep it simple for headers
+                        childAspectRatio: 1.6,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                     ),
+                     itemCount: toppings.length,
+                     itemBuilder: (context, index) {
+                        final topping = toppings[index];
+                        return Card(
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          color: Colors.amber[50], // Distinguishable color
+                          child: InkWell(
+                             onTap: () {
+                                if (ref.read(authStateChangesProvider).value?.role == UserRole.dev) {
+                                  _showUpdateToppingStockDialog(context, ref, topping);
+                                }
+                             },
+                             borderRadius: BorderRadius.circular(12),
+                             child: Padding(
+                               padding: const EdgeInsets.all(12.0),
+                               child: Column(
+                                 crossAxisAlignment: CrossAxisAlignment.start,
+                                 mainAxisAlignment: MainAxisAlignment.center,
+                                 children: [
+                                   Text(
+                                     topping.name, 
+                                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                     maxLines: 1, overflow: TextOverflow.ellipsis
+                                   ),
+                                   const SizedBox(height: 4),
+                                   Row(
+                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                     children: [
+                                       Text('Stok: ${topping.stock}'),
+                                       Text('Rp ${topping.price.toStringAsFixed(0)}', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                                     ],
+                                   ),
+                                 ],
+                               ),
+                             ),
+                          ),
+                        );
+                     },
+                   );
+                },
+                loading: () => const Skeleton(width: double.infinity, height: 100),
+                error: (e, _) => Text('Error loading toppings: $e'),
+              ),
+              const SizedBox(height: 32), // Bottom padding
             ],
           ),
         ),
@@ -435,6 +526,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               onTap: () => context.push('/entry'),
             ),
             if(authState.value?.role == UserRole.dev) ...[
+              SpeedDialChild(
+                child: const Icon(Icons.add),
+                label: 'Tambah Produk',
+                onTap: () => _showAddProductDialog(context, ref),
+              ),
               SpeedDialChild(
                 child: const Icon(Icons.analytics),
                 label: 'Laporan Penjualan',
@@ -498,6 +594,165 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   );
                   Navigator.pop(contextDialog);
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Stock updated successfully')));
+                } catch (e) {
+                  Navigator.pop(contextDialog);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update stock: $e')));
+                }
+              },
+              child: const Text('Update'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  void _showAddProductDialog(BuildContext context, WidgetRef ref) {
+    final nameController = TextEditingController();
+    final priceController = TextEditingController();
+    final stockController = TextEditingController();
+    final imageUrlController = TextEditingController(text: 'assets/images/logo.png'); // Default per request
+    String category = 'makanan'; // Default
+
+    showDialog(
+      context: context,
+      builder: (contextDialog) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Tambah Produk Baru'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(labelText: 'Nama Produk'),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      value: category,
+                      items: const [
+                        DropdownMenuItem(value: 'makanan', child: Text('Makanan')),
+                        DropdownMenuItem(value: 'minuman', child: Text('Minuman')),
+                        DropdownMenuItem(value: 'snack', child: Text('Snack')),
+                      ],
+                      onChanged: (v) => setState(() => category = v!),
+                      decoration: const InputDecoration(labelText: 'Kategori'),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: priceController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'Harga (Rp)'),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: stockController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'Stok Awal'),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: imageUrlController,
+                      decoration: const InputDecoration(labelText: 'Image URL (Assets/Network)'),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text('Status Active: TRUE (Default)', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(contextDialog),
+                  child: const Text('Batal'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (nameController.text.isEmpty || priceController.text.isEmpty) {
+                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nama dan Harga wajib diisi')));
+                       return;
+                    }
+
+                    try {
+                      final title = nameController.text;
+                      final price = double.tryParse(priceController.text) ?? 0;
+                      final stock = int.tryParse(stockController.text) ?? 0;
+                      final imageUrl = imageUrlController.text;
+                      
+                      final newProduct = Product(
+                        id: const Uuid().v4(),
+                        name: title,
+                        category: category,
+                        price: price,
+                        stock: stock,
+                        imageUrl: imageUrl.isEmpty ? null : imageUrl,
+                        isActive: true, // Default per request
+                      );
+                      
+                      await ref.read(productRepositoryProvider).addProduct(newProduct);
+                      Navigator.pop(contextDialog);
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Produk berhasil ditambahkan')));
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menambah produk: $e')));
+                    }
+                  },
+                  child: const Text('Simpan'),
+                ),
+              ],
+            );
+          }
+        );
+      },
+    );
+  }
+
+  void _showUpdateToppingStockDialog(BuildContext context, WidgetRef ref, Topping topping) {
+    final stockController = TextEditingController(text: topping.stock.toString());
+    final reasonController = TextEditingController(text: 'Manual Update');
+
+    showDialog(
+      context: context,
+      builder: (contextDialog) {
+        return AlertDialog(
+          title: Text('Update Stock Topping: ${topping.name}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: stockController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'New Stock'),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: reasonController,
+                decoration: const InputDecoration(labelText: 'Reason'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(contextDialog),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final newStock = int.tryParse(stockController.text);
+                if (newStock == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid stock number')));
+                  return;
+                }
+
+                try {
+                  final user = ref.read(authStateChangesProvider).value;
+                  await ref.read(toppingRepositoryProvider).updateStock(
+                    topping.id,
+                    newStock,
+                    reason: reasonController.text,
+                    username: user?.displayName ?? 'Admin',
+                  );
+                  Navigator.pop(contextDialog);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Stock topping updated successfully')));
                 } catch (e) {
                   Navigator.pop(contextDialog);
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update stock: $e')));

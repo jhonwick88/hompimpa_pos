@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
 import 'package:hompimpa_pos/features/products/presentation/product_provider.dart';
-import 'package:hompimpa_pos/features/orders/presentation/cart_controller.dart';
+import 'package:hompimpa_pos/features/orders/presentation/cart_controller.dart' as cc;
 import 'package:hompimpa_pos/features/products/domain/product.dart';
 import 'package:hompimpa_pos/features/orders/presentation/widgets/tablet_cart_panel.dart';
 import 'package:hompimpa_pos/features/orders/data/order_repository.dart';
@@ -81,7 +81,8 @@ class _TabletOrderPageState extends ConsumerState<TabletOrderPage> {
   void _initOrderType() {
     // 1. Always clear cart first
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      ref.read(cartProvider.notifier).clearCart();
+      final cc.CartController controller = ref.read(cc.cartProvider.notifier);
+      controller.clearCart();
       
       // 2. Fetch if editing
       if (widget.existingOrderId != null) {
@@ -94,7 +95,8 @@ class _TabletOrderPageState extends ConsumerState<TabletOrderPage> {
           _selectedDate = order.orderDate;
           _selectedTime = _parseTime(order.orderTime);
           _existingOrder = order;
-          ref.read(cartProvider.notifier).setCartItems(order.items);
+          final cc.CartController controller = ref.read(cc.cartProvider.notifier);
+          controller.setCartItems(order.items);
           setState(() {});
         } else if (mounted) {
              ScaffoldMessenger.of(context).showSnackBar(
@@ -353,7 +355,7 @@ class _ProductGrid extends ConsumerWidget {
                             );
                           } else {
                             try {
-                              ref.read(cartProvider.notifier).addItem(product, 1);
+                              ref.read(cc.cartProvider.notifier).addItem(product, 1);
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(

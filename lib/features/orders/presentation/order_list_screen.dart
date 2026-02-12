@@ -786,7 +786,7 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
                   value: _level,
                   min: 0,
                   max: 7,
-                  divisions: 6,
+                  divisions: 7,
                   label: _level.toInt().toString(),
                   onChanged: (v) => setState(() => _level = v),
                 ),
@@ -811,8 +811,30 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
         ),
         ElevatedButton(
           onPressed: () {
+            // Recalculate price based on new level
+            double newPrice = widget.item.price;
+            
+            // Check if it was already elevated? 
+            // Better to reset to base product price if possible, but we don't have Product object here easily.
+            // Assumption: existing price MIGHT have included the +1000.
+            // We need to know if it HAD +1000 and if it NEEDS +1000 now.
+            
+            // Heuristic: Check old level vs new level.
+            final oldLevel = double.tryParse(widget.item.level ?? '0') ?? 0;
+            final newLvl = _level;
+            final isMiePangsit = widget.item.productName.toLowerCase().contains('mie') || widget.item.productName.toLowerCase().contains('pangsit'); // Approximation since category unknown
+
+            if (isMiePangsit) {
+              if (oldLevel < 6 && newLvl >= 6) {
+                 newPrice += 1000; 
+              } else if (oldLevel >= 6 && newLvl < 6) {
+                 newPrice -= 1000;
+              }
+            }
+
             final updated = widget.item.copyWith(
               qty: _qty,
+              price: newPrice, // Update price
               level: isFood ? _level.toInt().toString() : null,
               sambal: isFood ? _sambal : null,
               note: _noteController.text.isNotEmpty ? _noteController.text : null,
