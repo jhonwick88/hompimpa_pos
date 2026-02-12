@@ -36,12 +36,15 @@
   <!-- Meta viewport removed to avoid conflict with Flutter Web -->
   <link rel="stylesheet" type="text/css" href="splash/style.css">
 
-  <!-- Firebase JS SDKs (Commented out as we use FlutterFire plugins) -->
-  <!-- 
+  <!-- Firebase JS SDKs (Required for FlutterFire v1.x on Web) -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-  -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-messaging.js"></script>
+
+  <!-- PROD: In production, we might need these if not using pure FlutterFire web implementation, 
+       but current FlutterFire versions bundle necessary JS or use dynamic imports. 
+       Keeping cleaner to avoid conflicts. -->
 </head>
 
 <body>
@@ -74,6 +77,13 @@
     if ('serviceWorker' in navigator) {
       // Service workers are supported. Use them.
       window.addEventListener('load', function () {
+        // Explicitly register Firebase Messaging Service Worker
+        // This is needed because sometimes flutter_service_worker.js might takeover or not handle FCM
+        // correctly if not explicitly registered in some browser environments.
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('firebase-messaging-sw.js');
+        }
+
         // Wait for registration to finish before dropping the <script> tag.
         // Otherwise, the browser will load the script multiple times,
         // potentially different versions.

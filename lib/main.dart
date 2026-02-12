@@ -88,8 +88,8 @@ class _HompimpaAppState extends ConsumerState<HompimpaApp> {
   }
 
   Future<void> _initNotifications() async {
-    // Check if Android and NOT web
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+    // Initialize for Android and Web
+    if (kIsWeb || defaultTargetPlatform == TargetPlatform.android) {
         final notificationService = ref.read(notificationServiceProvider);
         await notificationService.initialize((payload) {
              // Navigate to order list
@@ -97,7 +97,7 @@ class _HompimpaAppState extends ConsumerState<HompimpaApp> {
              ref.read(routerProvider).go('/orders'); 
         });
         
-        // Start monitoring
+        // Start monitoring (polling still useful as backup or for real-time data fetch)
         ref.read(orderNotificationControllerProvider).startMonitoring();
     }
   }
