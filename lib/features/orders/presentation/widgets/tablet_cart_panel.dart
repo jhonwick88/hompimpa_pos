@@ -158,11 +158,11 @@ class TabletCartPanel extends ConsumerWidget {
                         ),
                         child: ListTile(
                           title: Text(
-                            item.level != null ? '${item.productName} - Lvl ${item.level} (${item.sambal})' : item.productName,
+                            item.level != null ? '${item.productName} - Lvl ${item.level} (${item.sambal}) - ${item.qty}x' : item.productName + ' - ${item.qty}x',
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text(
-                            '${item.qty}x @ Rp ${item.price.toStringAsFixed(0)} ${item.note != null ? '(${item.note})' : ''}\n${item.toppings != null && item.toppings!.isNotEmpty ? '+ ${item.toppings!.map((t) => t.name).join(", ")}' : ''}',
+                            '${item.note != null ? '(${item.note})' : ''}\n${item.toppings != null && item.toppings!.isNotEmpty ? '+ ${item.toppings!.map((t) => t.name).join(", ")}' : ''}',
                             style: TextStyle(color: Colors.orange[800], fontSize: 13),
                           ),
                           isThreeLine: true,

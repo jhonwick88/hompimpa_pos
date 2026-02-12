@@ -12,8 +12,23 @@ class LoginScreen extends ConsumerWidget {
     ref.listen<AsyncValue<void>>(authControllerProvider, (previous, state) {
       state.maybeWhen(
         error: (error, stackTrace) {
+          String message = error.toString();
+          
+          // Handle specific errors for better UX
+          if (message.contains('ApiException: 10')) {
+            message = 'Gagal Login: Konfigurasi Salah (Developer Error). Cek SHA-1 & google-services.json.';
+          } else if (message.contains('network_error')) {
+             message = 'Koneksi Bermasalah. Cek internet Anda.';
+          } else if (message.contains('sign_in_canceled')) {
+             message = 'Login dibatalkan.';
+          }
+           
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $error')),
+            SnackBar(
+              content: Text(message),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
           );
         },
         orElse: () {},

@@ -196,7 +196,7 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
                   ),
                   child: Slider(
                     value: _level,
-                    min: 1,
+                    min: 0,
                     max: 7,
                     divisions: 6,
                     label: _level.toInt().toString(),

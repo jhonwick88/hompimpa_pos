@@ -17,7 +17,7 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
       await _authRepository.signInWithGoogle();
       state = const AsyncData(null);
     } catch (e, st) {
-      state = AsyncError(e, stackTrace: st);
+      state = AsyncError(e, st);
     }
   }
 
@@ -27,7 +27,7 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
       await _authRepository.signOut();
       state = const AsyncData(null);
     } catch (e, st) {
-      state = AsyncError(e, stackTrace: st);
+      state = AsyncError(e, st);
     }
   }
 }

@@ -23,7 +23,7 @@ class NotificationService {
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
     // iOS/macOS settings (default)
-    const IOSInitializationSettings initializationSettingsIOS = IOSInitializationSettings();
+    const DarwinInitializationSettings initializationSettingsIOS = DarwinInitializationSettings();
 
     const InitializationSettings initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
@@ -32,7 +32,8 @@ class NotificationService {
 
     await flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
-      onSelectNotification: (String? payload) async {
+      onDidReceiveNotificationResponse: (NotificationResponse response) async {
+        final String? payload = response.payload;
         if (payload != null) {
           onNotificationClick?.call(payload);
         }
@@ -99,7 +100,7 @@ class NotificationService {
         flutterLocalNotificationsPlugin
             .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
 
-    await androidImplementation?.requestPermission();
+    await androidImplementation?.requestNotificationsPermission();
   }
 
   Future<void> showOrderNotification(String orderId, String title, double total, {String? body}) async {

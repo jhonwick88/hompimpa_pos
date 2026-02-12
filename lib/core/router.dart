@@ -21,10 +21,10 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/splash',
     refreshListenable: GoRouterRefreshStream(authRepository.authStateChanges()),
-    redirect: (state) {
+    redirect: (context, state) {
        final isLoggedIn = FirebaseAuth.instance.currentUser != null;
-       final isLoggingIn = state.location == '/login';
-       final isSplash = state.location == '/splash';
+       final isLoggingIn = state.uri.toString() == '/login';
+       final isSplash = state.uri.toString() == '/splash';
        
        if (!isLoggedIn) {
          if (isSplash) return null; 
@@ -60,14 +60,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/entry',
         builder: (context, state) {
-          final isQuickOrder = state.queryParams['quick'] == 'true';
+          final isQuickOrder = state.uri.queryParameters['quick'] == 'true';
           return OrderPage(isQuickOrder: isQuickOrder);
         },
       ),
       GoRoute(
         path: '/entry/add/:orderId',
         builder: (context, state) {
-          final orderId = state.params['orderId']!;
+          final orderId = state.pathParameters['orderId']!;
           return OrderPage(
             isQuickOrder: false, 
             existingOrderId: orderId

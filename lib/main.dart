@@ -111,8 +111,7 @@ class _HompimpaAppState extends ConsumerState<HompimpaApp> {
       theme: ThemeData(
         primarySwatch: Colors.orange,
       ),
-      routeInformationParser: router.routeInformationParser,
-      routerDelegate: router.routerDelegate,
+      routerConfig: router,
     );
   }
 }

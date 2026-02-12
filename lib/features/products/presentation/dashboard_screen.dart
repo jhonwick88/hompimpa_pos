@@ -434,7 +434,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               label: 'Input Order Via WA',
               onTap: () => context.push('/entry'),
             ),
-            if(authState.value?.role == UserRole.dev || authState.value?.role == UserRole.admin) ...[
+            if(authState.value?.role == UserRole.dev) ...[
               SpeedDialChild(
                 child: const Icon(Icons.analytics),
                 label: 'Laporan Penjualan',

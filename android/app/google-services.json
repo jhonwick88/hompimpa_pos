@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "285253284489-5vg79a7q5ht47t8fsgn6e58h260dsskc.apps.googleusercontent.com",
+          "client_id": "285253284489-hjulrh5ss0qed33sdu7abt0cis205g68.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.pintarmedia.hompimpapos",
-            "certificate_hash": "1241023b7d4646efdda401ebd27cfcc742defb94"
+            "certificate_hash": "c136250662322abfd1d12c6f225c64691072549d"
           }
         },
         {

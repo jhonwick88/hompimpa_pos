@@ -433,8 +433,8 @@ class _OrderListTab extends ConsumerWidget {
                       dense: true,
                       title: Text(
                         item.level != null 
-                          ? '${item.productName} - Lvl ${item.level} (${item.sambal})'
-                          : item.productName, style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),
+                          ? '${item.productName} - Lvl ${item.level} (${item.sambal}) - ${item.qty}x'
+                          : item.productName + ' - ${item.qty}x', style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),
                       ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -442,11 +442,10 @@ class _OrderListTab extends ConsumerWidget {
                           Text.rich(
                             TextSpan(
                               children: [
-                                TextSpan(text: '${item.qty}x @ Rp ${item.price.toStringAsFixed(0)}'),
                                 if (item.note != null && item.note!.isNotEmpty)
                                   TextSpan(
                                     text: ' (${item.note})',
-                                    style: const TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.bold, fontSize: 12),
+                                    style: const TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.bold, fontSize: 14),
                                   ),
                               ],
                             ),
@@ -456,7 +455,7 @@ class _OrderListTab extends ConsumerWidget {
                               padding: const EdgeInsets.only(top: 4.0),
                               child: Text(
                                 'Toppings: ${item.toppings!.map((t) => t.name).join(", ")}',
-                                style: TextStyle(fontSize: 11, color: Colors.grey[900], fontStyle: FontStyle.italic),
+                                style: TextStyle(fontSize: 12, color: Colors.grey[900], fontStyle: FontStyle.italic),
                               ),
                             ),
                         ],
@@ -785,7 +784,7 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
                 ),
                 child: Slider(
                   value: _level,
-                  min: 1,
+                  min: 0,
                   max: 7,
                   divisions: 6,
                   label: _level.toInt().toString(),
