@@ -11,6 +11,7 @@ import 'package:hompimpa_pos/features/orders/data/order_repository.dart';
 import 'package:hompimpa_pos/features/orders/presentation/order_list_screen.dart';
 import 'package:hompimpa_pos/features/orders/presentation/widgets/product_option_dialog.dart';
 import 'package:hompimpa_pos/features/orders/domain/order.dart';
+import 'package:hompimpa_pos/core/widgets/app_end_drawer.dart';
 
 /// Tablet-specific order entry page (>= 600px)
 /// - Split layout: product grid + side cart panel
@@ -172,8 +173,17 @@ class _TabletOrderPageState extends ConsumerState<TabletOrderPage> {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
+        endDrawer: const AppEndDrawer(),
         appBar: AppBar(
           title: Text(widget.isQuickOrder ? 'Quick Order' : 'New Order'),
+          actions: [
+            Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () => Scaffold.of(context).openEndDrawer(),
+              ),
+            ),
+          ],
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Semua'),
