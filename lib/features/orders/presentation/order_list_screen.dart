@@ -10,6 +10,7 @@ import '../../orders/domain/order.dart';
 import '../../orders/domain/order_item.dart';
 import '../../../core/enums/user_role.dart';
 import 'widgets/nota_preview_dialog.dart';
+import '../../../core/widgets/app_end_drawer.dart';
 
 // Providers for filtering
 final orderStatusFilterProvider = StateProvider<OrderStatus?>((ref) => null);
@@ -85,6 +86,7 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
       child: DefaultTabController(
         length: 3,
         child: Scaffold(
+          endDrawer: const AppEndDrawer(),
           appBar: AppBar(
             title: isSearchMode 
               ? TextField(
@@ -132,43 +134,11 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
                   }
                 },
               ),
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert),
-                onSelected: (value) async {
-                  if (value == 'logout') {
-                     final confirm = await showDialog<bool>(
-                       context: context,
-                       builder: (context) => AlertDialog(
-                         title: const Text('Logout'),
-                         content: const Text('Apakah anda yakin ingin keluar?'),
-                         actions: [
-                           TextButton(
-                             child: const Text('BATAL'),
-                             onPressed: () => Navigator.pop(context, false),
-                           ),
-                           ElevatedButton(
-                             style: ElevatedButton.styleFrom(primary: Colors.red),
-                             child: const Text('KELUAR'),
-                             onPressed: () => Navigator.pop(context, true),
-                           ),
-                         ],
-                       ),
-                     );
-
-                     if (confirm == true) {
-                       await ref.read(authControllerProvider.notifier).signOut();
-                       if (mounted) {
-                        context.go('/login');
-                       }
-                     }
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'logout',
-                    child: Text('Logout'),
-                  ),
-                ],
+              Builder(
+                builder: (context) => IconButton(
+                  icon: const Icon(Icons.menu),
+                  onPressed: () => Scaffold.of(context).openEndDrawer(),
+                ),
               ),
             ],
             bottom: TabBar(
