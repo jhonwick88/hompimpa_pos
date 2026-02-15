@@ -13,7 +13,7 @@ class AppEndDrawer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final userAsync = ref.watch(authStateChangesProvider);
     final cashierState = ref.watch(cashierProvider);
-    final cashierController = ref.watch(cashierProvider.notifier);
+    // final cashierController = ref.read(cashierProvider.notifier); // Not used directly in build
 
     return Drawer(
       backgroundColor: AppColors.creamBackground,
@@ -64,7 +64,7 @@ class AppEndDrawer extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      cashierState.shiftName,
+                      cashierState.activeShift?.shiftName ?? '-',
                       style: const TextStyle(
                         fontSize: 14,
                         color: AppColors.textSecondary,
@@ -77,17 +77,33 @@ class AppEndDrawer extends ConsumerWidget {
                         color: cashierState.isOpen ? AppColors.freshGreen : AppColors.softRed,
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Text(
-                        cashierState.isOpen ? 'Kasir Aktif' : 'Kasir Tutup',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                      child: cashierState.isLoading 
+                        ? const SizedBox(
+                            width: 16, height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
+                          )
+                        : Text(
+                          cashierState.isOpen ? 'Kasir Aktif' : 'Kasir Tutup',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
                     ),
                   ],
                 ),
               ),
+
+              if (cashierState.error != null)
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  color: Colors.red.shade100,
+                  child: Text(
+                    cashierState.error!,
+                    style: TextStyle(color: Colors.red.shade800, fontSize: 12),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
 
               const SizedBox(height: 20),
               const Divider(height: 1),
@@ -100,7 +116,7 @@ class AppEndDrawer extends ConsumerWidget {
                   icon: Icons.remove_circle_outline,
                   label: 'Kurangi Laci',
                   color: AppColors.textPrimary,
-                  onTap: () => _showReduceCashDialog(context, ref, cashierState.cashBalance),
+                  onTap: () => _showReduceCashDialog(context, ref),
                 ),
 
               if (!cashierState.isOpen)
@@ -117,7 +133,7 @@ class AppEndDrawer extends ConsumerWidget {
                   label: 'Close Kasir',
                   color: AppColors.softRed,
                   isPrimary: true,
-                  onTap: () => _showCloseRegisterDialog(context, ref, cashierState),
+                  onTap: () => _showCloseRegisterDialog(context, ref),
                 ),
 
               const SizedBox(height: 10),
@@ -131,7 +147,6 @@ class AppEndDrawer extends ConsumerWidget {
                 label: 'Profil',
                 onTap: () { 
                    Navigator.pop(context);
-                   // Navigate to profile if route exists, mostly not implemented yet based on task
                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile feature coming soon')));
                 },
               ),
@@ -161,9 +176,10 @@ class AppEndDrawer extends ConsumerWidget {
     );
   }
 
-  void _showReduceCashDialog(BuildContext context, WidgetRef ref, double currentBalance) {
+  void _showReduceCashDialog(BuildContext context, WidgetRef ref) {
     final amountController = TextEditingController();
     final reasonController = TextEditingController();
+    final currentBalance = ref.read(cashierProvider).activeShift?.startCash ?? 0; // Estimation only
 
     showDialog(
       context: context,
@@ -172,8 +188,8 @@ class AppEndDrawer extends ConsumerWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-             Text('Saldo saat ini: Rp ${NumberFormat("#,##0", "id_ID").format(currentBalance)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-             const SizedBox(height: 16),
+             // Text('Modal Awal: Rp ${NumberFormat("#,##0", "id_ID").format(currentBalance)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+             // const SizedBox(height: 16),
              TextField(
                controller: amountController,
                keyboardType: TextInputType.number,
@@ -194,7 +210,7 @@ class AppEndDrawer extends ConsumerWidget {
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               final amount = double.tryParse(amountController.text) ?? 0;
               final reason = reasonController.text.trim();
               
@@ -203,14 +219,13 @@ class AppEndDrawer extends ConsumerWidget {
                  return;
               }
               
-              if (amount > currentBalance) {
-                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Saldo tidak mencukupi')));
-                 return;
-              }
-
-              ref.read(cashierProvider.notifier).reduceCash(amount, reason);
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Berhasil mengurangi Rp ${NumberFormat("#,##0", "id_ID").format(amount)}')));
+              try {
+                await ref.read(cashierProvider.notifier).reduceCash(amount, reason);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Berhasil mengurangi cash drawer')));
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal: $e')));
+              }
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.softRed),
             child: const Text('Konfirmasi'),
@@ -242,11 +257,15 @@ class AppEndDrawer extends ConsumerWidget {
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               final amount = double.tryParse(initialCashController.text) ?? 0;
-              ref.read(cashierProvider.notifier).openRegister(amount);
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Kasir Berhasil Dibuka! Selamat Bekerja.')));
+              try {
+                await ref.read(cashierProvider.notifier).openRegister(amount);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Kasir Berhasil Dibuka! Selamat Bekerja.')));
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal membuka kasir: $e')));
+              }
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.freshGreen),
             child: const Text('Buka Kasir'),
@@ -256,40 +275,117 @@ class AppEndDrawer extends ConsumerWidget {
     );
   }
 
-  void _showCloseRegisterDialog(BuildContext context, WidgetRef ref, CashierState state) {
-     final actualCashController = TextEditingController();
+  void _showCloseRegisterDialog(BuildContext context, WidgetRef ref) async {
+    // 1. Calculate Summary first
+    final controller = ref.read(cashierProvider.notifier);
+    
+    // Show loading indicator usually, but here we just wait
+    // Ideally block UI.
+    try {
+      final summary = await controller.calculateShiftSummary();
+      
+      if (!context.mounted) return;
 
-     showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Tutup Kasir'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Total Transaksi hari ini belum dihitung (Mock)'), 
-            const SizedBox(height: 8),
-            Text('Sisa Saldo Sistem: Rp ${NumberFormat("#,##0", "id_ID").format(state.cashBalance)}'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: actualCashController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Hitung Uang Fisik', prefixText: 'Rp '),
+      final actualCashController = TextEditingController();
+      final expectedCash = summary['expectedCash'] ?? 0;
+      final totalCashSales = summary['totalCashSales'] ?? 0;
+      final startCash = summary['startCash'] ?? 0;
+      final totalCashOut = summary['totalCashOut'] ?? 0;
+
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Tutup Kasir'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSummaryRow('Modal Awal', startCash),
+                _buildSummaryRow('Penjualan Tunai', totalCashSales, isPlus: true),
+                _buildSummaryRow('Pengeluaran', totalCashOut, isMinus: true),
+                const Divider(thickness: 2),
+                _buildSummaryRow('Ekspektasi Kas', expectedCash, isBold: true),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: actualCashController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Hitung Uang Fisik', 
+                    prefixText: 'Rp ',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
+            ElevatedButton(
+              onPressed: () async {
+                final actualCash = double.tryParse(actualCashController.text);
+                if (actualCash == null) {
+                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Masukkan jumlah uang fisik')));
+                   return;
+                }
+                
+                final difference = actualCash - expectedCash;
+                
+                if (difference.abs() > 0) {
+                  // Show warnings if difference exists
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text('Selisih Kas: Rp ${NumberFormat("#,##0", "id_ID").format(difference)}', 
+                        style: TextStyle(color: difference < 0 ? Colors.red : Colors.green)),
+                      content: const Text('Uang fisik tidak sesuai dengan sistem. Apakah Anda yakin ingin melanjutkan?'),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Periksa Ulang')),
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(context, true), 
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                          child: const Text('Ya, Tutup Kasir')
+                        ),
+                      ],
+                    ),
+                  );
+                  
+                  if (confirm != true) return;
+                }
+
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Close drawer
+                
+                try {
+                  await controller.closeRegister(actualCash, summary);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Shift Berhasil Ditutup.')));
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menutup shift: $e')));
+                }
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.softRed),
+              child: const Text('Tutup Kasir'),
             ),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
-          ElevatedButton(
-            onPressed: () {
-              ref.read(cashierProvider.notifier).closeRegister();
-              Navigator.pop(context);
-               
-              // Show summary logic could go here
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Kasir Berhasil Ditutup.')));
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.softRed),
-            child: const Text('Tutup Kasir'),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
+  Widget _buildSummaryRow(String label, double value, {bool isPlus = false, bool isMinus = false, bool isBold = false}) {
+    final color = isMinus ? Colors.red : (isBold ? Colors.black : Colors.grey[700]);
+    final prefix = isPlus ? '+ ' : (isMinus ? '- ' : '');
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: color)),
+          Text(
+            '$prefix Rp ${NumberFormat("#,##0", "id_ID").format(value)}', 
+            style: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: color)
           ),
         ],
       ),
@@ -309,7 +405,6 @@ class AppEndDrawer extends ConsumerWidget {
               Navigator.pop(context); // Close dialog
               Navigator.pop(context); // Close drawer
               await ref.read(authRepositoryProvider).signOut();
-              // Router usually handles redirect on auth state change, but to be safe:
               context.go('/login');
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.softRed),
@@ -389,3 +484,4 @@ class _DrawerButton extends StatelessWidget {
     );
   }
 }
+

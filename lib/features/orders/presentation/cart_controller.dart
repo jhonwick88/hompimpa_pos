@@ -6,11 +6,12 @@ import '../data/order_repository.dart';
 import '../../products/domain/product.dart';
 import '../../products/domain/topping.dart';
 import '../../products/data/topping_repository.dart';
+import '../../cashier/presentation/cashier_controller.dart';
 import 'package:collection/collection.dart';
 
 // Provider definition
 final cartProvider = StateNotifierProvider<CartController, List<OrderItem>>((ref) {
-  return CartController();
+  return CartController(ref);
 });
 
 final cartTotalProvider = Provider<double>((ref) {
@@ -19,7 +20,8 @@ final cartTotalProvider = Provider<double>((ref) {
 });
 
 class CartController extends StateNotifier<List<OrderItem>> {
-  CartController() : super([]);
+  final Ref ref;
+  CartController(this.ref) : super([]);
 
   void addItem(Product product, int qty, {String? level, String? sambal, String? note, List<Topping>? toppings}) {
     final existingIndex = state.indexWhere((item) {
@@ -112,6 +114,10 @@ class CartController extends StateNotifier<List<OrderItem>> {
        finalCustomerName = "Offline Order - ${const Uuid().v4().substring(0, 4)}";
     }
 
+    // Get active shift
+    final cashierState = ref.read(cashierProvider);
+    final String? shiftId = cashierState.isOpen ? cashierState.activeShift?.id : null;
+
     final order = OrderEntity(
       id: const Uuid().v4(),
       customerName: finalCustomerName,
@@ -123,6 +129,7 @@ class CartController extends StateNotifier<List<OrderItem>> {
       items: state,
       createdAt: now,
       updatedAt: now,
+      shiftId: shiftId,
     );
 
     await repository.addOrder(order);

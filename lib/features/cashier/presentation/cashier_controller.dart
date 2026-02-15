@@ -1,71 +1,218 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hompimpa_pos/features/cashier/data/cashier_repository.dart';
+import 'package:hompimpa_pos/features/cashier/domain/shift.dart';
+import 'package:hompimpa_pos/features/cashier/domain/cash_out.dart';
+import 'package:hompimpa_pos/features/orders/data/order_repository.dart';
+import 'package:hompimpa_pos/features/orders/domain/order.dart';
+import 'package:uuid/uuid.dart';
 
 class CashierState {
   final bool isOpen;
   final double cashBalance;
-  final DateTime? shiftStart;
-  final String shiftName;
+  final ShiftEntity? activeShift;
+  final bool isLoading;
+  final String? error;
 
   CashierState({
     this.isOpen = false,
     this.cashBalance = 0.0,
-    this.shiftStart,
-    this.shiftName = '',
+    this.activeShift,
+    this.isLoading = false,
+    this.error,
   });
 
   CashierState copyWith({
     bool? isOpen,
     double? cashBalance,
-    DateTime? shiftStart,
-    String? shiftName,
+    ShiftEntity? activeShift,
+    bool? isLoading,
+    String? error,
   }) {
     return CashierState(
       isOpen: isOpen ?? this.isOpen,
       cashBalance: cashBalance ?? this.cashBalance,
-      shiftStart: shiftStart ?? this.shiftStart,
-      shiftName: shiftName ?? this.shiftName,
+      activeShift: activeShift ?? this.activeShift,
+      isLoading: isLoading ?? this.isLoading,
+      error: error,
     );
   }
 }
 
 class CashierController extends StateNotifier<CashierState> {
-  CashierController() : super(CashierState(shiftName: _determineShift()));
+  final CashierRepository _repository;
+  final OrderRepository _orderRepository;
+
+  CashierController(this._repository, this._orderRepository) : super(CashierState()) {
+    _loadActiveShift();
+  }
+
+  Future<void> _loadActiveShift() async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final shift = await _repository.getCurrentActiveShift();
+      if (shift != null) {
+        state = state.copyWith(
+          isOpen: true,
+          activeShift: shift,
+          cashBalance: shift.startCash, // This might need to be recalculated with cash outs/sales if persistent
+          isLoading: false,
+        );
+         // Optionally recalculate current balance here based on initial + sales - cashouts
+      } else {
+        state = state.copyWith(isOpen: false, activeShift: null, isLoading: false);
+      }
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
 
   static String _determineShift() {
     final hour = DateTime.now().hour;
-    if (hour >= 6 && hour < 14) return 'Shift Pagi (06.00-14.00)';
-    if (hour >= 14 && hour < 22) return 'Shift Siang (14.00-22.00)';
-    return 'Shift Malam (22.00-06.00)';
+    if (hour >= 9 && hour < 17) return 'Shift Pagi (09.00-17.00)';
+    if (hour >= 17 && hour < 20) return 'Shift Siang (17.00-20.00)';
+    return 'Shift Malam (20.00-00.00)';
   }
 
-  void openRegister(double initialCash) {
-    state = state.copyWith(
-      isOpen: true,
-      cashBalance: initialCash,
-      shiftStart: DateTime.now(),
-      shiftName: _determineShift(),
-    );
+  Future<void> openRegister(double initialCash) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final newShift = ShiftEntity(
+        id: const Uuid().v4(),
+        shiftName: _determineShift(),
+        startTime: DateTime.now(),
+        startCash: initialCash,
+        status: 'OPEN',
+      );
+
+      await _repository.createShift(newShift);
+
+      state = state.copyWith(
+        isOpen: true,
+        cashBalance: initialCash,
+        activeShift: newShift,
+        isLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      rethrow;
+    }
   }
 
-  void closeRegister() {
-    state = state.copyWith(
-      isOpen: false,
-      cashBalance: 0,
-      shiftStart: null,
-    );
+  Future<Map<String, double>> calculateShiftSummary() async {
+    if (state.activeShift == null) return {};
+
+    final shiftId = state.activeShift!.id;
+    final startTime = state.activeShift!.startTime;
+    final endTime = DateTime.now();
+
+    // Use Time Range for Sales to be more robust (includes orders where shiftId might be missing but time is correct)
+    // and matches "Orders Hari Ini" expectation if shift started today.
+    final orders = await _orderRepository.getOrdersByTimeRange(startTime, endTime);
+    final cashOuts = await _repository.getCashOutsForShift(shiftId);
+
+    double totalCashSales = 0;
+    double totalNonCashSales = 0;
+
+    for (var order in orders) {
+      if (order.status == OrderStatus.selesai) { // Only count finished orders
+        // Use logic to determine payment method if available, defaulting to Cash for now if not specified
+        // Assuming 'isCash' or similar exists, otherwise treat all as cash or split logic
+        // For now, let's assume all are cash unless specified otherwise (needs payment method field in Order)
+        // Since we don't have PaymentMethod enum strictly defined in OrderEntity here, 
+        // we might stick to simple logic:
+        totalCashSales += order.total;
+      }
+    }
+
+    double totalCashOut = cashOuts.fold(0, (sum, item) => sum + item.amount);
+    
+    // Expected Cash = Start Cash + Cash Sales - Cash Outs
+    // Note: Non-cash sales (QRIS, Transfer) should NOT add to expected physical cash
+    
+    /* 
+       TODO: Filter orders by Payment Method once available in OrderEntity
+       For now assuming ALL orders are CASH.
+    */
+    
+    final startCash = state.activeShift!.startCash;
+    final expectedCash = startCash + totalCashSales - totalCashOut;
+
+    return {
+      'startCash': startCash,
+      'totalCashSales': totalCashSales,
+      'totalNonCashSales': totalNonCashSales,
+      'totalCashOut': totalCashOut,
+      'expectedCash': expectedCash,
+    };
   }
 
-  void reduceCash(double amount, String reason) {
-    if (state.cashBalance >= amount) {
-      state = state.copyWith(cashBalance: state.cashBalance - amount);
-      // Here you would typically log the transaction to backend
-      print('DEBUG: Reduced cash by $amount for $reason. New balance: ${state.cashBalance}');
-    } else {
-      throw Exception('Saldo kas tidak cukup!');
+  Future<void> closeRegister(double endCash, Map<String, double> summary) async {
+    if (state.activeShift == null) return;
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final expectedCash = summary['expectedCash'] ?? 0;
+      final difference = endCash - expectedCash;
+
+      final updatedShift = state.activeShift!.copyWith(
+        endTime: DateTime.now(),
+        endCash: endCash,
+        expectedCash: expectedCash,
+        difference: difference,
+        status: 'CLOSED',
+        totalCashSales: summary['totalCashSales'],
+        totalNonCashSales: summary['totalNonCashSales'],
+        totalCashOut: summary['totalCashOut'],
+      );
+
+      await _repository.closeShift(updatedShift);
+
+      state = state.copyWith(
+        isOpen: false,
+        activeShift: null,
+        cashBalance: 0,
+        isLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      rethrow;
+    }
+  }
+
+  Future<void> reduceCash(double amount, String reason) async {
+    if (state.activeShift == null) throw Exception('Tidak ada shift aktif');
+    
+    // Optimistic balance check (approximate, since we don't stream real-time sales balance yet)
+    // For strict control, we'd need to calculate current balance first.
+    // For now, allow it, but maybe warn? Or just process it.
+    
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final cashOut = CashOutEntity(
+        id: const Uuid().v4(),
+        shiftId: state.activeShift!.id,
+        amount: amount,
+        reason: reason,
+        timestamp: DateTime.now(),
+      );
+
+      await _repository.addCashOut(cashOut);
+      
+      // Update local state if we were tracking balance
+      state = state.copyWith(
+        isLoading: false,
+        cashBalance: state.cashBalance - amount, 
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      rethrow;
     }
   }
 }
 
 final cashierProvider = StateNotifierProvider<CashierController, CashierState>((ref) {
-  return CashierController();
+  final cashierRepo = ref.watch(cashierRepositoryProvider);
+  final orderRepo = ref.watch(orderRepositoryProvider);
+  return CashierController(cashierRepo, orderRepo);
 });

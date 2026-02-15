@@ -17,6 +17,8 @@ abstract class OrderRepository {
   Future<void> voidOrder(String orderId, String reason, String voidBy);
   Future<void> bulkDeleteOrders(List<String> orderIds);
   Future<OrderEntity?> getOrder(String orderId);
+  Future<List<OrderEntity>> getOrdersForShift(String shiftId);
+  Future<List<OrderEntity>> getOrdersByTimeRange(DateTime start, DateTime end);
 }
 
 class FirestoreOrderRepository implements OrderRepository {
@@ -197,6 +199,42 @@ class FirestoreOrderRepository implements OrderRepository {
     } catch (e) {
       print('Error fetching order $orderId: $e');
       return null;
+    }
+  }
+
+  @override
+  Future<List<OrderEntity>> getOrdersForShift(String shiftId) async {
+     try {
+      final snapshot = await _firestore.collection('orders')
+          .where('shiftId', isEqualTo: shiftId)
+          .get();
+
+      return snapshot.docs.map((doc) {
+        return OrderEntity.fromJsonRobust({...doc.data(), 'id': doc.id});
+      }).toList();
+    } catch (e) {
+      print('Error fetching orders for shift $shiftId: $e');
+      return [];
+    }
+  }
+
+  @override
+  Future<List<OrderEntity>> getOrdersByTimeRange(DateTime start, DateTime end) async {
+    try {
+      // Query by createdAt range
+      // Note: This requires 'createdAt' field to be indexed for complex queries if we add more filters.
+      // For simple range, it should be fine.
+      final snapshot = await _firestore.collection('orders')
+          .where('createdAt', isGreaterThanOrEqualTo: start)
+          .where('createdAt', isLessThanOrEqualTo: end)
+          .get();
+
+      return snapshot.docs.map((doc) {
+        return OrderEntity.fromJsonRobust({...doc.data(), 'id': doc.id});
+      }).toList();
+    } catch (e) {
+      print('Error fetching orders by time range: $e');
+      return [];
     }
   }
 }

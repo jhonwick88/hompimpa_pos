@@ -6,7 +6,7 @@ part of 'order.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$_Order _$$_OrderFromJson(Map<String, dynamic> json) => _$_Order(
+_$OrderImpl _$$OrderImplFromJson(Map<String, dynamic> json) => _$OrderImpl(
       id: json['id'] as String,
       customerName: json['customerName'] as String? ?? 'Guest',
       customerPhone: json['customerPhone'] as String?,
@@ -18,7 +18,7 @@ _$_Order _$$_OrderFromJson(Map<String, dynamic> json) => _$_Order(
       items: (json['items'] as List<dynamic>)
           .map((e) => OrderItem.fromJson(e as Map<String, dynamic>))
           .toList(),
-      queueNumber: json['queueNumber'] as int?,
+      queueNumber: (json['queueNumber'] as num?)?.toInt(),
       executorName: json['executorName'] as String?,
       executorId: json['executorId'] as String?,
       createdAt: const TimestampNullableConverter().fromJson(json['createdAt']),
@@ -29,9 +29,11 @@ _$_Order _$$_OrderFromJson(Map<String, dynamic> json) => _$_Order(
       paymentMethod: json['paymentMethod'] as String? ?? 'Cash',
       paidAmount: (json['paidAmount'] as num?)?.toDouble(),
       changeAmount: (json['changeAmount'] as num?)?.toDouble(),
+      shiftId: json['shiftId'] as String?,
     );
 
-Map<String, dynamic> _$$_OrderToJson(_$_Order instance) => <String, dynamic>{
+Map<String, dynamic> _$$OrderImplToJson(_$OrderImpl instance) =>
+    <String, dynamic>{
       'id': instance.id,
       'customerName': instance.customerName,
       'customerPhone': instance.customerPhone,
@@ -53,6 +55,7 @@ Map<String, dynamic> _$$_OrderToJson(_$_Order instance) => <String, dynamic>{
       'paymentMethod': instance.paymentMethod,
       'paidAmount': instance.paidAmount,
       'changeAmount': instance.changeAmount,
+      'shiftId': instance.shiftId,
     };
 
 const _$OrderStatusEnumMap = {

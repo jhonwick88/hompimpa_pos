@@ -32,6 +32,7 @@ class OrderEntity with _$OrderEntity {
     @Default('Cash') String paymentMethod,
     double? paidAmount,
     double? changeAmount,
+    String? shiftId, // Link to Shift
   }) = _Order;
 
   factory OrderEntity.fromJson(Map<String, dynamic> json) => _$OrderEntityFromJson(json);

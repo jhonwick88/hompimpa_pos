@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hompimpa_pos/core/widgets/app_end_drawer.dart';
 import 'package:hompimpa_pos/core/widgets/skeleton.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -78,6 +79,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
+        endDrawer: const AppEndDrawer(),
         appBar: AppBar(
           title: const Text('Hompimpa POS'),
           actions: [
@@ -98,35 +100,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
               ),
             ), 
-            IconButton(
-              icon: const Icon(Icons.logout, color: Colors.white),
-              onPressed: () async {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Logout'),
-                    content: const Text('Apakah anda yakin ingin keluar?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('BATAL'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        style: ElevatedButton.styleFrom(primary: Colors.red),
-                        child: const Text('KELUAR'),
-                      ),
-                    ],
-                  ),
-                );
-
-                if (confirm == true) {
-                  await ref.read(authControllerProvider.notifier).signOut();
-                  if (mounted) {
-                    context.go('/login');
-                  }
-                }
-              },
+            Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () => Scaffold.of(context).openEndDrawer(),
+              ),
             ),
           ],
         ),
