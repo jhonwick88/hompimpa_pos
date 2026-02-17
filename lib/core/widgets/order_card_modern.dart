@@ -215,10 +215,14 @@ class _OrderCardModernState extends State<OrderCardModern> {
         const Divider(height: 1),
 
         // Action Section (tombol aksi saja)
-        Padding(
-          padding: const EdgeInsets.all(12),
-          child: widget.actionSection,
-        ),
+Padding(
+  padding: const EdgeInsets.all(12),
+  child: Align(
+    alignment: Alignment.centerLeft,
+    child: widget.actionSection,
+  ),
+),
+
       ],
     );
   }

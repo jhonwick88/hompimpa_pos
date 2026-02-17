@@ -390,6 +390,7 @@ class _OrderListTab extends ConsumerWidget {
   statusIcon: _getStatusIcon(order.status),
   onEditItem: (order, idx) => _editOrderItem(context, ref, order, idx),
   actionSection: Wrap(
+    alignment: WrapAlignment.start,
     spacing: 8,
     runSpacing: 8,
     children: [
@@ -398,10 +399,11 @@ class _OrderListTab extends ConsumerWidget {
           onPressed: () => context.push('/entry/add/${order.id}'),
           icon: const Icon(Icons.add_shopping_cart, size: 18),
           label: const Text('Tambah'),
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
         ),
         ElevatedButton(
           onPressed: () => _processOrder(context, ref, order),
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
           child: const Text('Proses'),
         ),
       ],
@@ -410,7 +412,7 @@ class _OrderListTab extends ConsumerWidget {
           onPressed: () => _showSelesaiConfirmation(context, ref, order),
           icon: const Icon(Icons.check_circle_outline, size: 18),
           label: const Text('Selesai'),
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
         ),
       ],
       if (order.status == OrderStatus.selesai) ...[
@@ -418,7 +420,7 @@ class _OrderListTab extends ConsumerWidget {
           onPressed: () => _showPrintPreview(context, order),
           icon: const Icon(Icons.print, size: 18),
           label: const Text('Print'),
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.blueGrey),
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.blueGrey, foregroundColor: Colors.white),
         ),
       ],
       if (order.status != OrderStatus.selesai) ...[
@@ -426,7 +428,7 @@ class _OrderListTab extends ConsumerWidget {
           onPressed: () => _showVoidDialog(context, ref, order),
           icon: const Icon(Icons.delete_forever, size: 18),
           label: const Text('Void Order'),
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
         ),
       ],
     ],
