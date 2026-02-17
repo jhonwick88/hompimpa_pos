@@ -248,6 +248,16 @@ class _OrderListTab extends ConsumerWidget {
     }
   }
 
+  Future<void> _processOrder(BuildContext context, WidgetRef ref, OrderEntity order) async {
+    try {
+      final messenger = ScaffoldMessenger.of(context);
+      await ref.read(orderRepositoryProvider).updateOrderStatus(order.id, OrderStatus.proses, order.items);
+      messenger.showSnackBar(const SnackBar(content: Text('Pesanan diproses')));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal memproses pesanan: $e')));
+    }
+  }
+
   Future<void> _showSelesaiConfirmation(BuildContext context, WidgetRef ref, OrderEntity order) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -384,7 +394,7 @@ class _OrderListTab extends ConsumerWidget {
           style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
         ),
         ElevatedButton(
-          onPressed: () async { /* update status proses */ },
+          onPressed: () => _processOrder(context, ref, order),
           child: const Text('Proses'),
         ),
       ],
