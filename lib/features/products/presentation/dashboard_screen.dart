@@ -434,55 +434,186 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       return const Center(child: Text('Belum ada topping'));
                    }
                    
-                   return GridView.builder(
-                     physics: const NeverScrollableScrollPhysics(),
-                     shrinkWrap: true,
-                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2, // Keep it simple for headers
-                        childAspectRatio: 1.6,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                     ),
-                     itemCount: toppings.length,
-                     itemBuilder: (context, index) {
-                        final topping = toppings[index];
-                        return Card(
-                          elevation: 4,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          color: Colors.amber[50], // Distinguishable color
-                          child: InkWell(
-                             onTap: () {
-                                if (ref.read(authStateChangesProvider).value?.role == UserRole.dev) {
-                                  _showUpdateToppingStockDialog(context, ref, topping);
-                                }
-                             },
-                             borderRadius: BorderRadius.circular(12),
-                             child: Padding(
-                               padding: const EdgeInsets.all(12.0),
-                               child: Column(
-                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                 mainAxisAlignment: MainAxisAlignment.center,
-                                 children: [
-                                   Text(
-                                     topping.name, 
-                                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                     maxLines: 1, overflow: TextOverflow.ellipsis
-                                   ),
-                                   const SizedBox(height: 4),
-                                   Row(
-                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                     children: [
-                                       Text('Stok: ${topping.stock}'),
-                                       Text('Rp ${topping.price.toStringAsFixed(0)}', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
-                                     ],
-                                   ),
-                                 ],
-                               ),
-                             ),
+                   final cardColors = [
+                      Colors.orange[100],
+                      Colors.blue[100],
+                      Colors.green[100],
+                      Colors.purple[100],
+                      Colors.pink[100],
+                      Colors.amber[100],
+                      Colors.cyan[100],
+                      Colors.indigo[100],
+                    ];
+
+                    return LayoutBuilder(
+                      builder: (context, constraints) {
+                        final orientation = MediaQuery.of(context).orientation;
+                        int crossAxisCount;
+                        
+                        if (isTablet && orientation == Orientation.portrait) {
+                          crossAxisCount = 4; // Tablet portrait
+                        } else if (isTablet) {
+                          crossAxisCount = 6; // Tablet landscape
+                        } else {
+                          crossAxisCount = 2; // Phone portrait
+                        }
+                        
+                        return GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: crossAxisCount,
+                            childAspectRatio: 0.85,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
                           ),
+                          itemCount: toppings.length,
+                          itemBuilder: (context, index) {
+                            final topping = toppings[index];
+                            final bgColor = cardColors[index % cardColors.length];
+                        
+                            return Card(
+                              elevation: 6,
+                              shadowColor: Colors.black26,
+                              clipBehavior: Clip.antiAlias,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              child: Stack(
+                                children: [
+                                  // Content Layer
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
+                                      Expanded(
+                                        child: Stack(
+                                          children: [
+                                            // Main Background
+                                            Container(color: bgColor),
+                                            
+                                            // Product Image or Icon
+                                            if (topping.imageUrl != null)
+                                              Positioned.fill(
+                                                child: Image.asset(
+                                                  topping.imageUrl!,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (context, error, stackTrace) {
+                                                    return const Center(
+                                                      child: Icon(Icons.broken_image,color: Colors.white54),
+                                                    );
+                                                  },
+                                                ),
+                                              )
+                                            else
+                                              const Center(
+                                                child: Opacity(
+                                                  opacity: 0.1,
+                                                  child: Icon(Icons.grain, size: 64),
+                                                ),
+                                              ),
+                                      
+                                            // Name Label at Bottom with Gradient
+                                            Positioned(
+                                              bottom: 0,
+                                              left: 0,
+                                              right: 0,
+                                              child: Container(
+                                                decoration: const BoxDecoration(
+                                                  gradient: LinearGradient(
+                                                    begin: Alignment.bottomCenter,
+                                                    end: Alignment.topCenter,
+                                                    colors: [Colors.black87, Colors.transparent],
+                                                  ),
+                                                ),
+                                                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                                                child: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Text(
+                                                      topping.name,
+                                                      textAlign: TextAlign.center,
+                                                      style: const TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 14,
+                                                      ),
+                                                      maxLines: 2,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                    Text(
+                                                       'Rp ${topping.price.toStringAsFixed(0)}',
+                                                       style: const TextStyle(
+                                                         color: Colors.greenAccent,
+                                                         fontSize: 12,
+                                                         fontWeight: FontWeight.bold
+                                                       ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                      
+                                            // Stock Badge at Top Right Edge
+                                            Positioned(
+                                              top: 4,
+                                              right: 4,
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.red,
+                                                  borderRadius: BorderRadius.circular(20), // Oval
+                                                  boxShadow: const [
+                                                    BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+                                                  ],
+                                                ),
+                                                child: Text(
+                                                  '${topping.stock}',
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            
+                                            // Edit Icon for Dev
+                                            if (ref.watch(authStateChangesProvider).value?.role == UserRole.dev)
+                                              const Positioned(
+                                                top: 4,
+                                                left: 4,
+                                                child: CircleAvatar(
+                                                  backgroundColor: Colors.white70,
+                                                  radius: 12,
+                                                  child: Icon(Icons.edit, size: 14, color: Colors.black87),
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  // Ripple Layer
+                                  Positioned.fill(
+                                    child: Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        onTap: () {
+                                          final authState = ref.read(authStateChangesProvider);
+                                          final user = authState.value;
+                                          if (user != null && user.role == UserRole.dev) {
+                                            _showUpdateToppingStockDialog(context, ref, topping);
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
                         );
-                     },
-                   );
+                      },
+                    );
                 },
                 loading: () => const Skeleton(width: double.infinity, height: 100),
                 error: (e, _) => Text('Error loading toppings: $e'),

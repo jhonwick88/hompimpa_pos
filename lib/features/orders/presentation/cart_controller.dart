@@ -52,14 +52,22 @@ class CartController extends Notifier<CartState> {
       }
     }
     // Spicy Level Charge
-    if (level != null && (int.tryParse(level) ?? 0) >= 6) {
-       final isMiePangsit = product.category.toLowerCase().contains('mie') || 
-                            product.name.toLowerCase().contains('mie') ||
-                            product.category.toLowerCase().contains('pangsit') ||
-                            product.name.toLowerCase().contains('pangsit');
+    if (level != null) {
+       final levelVal = int.tryParse(level) ?? 0;
        
-       if (isMiePangsit) {
-         unitPrice += 1000;
+       if (levelVal >= 4) {
+         final isMiePangsit = product.category.toLowerCase().contains('mie') || 
+                              product.name.toLowerCase().contains('mie') ||
+                              product.category.toLowerCase().contains('pangsit') ||
+                              product.name.toLowerCase().contains('pangsit');
+         
+         if (isMiePangsit) {
+           if (levelVal >= 6) {
+             unitPrice += 1000;
+           } else {
+             unitPrice += 500;
+           }
+         }
        }
     }
 

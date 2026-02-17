@@ -7,25 +7,25 @@ part of 'order_item.dart';
 // **************************************************************************
 
 OrderItem _$OrderItemFromJson(Map<String, dynamic> json) => OrderItem(
-      productId: json['productId'] as String,
-      productName: json['productName'] as String,
-      qty: (json['qty'] as num).toInt(),
-      price: (json['price'] as num).toDouble(),
-      level: json['level'] as String?,
-      sambal: json['sambal'] as String?,
-      note: json['note'] as String?,
-      toppings: (json['toppings'] as List<dynamic>?)
-          ?.map((e) => Topping.fromJson(e as Map<String, dynamic>))
-          .toList(),
-    );
+  productId: json['productId'] as String,
+  productName: json['productName'] as String,
+  qty: (json['qty'] as num).toInt(),
+  price: (json['price'] as num).toDouble(),
+  level: json['level'] as String?,
+  sambal: json['sambal'] as String?,
+  note: json['note'] as String?,
+  toppings: (json['toppings'] as List<dynamic>?)
+      ?.map((e) => Topping.fromJson(e as Map<String, dynamic>))
+      .toList(),
+);
 
 Map<String, dynamic> _$OrderItemToJson(OrderItem instance) => <String, dynamic>{
-      'productId': instance.productId,
-      'productName': instance.productName,
-      'qty': instance.qty,
-      'price': instance.price,
-      'level': instance.level,
-      'sambal': instance.sambal,
-      'note': instance.note,
-      'toppings': instance.toppings,
-    };
+  'productId': instance.productId,
+  'productName': instance.productName,
+  'qty': instance.qty,
+  'price': instance.price,
+  'level': instance.level,
+  'sambal': instance.sambal,
+  'note': instance.note,
+  'toppings': instance.toppings,
+};

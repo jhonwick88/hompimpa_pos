@@ -6,20 +6,20 @@ part of 'topping.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$ToppingImpl _$$ToppingImplFromJson(Map<String, dynamic> json) =>
-    _$ToppingImpl(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      price: (json['price'] as num).toDouble(),
-      stock: (json['stock'] as num).toInt(),
-      isActive: json['isActive'] as bool? ?? true,
-    );
+_Topping _$ToppingFromJson(Map<String, dynamic> json) => _Topping(
+  id: json['id'] as String,
+  name: json['name'] as String,
+  price: (json['price'] as num).toDouble(),
+  stock: (json['stock'] as num).toInt(),
+  imageUrl: json['imageUrl'] as String?,
+  isActive: json['isActive'] as bool? ?? true,
+);
 
-Map<String, dynamic> _$$ToppingImplToJson(_$ToppingImpl instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'name': instance.name,
-      'price': instance.price,
-      'stock': instance.stock,
-      'isActive': instance.isActive,
-    };
+Map<String, dynamic> _$ToppingToJson(_Topping instance) => <String, dynamic>{
+  'id': instance.id,
+  'name': instance.name,
+  'price': instance.price,
+  'stock': instance.stock,
+  'imageUrl': instance.imageUrl,
+  'isActive': instance.isActive,
+};

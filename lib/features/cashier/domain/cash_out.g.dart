@@ -6,8 +6,8 @@ part of 'cash_out.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$CashOutEntityImpl _$$CashOutEntityImplFromJson(Map<String, dynamic> json) =>
-    _$CashOutEntityImpl(
+_CashOutEntity _$CashOutEntityFromJson(Map<String, dynamic> json) =>
+    _CashOutEntity(
       id: json['id'] as String,
       shiftId: json['shiftId'] as String,
       amount: (json['amount'] as num).toDouble(),
@@ -16,7 +16,7 @@ _$CashOutEntityImpl _$$CashOutEntityImplFromJson(Map<String, dynamic> json) =>
       performedBy: json['performedBy'] as String?,
     );
 
-Map<String, dynamic> _$$CashOutEntityImplToJson(_$CashOutEntityImpl instance) =>
+Map<String, dynamic> _$CashOutEntityToJson(_CashOutEntity instance) =>
     <String, dynamic>{
       'id': instance.id,
       'shiftId': instance.shiftId,

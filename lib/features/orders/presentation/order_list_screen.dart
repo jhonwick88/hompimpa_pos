@@ -699,11 +699,15 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
             final isMiePangsit = widget.item.productName.toLowerCase().contains('mie') || widget.item.productName.toLowerCase().contains('pangsit'); // Approximation since category unknown
 
             if (isMiePangsit) {
-              if (oldLevel < 6 && newLvl >= 6) {
-                 newPrice += 1000; 
-              } else if (oldLevel >= 6 && newLvl < 6) {
-                 newPrice -= 1000;
-              }
+              int oldSurcharge = 0;
+              if (oldLevel >= 6) oldSurcharge = 1000;
+              else if (oldLevel >= 4) oldSurcharge = 500;
+
+              int newSurcharge = 0;
+              if (newLvl >= 6) newSurcharge = 1000;
+              else if (newLvl >= 4) newSurcharge = 500;
+
+              newPrice = newPrice - oldSurcharge + newSurcharge;
             }
 
             final updated = widget.item.copyWith(

@@ -5,7 +5,7 @@ part 'shift.freezed.dart';
 part 'shift.g.dart';
 
 @freezed
-class ShiftEntity with _$ShiftEntity {
+abstract class ShiftEntity with _$ShiftEntity {
   @JsonSerializable(explicitToJson: true)
   const factory ShiftEntity({
     required String id,

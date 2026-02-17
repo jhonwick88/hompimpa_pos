@@ -5,7 +5,7 @@ part 'cash_out.freezed.dart';
 part 'cash_out.g.dart';
 
 @freezed
-class CashOutEntity with _$CashOutEntity {
+abstract class CashOutEntity with _$CashOutEntity {
   @JsonSerializable(explicitToJson: true)
   const factory CashOutEntity({
     required String id,

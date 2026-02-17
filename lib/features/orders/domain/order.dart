@@ -10,7 +10,7 @@ part 'order.g.dart';
 enum OrderStatus { belum, proses, selesai, batal }
 
 @freezed
-class OrderEntity with _$OrderEntity {
+abstract class OrderEntity with _$OrderEntity {
   @JsonSerializable(explicitToJson: true)
   const factory OrderEntity({
     required String id,
