@@ -1,0 +1,219 @@
+﻿Analyzing hompimpa_pos...                                       
+
+warning - Unused import: 'enums/user_role.dart' - lib\core\router.dart:8:8 - unused_import
+warning - Unused import: 'package:go_router/go_router.dart' - lib\core\services\notification_service.dart:4:8 - unused_import
+warning - Unused import: 'package:flutter/material.dart' - lib\core\services\notification_service.dart:6:8 - unused_import
+   info - Unnecessary 'this.' qualifier - lib\core\services\notification_service.dart:19:5 - unnecessary_this
+  error - The named parameter 'settings' is required, but there's no corresponding argument - lib\core\services\notification_service.dart:33:43 - missing_required_argument
+  error - Too many positional arguments: 0 expected, but 1 found - lib\core\services\notification_service.dart:34:7 - extra_positional_arguments_could_be_named
+   info - Don't invoke 'print' in production code - lib\core\services\notification_service.dart:59:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\core\services\notification_service.dart:61:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\core\services\notification_service.dart:63:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\core\services\notification_service.dart:68:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\core\services\notification_service.dart:72:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\core\services\notification_service.dart:73:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\core\services\notification_service.dart:76:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\core\services\notification_service.dart:91:9 - avoid_print
+  error - The named parameter 'id' is required, but there's no corresponding argument - lib\core\services\notification_service.dart:122:43 - missing_required_argument
+  error - Too many positional arguments: 0 expected, but 4 found - lib\core\services\notification_service.dart:123:7 - extra_positional_arguments_could_be_named
+   info - Don't invoke 'print' in production code - lib\core\services\notification_service.dart:139:3 - avoid_print
+warning - Unused import: '../../features/products/data/product_repository.dart' - lib\core\services\order_notification_controller.dart:4:8 - unused_import
+warning - Unused import: 'dart:typed_data' - lib\core\services\print_service.dart:1:8 - unused_import
+   info - Unnecessary use of 'toList' in a spread - lib\core\services\print_service.dart:100:12 - unnecessary_to_list_in_spreads
+   info - Parameter 'key' could be a super parameter - lib\core\utils\responsive_layout.dart:42:9 - use_super_parameters
+   info - The imported package 'flutter_native_splash' isn't a dependency of the importing package - lib\core\widgets\animated_splash_screen.dart:3:8 - depend_on_referenced_packages
+   info - Parameter 'key' could be a super parameter - lib\core\widgets\animated_splash_screen.dart:13:9 - use_super_parameters
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary - lib\core\widgets\animated_splash_screen.dart:54:28 - invalid_null_aware_operator
+   info - Don't use 'BuildContext's across async gaps - lib\core\widgets\animated_splash_screen.dart:72:9 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\core\widgets\animated_splash_screen.dart:74:9 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\core\widgets\animated_splash_screen.dart:78:7 - use_build_context_synchronously
+   info - Parameter 'key' could be a super parameter - lib\core\widgets\app_end_drawer.dart:10:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\widgets\app_end_drawer.dart:46:61 - deprecated_member_use
+warning - The value of the local variable 'currentBalance' isn't used - lib\core\widgets\app_end_drawer.dart:182:11 - unused_local_variable
+   info - Don't use 'BuildContext's across async gaps - lib\core\widgets\app_end_drawer.dart:225:38 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\core\widgets\app_end_drawer.dart:227:38 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\core\widgets\app_end_drawer.dart:265:38 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\core\widgets\app_end_drawer.dart:267:38 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\core\widgets\app_end_drawer.dart:356:31 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\core\widgets\app_end_drawer.dart:357:31 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\core\widgets\app_end_drawer.dart:361:40 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\core\widgets\app_end_drawer.dart:363:40 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\core\widgets\app_end_drawer.dart:408:15 - use_build_context_synchronously
+   info - Parameter 'key' could be a super parameter - lib\core\widgets\skeleton.dart:8:9 - use_super_parameters
+   info - Invalid use of a private type in a public API - lib\core\widgets\skeleton.dart:16:3 - library_private_types_in_public_api
+warning - Unused import: '../../../core/enums/user_role.dart' - lib\features\auth\data\auth_repository.dart:8:8 - unused_import
+  error - The class 'GoogleSignIn' doesn't have an unnamed constructor - lib\features\auth\data\auth_repository.dart:14:5 - new_with_undefined_constructor_default
+  error - The method 'signIn' isn't defined for the type 'GoogleSignIn' - lib\features\auth\data\auth_repository.dart:63:69 - undefined_method
+   info - Uses 'await' on an instance of 'GoogleSignInAuthentication', which is not a subtype of 'Future' - lib\features\auth\data\auth_repository.dart:67:13 - await_only_futures
+  error - The getter 'accessToken' isn't defined for the type 'GoogleSignInAuthentication' - lib\features\auth\data\auth_repository.dart:69:35 - undefined_getter
+   info - Parameter 'key' could be a super parameter - lib\features\auth\presentation\login_screen.dart:7:9 - use_super_parameters
+   info - Don't invoke 'print' in production code - lib\features\cashier\data\cashier_repository.dart:38:7 - avoid_print
+warning - The annotation 'JsonSerializable.new' can only be used on classes - lib\features\cashier\domain\cash_out.dart:9:4 - invalid_annotation_target
+warning - The annotation 'JsonSerializable.new' can only be used on classes - lib\features\cashier\domain\shift.dart:9:4 - invalid_annotation_target
+warning - Unnecessary cast - lib\features\orders\data\order_repository.dart:37:24 - unnecessary_cast
+   info - Don't invoke 'print' in production code - lib\features\orders\data\order_repository.dart:40:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\orders\data\order_repository.dart:98:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\orders\data\order_repository.dart:145:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\orders\data\order_repository.dart:147:7 - avoid_print
+   info - The parameter name 'sum' matches a visible type name - lib\features\orders\data\order_repository.dart:155:44 - avoid_types_as_parameter_names
+   info - Don't invoke 'print' in production code - lib\features\orders\data\order_repository.dart:200:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\orders\data\order_repository.dart:216:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\orders\data\order_repository.dart:236:7 - avoid_print
+warning - Unused import: 'package:cloud_firestore/cloud_firestore.dart' - lib\features\orders\domain\order.dart:2:8 - unused_import
+   info - The import of 'package:json_annotation/json_annotation.dart' is unnecessary because all of the used elements are also provided by the import of 'package:freezed_annotation/freezed_annotation.dart' - lib\features\orders\domain\order.dart:3:8 - unnecessary_import
+warning - The annotation 'JsonSerializable.new' can only be used on classes - lib\features\orders\domain\order.dart:14:4 - invalid_annotation_target
+   info - Statements in an if should be enclosed in a block - lib\features\orders\domain\order.dart:57:42 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\orders\domain\order.dart:58:46 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\orders\domain\order.dart:59:75 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\orders\domain\order.dart:60:12 - curly_braces_in_flow_control_structures
+   info - The imported package 'collection' isn't a dependency of the importing package - lib\features\orders\presentation\cart_controller.dart:10:8 - depend_on_referenced_packages
+   info - Don't invoke 'print' in production code - lib\features\orders\presentation\cart_controller.dart:151:14 - avoid_print
+warning - Unused import: 'package:hompimpa_pos/features/orders/domain/order.dart' - lib\features\orders\presentation\order_entry_screen.dart:9:8 - unused_import
+warning - Unused import: 'package:hompimpa_pos/features/orders/domain/order_item.dart' - lib\features\orders\presentation\order_entry_screen.dart:10:8 - unused_import
+warning - Unused import: 'package:flutter_speed_dial/flutter_speed_dial.dart' - lib\features\orders\presentation\order_entry_screen.dart:16:8 - unused_import
+   info - Parameter 'key' could be a super parameter - lib\features\orders\presentation\order_entry_screen.dart:23:9 - use_super_parameters
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary - lib\features\orders\presentation\order_entry_screen.dart:64:30 - invalid_null_aware_operator
+   info - Use interpolation to compose strings and values - lib\features\orders\presentation\order_entry_screen.dart:128:14 - prefer_interpolation_to_compose_strings
+   info - Use interpolation to compose strings and values - lib\features\orders\presentation\order_entry_screen.dart:131:14 - prefer_interpolation_to_compose_strings
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\orders\presentation\order_entry_screen.dart:410:37 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\features\orders\presentation\order_entry_screen.dart:450:43 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\orders\presentation\order_entry_screen.dart:451:50 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\orders\presentation\order_entry_screen.dart:455:29 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\orders\presentation\order_entry_screen.dart:508:19 - avoid_print
+  error - The function 'StateProvider' isn't defined - lib\features\orders\presentation\order_list_screen.dart:16:35 - undefined_function
+  error - The function 'StateProvider' isn't defined - lib\features\orders\presentation\order_list_screen.dart:17:34 - undefined_function
+  error - The function 'StateProvider' isn't defined - lib\features\orders\presentation\order_list_screen.dart:18:33 - undefined_function
+  error - The function 'StateProvider' isn't defined - lib\features\orders\presentation\order_list_screen.dart:19:30 - undefined_function
+   info - Parameter 'key' could be a super parameter - lib\features\orders\presentation\order_list_screen.dart:36:9 - use_super_parameters
+   info - Unnecessary use of multiple underscores - lib\features\orders\presentation\order_list_screen.dart:81:18 - unnecessary_underscores
+   info - 'WillPopScope' is deprecated and shouldn't be used. Use PopScope instead. The Android predictive back feature will not work with WillPopScope. This feature was deprecated after v3.12.0-1.0.pre - lib\features\orders\presentation\order_list_screen.dart:84:12 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\features\orders\presentation\order_list_screen.dart:256:48 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\orders\presentation\order_list_screen.dart:265:30 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\orders\presentation\order_list_screen.dart:279:48 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\orders\presentation\order_list_screen.dart:289:30 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\orders\presentation\order_list_screen.dart:303:48 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\orders\presentation\order_list_screen.dart:309:30 - use_build_context_synchronously
+   info - Unnecessary use of string interpolation - lib\features\orders\presentation\order_list_screen.dart:363:29 - unnecessary_string_interpolations
+   info - Use interpolation to compose strings and values - lib\features\orders\presentation\order_list_screen.dart:407:29 - prefer_interpolation_to_compose_strings
+   info - Don't invoke 'print' in production code - lib\features\orders\presentation\order_list_screen.dart:471:35 - avoid_print
+   info - Unnecessary braces in a string interpolation - lib\features\orders\presentation\order_list_screen.dart:471:54 - unnecessary_brace_in_string_interps
+   info - Don't use 'BuildContext's across async gaps - lib\features\orders\presentation\order_list_screen.dart:481:56 - use_build_context_synchronously
+   info - Parameter 'key' could be a super parameter - lib\features\orders\presentation\order_list_screen.dart:569:9 - use_super_parameters
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\orders\presentation\order_list_screen.dart:622:15 - deprecated_member_use
+   info - Parameter 'key' could be a super parameter - lib\features\orders\presentation\order_list_screen.dart:675:9 - use_super_parameters
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\orders\presentation\order_list_screen.dart:735:21 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\orders\presentation\order_list_screen.dart:736:21 - deprecated_member_use
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\orders\presentation\order_list_screen.dart:741:21 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\orders\presentation\order_list_screen.dart:742:21 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\orders\presentation\order_list_screen.dart:753:51 - deprecated_member_use
+   info - Parameter 'key' could be a super parameter - lib\features\orders\presentation\order_page.dart:10:9 - use_super_parameters
+warning - The value of the local variable 'isDesktop' isn't used - lib\features\orders\presentation\order_page.dart:29:14 - unused_local_variable
+warning - Unused import: 'package:hompimpa_pos/features/products/domain/product.dart' - lib\features\orders\presentation\phone_order_page.dart:8:8 - unused_import
+warning - Unused import: 'package:hompimpa_pos/features/orders/presentation/order_list_screen.dart' - lib\features\orders\presentation\phone_order_page.dart:11:8 - unused_import
+   info - Parameter 'key' could be a super parameter - lib\features\orders\presentation\phone_order_page.dart:24:9 - use_super_parameters
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary - lib\features\orders\presentation\phone_order_page.dart:77:28 - invalid_null_aware_operator
+warning - The declaration '_selectDate' isn't referenced - lib\features\orders\presentation\phone_order_page.dart:111:16 - unused_element
+warning - The declaration '_selectTime' isn't referenced - lib\features\orders\presentation\phone_order_page.dart:125:16 - unused_element
+   info - Use interpolation to compose strings and values - lib\features\orders\presentation\phone_order_page.dart:140:14 - prefer_interpolation_to_compose_strings
+   info - Use interpolation to compose strings and values - lib\features\orders\presentation\phone_order_page.dart:143:14 - prefer_interpolation_to_compose_strings
+   info - Use interpolation to compose strings and values - lib\features\orders\presentation\phone_order_page.dart:392:124 - prefer_interpolation_to_compose_strings
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\orders\presentation\phone_order_page.dart:425:37 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\features\orders\presentation\phone_order_page.dart:470:47 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\orders\presentation\phone_order_page.dart:475:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\orders\presentation\phone_order_page.dart:494:47 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\orders\presentation\phone_order_page.dart:495:54 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\orders\presentation\phone_order_page.dart:499:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\orders\presentation\phone_order_page.dart:501:54 - use_build_context_synchronously
+warning - Unused import: 'package:intl/intl.dart' - lib\features\orders\presentation\tablet_order_page.dart:5:8 - unused_import
+warning - Unused import: 'package:hompimpa_pos/features/products/domain/product.dart' - lib\features\orders\presentation\tablet_order_page.dart:8:8 - unused_import
+warning - Unused import: 'package:hompimpa_pos/features/orders/presentation/order_list_screen.dart' - lib\features\orders\presentation\tablet_order_page.dart:11:8 - unused_import
+   info - Parameter 'key' could be a super parameter - lib\features\orders\presentation\tablet_order_page.dart:23:9 - use_super_parameters
+   info - Don't invoke 'print' in production code - lib\features\orders\presentation\tablet_order_page.dart:76:7 - avoid_print
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary - lib\features\orders\presentation\tablet_order_page.dart:83:28 - invalid_null_aware_operator
+   info - Use interpolation to compose strings and values - lib\features\orders\presentation\tablet_order_page.dart:160:14 - prefer_interpolation_to_compose_strings
+   info - Use interpolation to compose strings and values - lib\features\orders\presentation\tablet_order_page.dart:163:14 - prefer_interpolation_to_compose_strings
+   info - Don't invoke 'print' in production code - lib\features\orders\presentation\tablet_order_page.dart:335:27 - avoid_print
+warning - Unused import: 'package:intl/intl.dart' - lib\features\orders\presentation\tablet_portrait_order_page.dart:5:8 - unused_import
+warning - Unused import: 'package:hompimpa_pos/features/products/domain/product.dart' - lib\features\orders\presentation\tablet_portrait_order_page.dart:8:8 - unused_import
+warning - Unused import: 'package:hompimpa_pos/features/orders/presentation/order_list_screen.dart' - lib\features\orders\presentation\tablet_portrait_order_page.dart:11:8 - unused_import
+   info - Parameter 'key' could be a super parameter - lib\features\orders\presentation\tablet_portrait_order_page.dart:23:9 - use_super_parameters
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary - lib\features\orders\presentation\tablet_portrait_order_page.dart:57:28 - invalid_null_aware_operator
+   info - Use interpolation to compose strings and values - lib\features\orders\presentation\tablet_portrait_order_page.dart:159:14 - prefer_interpolation_to_compose_strings
+   info - Use interpolation to compose strings and values - lib\features\orders\presentation\tablet_portrait_order_page.dart:162:14 - prefer_interpolation_to_compose_strings
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\orders\presentation\tablet_portrait_order_page.dart:220:43 - deprecated_member_use
+warning - Unused import: 'package:hompimpa_pos/features/auth/presentation/auth_controller.dart' - lib\features\orders\presentation\void_orders_screen.dart:6:8 - unused_import
+   info - Parameter 'key' could be a super parameter - lib\features\orders\presentation\void_orders_screen.dart:19:9 - use_super_parameters
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary - lib\features\orders\presentation\void_orders_screen.dart:33:28 - invalid_null_aware_operator
+   info - Don't use 'BuildContext's across async gaps - lib\features\orders\presentation\void_orders_screen.dart:103:30 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\orders\presentation\void_orders_screen.dart:107:31 - use_build_context_synchronously
+   info - Parameter 'key' could be a super parameter - lib\features\orders\presentation\widgets\mobile_action_bar.dart:10:9 - use_super_parameters
+   info - Parameter 'key' could be a super parameter - lib\features\orders\presentation\widgets\nota_preview_dialog.dart:10:9 - use_super_parameters
+   info - Unnecessary use of 'toList' in a spread - lib\features\orders\presentation\widgets\nota_preview_dialog.dart:117:26 - unnecessary_to_list_in_spreads
+   info - Parameter 'key' could be a super parameter - lib\features\orders\presentation\widgets\pos_action_buttons.dart:10:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\orders\presentation\widgets\pos_action_buttons.dart:58:46 - deprecated_member_use
+   info - Parameter 'key' could be a super parameter - lib\features\orders\presentation\widgets\product_option_dialog.dart:10:9 - use_super_parameters
+warning - The value of the local variable 'total' isn't used - lib\features\orders\presentation\widgets\product_option_dialog.dart:38:12 - unused_local_variable
+warning - The value of the local variable 'topping' isn't used - lib\features\orders\presentation\widgets\product_option_dialog.dart:42:13 - unused_local_variable
+   info - Don't invoke 'print' in production code - lib\features\orders\presentation\widgets\product_option_dialog.dart:125:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\orders\presentation\widgets\product_option_dialog.dart:126:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\orders\presentation\widgets\product_option_dialog.dart:127:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\orders\presentation\widgets\product_option_dialog.dart:134:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\orders\presentation\widgets\product_option_dialog.dart:141:9 - avoid_print
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\orders\presentation\widgets\product_option_dialog.dart:181:23 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\orders\presentation\widgets\product_option_dialog.dart:182:23 - deprecated_member_use
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\orders\presentation\widgets\product_option_dialog.dart:187:23 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\orders\presentation\widgets\product_option_dialog.dart:188:23 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\orders\presentation\widgets\product_option_dialog.dart:201:53 - deprecated_member_use
+warning - Unused import: 'package:hompimpa_pos/features/orders/presentation/widgets/pos_action_buttons.dart' - lib\features\orders\presentation\widgets\tablet_cart_panel.dart:8:8 - unused_import
+warning - Unused import: 'package:hompimpa_pos/features/orders/presentation/order_list_screen.dart' - lib\features\orders\presentation\widgets\tablet_cart_panel.dart:10:8 - unused_import
+   info - Parameter 'key' could be a super parameter - lib\features\orders\presentation\widgets\tablet_cart_panel.dart:27:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\orders\presentation\widgets\tablet_cart_panel.dart:56:33 - deprecated_member_use
+   info - Use interpolation to compose strings and values - lib\features\orders\presentation\widgets\tablet_cart_panel.dart:162:126 - prefer_interpolation_to_compose_strings
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\orders\presentation\widgets\tablet_cart_panel.dart:198:39 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\features\orders\presentation\widgets\tablet_cart_panel.dart:244:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\orders\presentation\widgets\tablet_cart_panel.dart:266:31 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\features\products\data\product_seeder.dart:27:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\products\data\product_seeder.dart:30:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\products\data\product_seeder.dart:32:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\products\data\topping_repository.dart:26:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\products\data\topping_repository.dart:93:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\products\data\topping_repository.dart:122:5 - avoid_print
+warning - Unused import: '../../auth/presentation/auth_controller.dart' - lib\features\products\presentation\dashboard_screen.dart:13:8 - unused_import
+   info - Parameter 'key' could be a super parameter - lib\features\products\presentation\dashboard_screen.dart:22:9 - use_super_parameters
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary - lib\features\products\presentation\dashboard_screen.dart:35:28 - invalid_null_aware_operator
+   info - 'WillPopScope' is deprecated and shouldn't be used. Use PopScope instead. The Android predictive back feature will not work with WillPopScope. This feature was deprecated after v3.12.0-1.0.pre - lib\features\products\presentation\dashboard_screen.dart:79:12 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\products\presentation\dashboard_screen.dart:123:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\products\presentation\dashboard_screen.dart:147:49 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\features\products\presentation\dashboard_screen.dart:162:44 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\products\presentation\dashboard_screen.dart:176:45 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\features\products\presentation\dashboard_screen.dart:198:45 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\products\presentation\dashboard_screen.dart:419:38 - unnecessary_underscores
+   info - Don't use 'BuildContext's across async gaps - lib\features\products\presentation\dashboard_screen.dart:573:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\products\presentation\dashboard_screen.dart:574:40 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\products\presentation\dashboard_screen.dart:576:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\products\presentation\dashboard_screen.dart:577:40 - use_build_context_synchronously
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\products\presentation\dashboard_screen.dart:611:23 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\features\products\presentation\dashboard_screen.dart:671:37 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\products\presentation\dashboard_screen.dart:672:44 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\products\presentation\dashboard_screen.dart:674:44 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\products\presentation\dashboard_screen.dart:732:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\products\presentation\dashboard_screen.dart:733:40 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\products\presentation\dashboard_screen.dart:735:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\products\presentation\dashboard_screen.dart:736:40 - use_build_context_synchronously
+   info - Unnecessary use of multiple underscores - lib\features\reports\presentation\daily_sales_provider.dart:21:16 - unnecessary_underscores
+  error - The function 'StateProvider' isn't defined - lib\features\reports\presentation\report_provider.dart:5:28 - undefined_function
+  error - The function 'StateProvider' isn't defined - lib\features\reports\presentation\report_provider.dart:6:35 - undefined_function
+   info - Unnecessary use of multiple underscores - lib\features\reports\presentation\report_provider.dart:63:16 - unnecessary_underscores
+   info - Parameter 'key' could be a super parameter - lib\features\reports\presentation\report_screen.dart:8:9 - use_super_parameters
+  error - The named parameter 'tooltipBgColor' isn't defined - lib\features\reports\presentation\report_screen.dart:119:13 - undefined_named_parameter
+   info - Use interpolation to compose strings and values - lib\features\reports\presentation\report_screen.dart:147:29 - prefer_interpolation_to_compose_strings
+   info - The imported package 'flutter_native_splash' isn't a dependency of the importing package - lib\main.dart:5:8 - depend_on_referenced_packages
+warning - Unused import: 'core/widgets/animated_splash_screen.dart' - lib\main.dart:8:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\main.dart:13:3 - avoid_print
+   info - Don't invoke 'print' in production code - lib\main.dart:15:3 - avoid_print
+   info - Don't invoke 'print' in production code - lib\main.dart:29:6 - avoid_print
+   info - Parameter 'key' could be a super parameter - lib\main.dart:38:9 - use_super_parameters
+   info - Parameter 'key' could be a super parameter - lib\main.dart:77:9 - use_super_parameters
+  error - Missing concrete implementation of 'OrderRepository.getOrdersByTimeRange' - test\features\cashier\cashier_controller_test.dart:43:7 - non_abstract_class_inherits_abstract_member
+  error - Too many positional arguments: 0 expected, but 2 found - test\features\cashier\cashier_controller_test.dart:89:36 - extra_positional_arguments
+

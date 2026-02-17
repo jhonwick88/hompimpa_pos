@@ -65,7 +65,7 @@ class LoginScreen extends ConsumerWidget {
                 
                 Text(
                   'Hompimpa POS',
-                  style: Theme.of(context).textTheme.headline5?.copyWith(
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     fontSize: 32, // Increased size slightly to match large logo
                     color: Colors.white, // White text for contrast
@@ -78,11 +78,11 @@ class LoginScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-                 const SizedBox(height: 60),
-                 Text(
-                  'Sign in to continue',
-                  style: Theme.of(context).textTheme.bodyText1?.copyWith(
-                    color: Colors.white70, // Lighter white
+                SizedBox(height: 10),
+                Text(
+                  'Masuk untuk melanjutkan',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Colors.grey[600], // Lighter white
                     fontSize: 16,
                   ),
                 ),
@@ -102,8 +102,8 @@ class LoginScreen extends ConsumerWidget {
                       icon: const Icon(Icons.login), 
                       label: const Text('Sign in with Google'),
                       style: ElevatedButton.styleFrom(
-                        primary: Colors.white, // White button
-                        onPrimary: const Color(0xFFB71C1C), // Red text
+                        backgroundColor: Colors.white, // White button
+                        foregroundColor: const Color(0xFFB71C1C), // Red text
                         elevation: 4,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),

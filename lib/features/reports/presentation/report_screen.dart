@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'report_provider.dart';
+import 'package:hompimpa_pos/core/widgets/gradient_app_bar.dart';
 
 class ReportsScreen extends ConsumerWidget {
   const ReportsScreen({Key? key}) : super(key: key);
@@ -14,7 +15,7 @@ class ReportsScreen extends ConsumerWidget {
     final filteredSales = ref.watch(filteredProductSalesProvider);
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: GradientAppBar(
         title: const Text('Laporan Penjualan'),
         actions: [
           IconButton(

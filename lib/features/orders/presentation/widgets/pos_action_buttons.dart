@@ -52,8 +52,8 @@ class POSActionButton extends StatelessWidget {
       icon: Icon(icon, size: 20),
       label: Text(label),
       style: ElevatedButton.styleFrom(
-        primary: Colors.white,
-        onPrimary: primaryColor,
+        backgroundColor: Colors.white,
+        foregroundColor: primaryColor,
         elevation: 0,
         side: BorderSide(color: primaryColor.withOpacity(0.5)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

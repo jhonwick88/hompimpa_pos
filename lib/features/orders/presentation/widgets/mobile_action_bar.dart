@@ -16,7 +16,8 @@ class MobileActionBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cart = ref.watch(cartProvider);
+    final cartState = ref.watch(cartProvider);
+    final cart = cartState.items;
     final cartCount = cart.length;
 
     return Row(

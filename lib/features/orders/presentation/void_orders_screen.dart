@@ -7,6 +7,7 @@ import 'package:hompimpa_pos/features/auth/presentation/auth_controller.dart';
 import 'package:hompimpa_pos/core/enums/user_role.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hompimpa_pos/features/auth/data/auth_repository.dart';
+import 'package:hompimpa_pos/core/widgets/gradient_app_bar.dart';
 
 final voidOrdersProvider = StreamProvider.autoDispose<List<OrderEntity>>((ref) {
   final repository = ref.watch(orderRepositoryProvider);
@@ -80,7 +81,7 @@ class _VoidOrdersScreenState extends ConsumerState<VoidOrdersScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(primary: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('HAPUS PERMANEN'),
           ),
         ],
@@ -116,9 +117,8 @@ class _VoidOrdersScreenState extends ConsumerState<VoidOrdersScreen> {
     final voidOrdersAsync = ref.watch(voidOrdersProvider);
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: GradientAppBar(
         title: const Text('List Pembatalan Order (DEV)'),
-        backgroundColor: Colors.red[900],
         actions: [
           if (_selectedOrderIds.isNotEmpty)
             Padding(

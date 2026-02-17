@@ -9,22 +9,33 @@ import '../../products/data/topping_repository.dart';
 import '../../cashier/presentation/cashier_controller.dart';
 import 'package:collection/collection.dart';
 
+// wrapper class for state
+class CartState {
+  final List<OrderItem> items;
+  CartState({this.items = const []});
+  
+  CartState copyWith({List<OrderItem>? items}) {
+    return CartState(items: items ?? this.items);
+  }
+}
+
 // Provider definition
-final cartProvider = StateNotifierProvider<CartController, List<OrderItem>>((ref) {
-  return CartController(ref);
-});
+final cartProvider = NotifierProvider<CartController, CartState>(CartController.new);
 
 final cartTotalProvider = Provider<double>((ref) {
-  final items = ref.watch(cartProvider);
-  return items.fold(0, (sum, item) => sum + (item.price * item.qty));
+  final cartState = ref.watch(cartProvider); // it returns CartState now
+  return cartState.items.fold(0, (sum, item) => sum + (item.price * item.qty));
 });
 
-class CartController extends StateNotifier<List<OrderItem>> {
-  final Ref ref;
-  CartController(this.ref) : super([]);
+class CartController extends Notifier<CartState> {
+  @override
+  CartState build() {
+    return CartState();
+  }
 
   void addItem(Product product, int qty, {String? level, String? sambal, String? note, List<Topping>? toppings}) {
-    final existingIndex = state.indexWhere((item) {
+    final currentItems = state.items;
+    final existingIndex = currentItems.indexWhere((item) {
       final bool toppingsMatch = const DeepCollectionEquality.unordered().equals(item.toppings, toppings);
       return item.productId == product.id && 
              item.level == level && 
@@ -41,7 +52,6 @@ class CartController extends StateNotifier<List<OrderItem>> {
       }
     }
     // Spicy Level Charge
-    // Only applies if product is Mie/Pangsit and level >= 6
     if (level != null && (int.tryParse(level) ?? 0) >= 6) {
        final isMiePangsit = product.category.toLowerCase().contains('mie') || 
                             product.name.toLowerCase().contains('mie') ||
@@ -53,20 +63,19 @@ class CartController extends StateNotifier<List<OrderItem>> {
        }
     }
 
-    // Check total stock for this product across all variations
-    final totalQtyInCart = state.where((i) => i.productId == product.id).fold<int>(0, (sum, i) => sum + i.qty);
+    // Check total stock
+    final totalQtyInCart = currentItems.where((i) => i.productId == product.id).fold<int>(0, (sum, i) => sum + i.qty);
     
     if (totalQtyInCart + qty > product.stock) {
       throw Exception('Stok tidak cukup! (Total di keranjang: $totalQtyInCart, Stok: ${product.stock})');
     }
 
     if (existingIndex != -1) {
-      final existingItem = state[existingIndex];
-      // Note: If toppings match, price should match too.
+      final existingItem = currentItems[existingIndex];
       final updatedItem = existingItem.copyWith(qty: existingItem.qty + qty);
-      final newState = List<OrderItem>.from(state);
-      newState[existingIndex] = updatedItem;
-      state = newState;
+      final newItems = List<OrderItem>.from(currentItems);
+      newItems[existingIndex] = updatedItem;
+      state = state.copyWith(items: newItems);
     } else {
       final item = OrderItem(
         productId: product.id,
@@ -78,43 +87,41 @@ class CartController extends StateNotifier<List<OrderItem>> {
         note: note,
         toppings: toppings,
       );
-      state = [...state, item];
+      state = state.copyWith(items: [...currentItems, item]);
     }
   }
 
   void removeItem(OrderItem item) {
-    state = state.where((i) => i != item).toList();
+    state = state.copyWith(items: state.items.where((i) => i != item).toList());
   }
 
   void clearCart() {
-    state = [];
+    state = CartState(items: []);
   }
 
   void setCartItems(List<OrderItem> items) {
-    state = List<OrderItem>.from(items);
+    state = CartState(items: List<OrderItem>.from(items));
   }
 
   Future<void> submitOrder(
     OrderRepository repository,
-    ToppingRepository toppingRepository, // Added
+    ToppingRepository toppingRepository, 
     String customerName, {
     String? customerPhone, 
     bool isQuickOrder = false,
     required DateTime pickupDate,
     required String pickupTime,
   }) async {
-    if (state.isEmpty) return;
+    if (state.items.isEmpty) return;
     
-    final total = state.fold<double>(0.0, (sum, item) => sum + (item.price * item.qty));
+    final total = state.items.fold<double>(0.0, (sum, item) => sum + (item.price * item.qty));
     final now = DateTime.now();
 
-    // Quick Order Logic Prefix
     String finalCustomerName = customerName;
     if (isQuickOrder && finalCustomerName.isEmpty) {
        finalCustomerName = "Offline Order - ${const Uuid().v4().substring(0, 4)}";
     }
 
-    // Get active shift
     final cashierState = ref.read(cashierProvider);
     final String? shiftId = cashierState.isOpen ? cashierState.activeShift?.id : null;
 
@@ -126,7 +133,7 @@ class CartController extends StateNotifier<List<OrderItem>> {
       orderDate: pickupDate,
       orderTime: pickupTime,
       status: OrderStatus.belum,
-      items: state,
+      items: state.items,
       createdAt: now,
       updatedAt: now,
       shiftId: shiftId,
@@ -135,15 +142,12 @@ class CartController extends StateNotifier<List<OrderItem>> {
     await repository.addOrder(order);
     
     // Reduce Stock
-    for (var item in state) {
+    for (var item in state.items) {
       if (item.toppings != null) {
         for (var topping in item.toppings!) {
-          // Reduce stock for each topping * item qty
           try {
              await toppingRepository.reduceStock(topping.id, item.qty);
           } catch (e) {
-             // Handle error? or just log. Ideally we should validate before submitting.
-             // But UI should have prevented this.
              print("Error reducing stock for ${topping.name}: $e");
           }
         }
@@ -155,16 +159,16 @@ class CartController extends StateNotifier<List<OrderItem>> {
 
   Future<void> updateOrder(
     OrderRepository repository,
-    ToppingRepository toppingRepository, // Added
+    ToppingRepository toppingRepository, 
     OrderEntity existingOrder,
     String customerName, {
     String? customerPhone,
     required DateTime pickupDate,
     required String pickupTime,
   }) async {
-    if (state.isEmpty) return;
+    if (state.items.isEmpty) return;
 
-    final total = state.fold<double>(0.0, (sum, item) => sum + (item.price * item.qty));
+    final total = state.items.fold<double>(0.0, (sum, item) => sum + (item.price * item.qty));
     final now = DateTime.now();
 
     final updatedOrder = existingOrder.copyWith(
@@ -173,25 +177,11 @@ class CartController extends StateNotifier<List<OrderItem>> {
       total: total,
       orderDate: pickupDate,
       orderTime: pickupTime,
-      items: state,
+      items: state.items,
       updatedAt: now,
     );
 
     await repository.updateOrder(updatedOrder);
-    
-    // Note: Complex logic needed for restoring stock if creating/updating items.
-    // For now, prompt constraints didn't specify handling stock RETURN on update, 
-    // but we should probably reduce stock for NEW items or calculate diff.
-    // Given the complexity and prompt scope ("Only update Create / Add Order (Kasir) logic"),
-    // I will implement stock reduction for the items in the updated order 
-    // BUT this is risky if we re-reduce stock for existing items.
-    // Ideally update logic handles diff. 
-    // "On order submit: Reduce topping stock... default pangsit decreases"
-    // Since this is update, and valid for "Add Order (Kasir)", technically Update is separate feature I just added.
-    // The prompt says "ONLY update Create / Add Order (Kasir) logic".
-    // I will leave Update Order stock logic as legacy (no-op) or matching existing behavior (none)
-    // UNLESS I can safely diff.
-    // I'll skip stock reduction on updateOrder to be safe/compliant with scope limitation.
     
     clearCart();
   }

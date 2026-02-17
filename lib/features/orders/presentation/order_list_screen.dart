@@ -10,7 +10,9 @@ import '../../orders/domain/order.dart';
 import '../../orders/domain/order_item.dart';
 import '../../../core/enums/user_role.dart';
 import 'widgets/nota_preview_dialog.dart';
-import '../../../core/widgets/app_end_drawer.dart';
+import '../../../core/widgets/gradient_app_bar.dart';
+import '../../../core/widgets/gradient_status_tab_bar.dart';
+import '../../../core/widgets/order_card_modern.dart';
 
 // Providers for filtering
 final orderStatusFilterProvider = StateProvider<OrderStatus?>((ref) => null);
@@ -86,8 +88,8 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
       child: DefaultTabController(
         length: 3,
         child: Scaffold(
-          endDrawer: const AppEndDrawer(),
-          appBar: AppBar(
+         // endDrawer: const AppEndDrawer(),
+          appBar: GradientAppBar(
             title: isSearchMode 
               ? TextField(
                   autofocus: true,
@@ -134,21 +136,36 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
                   }
                 },
               ),
-              Builder(
-                builder: (context) => IconButton(
-                  icon: const Icon(Icons.menu),
-                  onPressed: () => Scaffold.of(context).openEndDrawer(),
-                ),
-              ),
+              // Builder(
+              //   builder: (context) => IconButton(
+              //     icon: const Icon(Icons.menu),
+              //     onPressed: () => Scaffold.of(context).openEndDrawer(),
+              //   ),
+              // ),
             ],
-            bottom: TabBar(
-              isScrollable: true,
-              tabs: [
-                Tab(child: _buildTabHeader('Belum', Icons.timer, counts[OrderStatus.belum]!, Colors.orange)),
-                Tab(child: _buildTabHeader('Proses', Icons.sync, counts[OrderStatus.proses]!, Colors.blue)),
-                Tab(child: _buildTabHeader('Selesai', Icons.check_circle, counts[OrderStatus.selesai]!, Colors.green)),
-              ],
-            ),
+bottom: GradientStatusTabBar(
+  style: TabBarStyle.pill, // atau underline
+  items: [
+    GradientStatusTabItem(
+      title: 'Belum',
+      icon: Icons.timer,
+      count: counts[OrderStatus.belum]!,
+      color: Colors.orange,
+    ),
+    GradientStatusTabItem(
+      title: 'Proses',
+      icon: Icons.sync,
+      count: counts[OrderStatus.proses]!,
+      color: Colors.blue,
+    ),
+    GradientStatusTabItem(
+      title: 'Selesai',
+      icon: Icons.check_circle,
+      count: counts[OrderStatus.selesai]!,
+      color: Colors.green,
+    ),
+  ],
+),
           ),
           body: const TabBarView(
             children: [
@@ -244,7 +261,7 @@ class _OrderListTab extends ConsumerWidget {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(primary: Colors.green),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
             child: const Text('YA, SELESAI'),
           ),
         ],
@@ -349,187 +366,55 @@ class _OrderListTab extends ConsumerWidget {
             // Queue number 1, 2, 3...
             final queueNumber = index + 1;
 
-            return Card(
-              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              elevation: 2,
-              child: ExpansionTile(
-                title: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${order.customerName}',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          if (order.executorName != null)
-                             Text(
-                               'Eksekutor : ${order.executorName}',
-                               style: const TextStyle(fontSize: 10, color: Colors.indigo, fontStyle: FontStyle.italic),
-                             ),
-                        ],
-                      ),
-                    ),
-                    const Icon(Icons.arrow_forward, size: 16, color: Colors.grey),
-                    const SizedBox(width: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade100,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '#$queueNumber',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                subtitle: Text('Total: Rp ${order.total.toStringAsFixed(0)} | ${order.orderTime}'),
-                leading: CircleAvatar(
-                  backgroundColor: _getStatusColor(order.status),
-                  child: Icon(_getStatusIcon(order.status), color: Colors.white, size: 20),
-                ),
-                children: [
-                   ...order.items.asMap().entries.map((entry) {
-                    final idx = entry.key;
-                    final item = entry.value;
-                    return ListTile(
-                      dense: true,
-                      title: Text(
-                        item.level != null 
-                          ? '${item.productName} - Lvl ${item.level} (${item.sambal}) - ${item.qty}x'
-                          : item.productName + ' - ${item.qty}x', style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text.rich(
-                            TextSpan(
-                              children: [
-                                if (item.note != null && item.note!.isNotEmpty)
-                                  TextSpan(
-                                    text: ' (${item.note})',
-                                    style: const TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.bold, fontSize: 14),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          if (item.toppings != null && item.toppings!.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4.0),
-                              child: Text(
-                                'Toppings: ${item.toppings!.map((t) => t.name).join(", ")}',
-                                style: TextStyle(fontSize: 12, color: Colors.grey[900], fontStyle: FontStyle.italic),
-                              ),
-                            ),
-                        ],
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text('Rp ${(item.price * item.qty).toStringAsFixed(0)}'),
-                          if (order.status == OrderStatus.belum)
-                            IconButton(
-                              icon: const Icon(Icons.edit, size: 18, color: Colors.blue),
-                              onPressed: () => _editOrderItem(context, ref, order, idx),
-                            ),
-                        ],
-                      ),
-                    );
-                  }),
-                  const Divider(),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          if (order.status == OrderStatus.belum) ...[
-                            ElevatedButton.icon(
-                              onPressed: () => context.push('/entry/add/${order.id}'),
-                              icon: const Icon(Icons.add_shopping_cart, size: 18),
-                              label: const Text('Tambah'),
-                              style: ElevatedButton.styleFrom(
-                                primary: Colors.orange,
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
-                              ),
-                            ),
-                            ElevatedButton(
-                              onPressed: () async {
-                                try {
-                                  final messenger = ScaffoldMessenger.of(context);
-                                  final authState = ref.read(authStateChangesProvider);
-                                  final user = authState.value;
-                                  print('login data: ${user}');
-                                  await ref.read(orderRepositoryProvider).updateOrderStatus(
-                                    order.id, 
-                                    OrderStatus.proses, 
-                                    order.items,
-                                    executorName: user?.displayName ?? 'Admin',
-                                    executorId: user?.uid
-                                  );
-                                  messenger.showSnackBar(const SnackBar(content: Text('Pesanan sedang diproses')));
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal memperbarui: $e')));
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
-                              ),
-                              child: const Text('Proses'),
-                            ),
-                          ],
-                          if (order.status == OrderStatus.proses) ...[
-                            ElevatedButton.icon(
-                              onPressed: () => _showSelesaiConfirmation(context, ref, order),
-                              icon: const Icon(Icons.check_circle_outline, size: 18),
-                              label: const Text('Selesai'),
-                              style: ElevatedButton.styleFrom(
-                                primary: Colors.green, 
-                                onPrimary: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
-                              ),
-                            ),
-                          ],
-                          if (order.status == OrderStatus.selesai) ...[
-                             ElevatedButton.icon(
-                               onPressed: () => _showPrintPreview(context, order),
-                               icon: const Icon(Icons.print, size: 18),
-                               label: const Text('Print'),
-                               style: ElevatedButton.styleFrom(
-                                 primary: Colors.blueGrey, 
-                                 onPrimary: Colors.white,
-                                 padding: const EdgeInsets.symmetric(horizontal: 8),
-                               ),
-                             ),
-                          ],
-                          if (order.status != OrderStatus.selesai) ...[
-                            ElevatedButton.icon(
-                              onPressed: () => _showVoidDialog(context, ref, order),
-                              icon: const Icon(Icons.delete_forever, size: 18),
-                              label: const Text('Void Order'),
-                              style: ElevatedButton.styleFrom(
-                                primary: Colors.red,
-                                onPrimary: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
+            return OrderCardModern(
+  order: order,
+  queueNumber: queueNumber,
+  statusColor: _getStatusColor(order.status),
+  statusIcon: _getStatusIcon(order.status),
+  onEditItem: (order, idx) => _editOrderItem(context, ref, order, idx),
+  actionSection: Wrap(
+    spacing: 8,
+    runSpacing: 8,
+    children: [
+      if (order.status == OrderStatus.belum) ...[
+        ElevatedButton.icon(
+          onPressed: () => context.push('/entry/add/${order.id}'),
+          icon: const Icon(Icons.add_shopping_cart, size: 18),
+          label: const Text('Tambah'),
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+        ),
+        ElevatedButton(
+          onPressed: () async { /* update status proses */ },
+          child: const Text('Proses'),
+        ),
+      ],
+      if (order.status == OrderStatus.proses) ...[
+        ElevatedButton.icon(
+          onPressed: () => _showSelesaiConfirmation(context, ref, order),
+          icon: const Icon(Icons.check_circle_outline, size: 18),
+          label: const Text('Selesai'),
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+        ),
+      ],
+      if (order.status == OrderStatus.selesai) ...[
+        ElevatedButton.icon(
+          onPressed: () => _showPrintPreview(context, order),
+          icon: const Icon(Icons.print, size: 18),
+          label: const Text('Print'),
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.blueGrey),
+        ),
+      ],
+      if (order.status != OrderStatus.selesai) ...[
+        ElevatedButton.icon(
+          onPressed: () => _showVoidDialog(context, ref, order),
+          icon: const Icon(Icons.delete_forever, size: 18),
+          label: const Text('Void Order'),
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+        ),
+      ],
+    ],
+  ),
+);
           },
         );
       },
@@ -660,8 +545,8 @@ class _VoidOrderDialogState extends State<_VoidOrderDialog> {
                 }
               : null,
           style: ElevatedButton.styleFrom(
-            primary: Colors.red,
-            onPrimary: Colors.white,
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
           ),
           child: const Text('KONFIRMASI VOID'),
         ),

@@ -16,6 +16,7 @@ import 'package:hompimpa_pos/features/orders/presentation/order_list_screen.dart
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:hompimpa_pos/features/products/data/topping_repository.dart';
 import 'package:hompimpa_pos/features/orders/presentation/widgets/product_option_dialog.dart';
+import 'package:hompimpa_pos/core/widgets/gradient_status_tab_bar.dart';
 
 class OrderEntryScreen extends ConsumerStatefulWidget {
   final bool isQuickOrder;
@@ -151,11 +152,26 @@ class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
                 onQuickOrderPressed: _switchToQuickOrder,
               ),
           ],
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Semua'),
-              Tab(text: 'Makanan'),
-              Tab(text: 'Minuman'),
+          bottom: GradientStatusTabBar(
+            items: [
+              GradientStatusTabItem(
+                title: 'Semua',
+                icon: Icons.all_inclusive,
+                count: 0,
+                color: Colors.blue,
+              ),
+              GradientStatusTabItem(
+                title: 'Makanan',
+                icon: Icons.fastfood,
+                count: 0,
+                color: Colors.orange,
+              ),
+              GradientStatusTabItem(
+                title: 'Minuman',
+                icon: Icons.local_drink,
+                count: 0,
+                color: Colors.green,
+              ),
             ],
           ),
         ),
@@ -274,7 +290,8 @@ class _MobileCartView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cart = ref.watch(cartProvider);
+    final cartState = ref.watch(cartProvider);
+    final cart = cartState.items;
     final cartTotal = ref.watch(cartTotalProvider);
     bool isNameFilled = nameController.text.trim().isNotEmpty;
 
@@ -454,8 +471,8 @@ class _MobileCartView extends ConsumerWidget {
                             context.go('/orders');
                           },
                     style: ElevatedButton.styleFrom(
-                      primary: Colors.orange[800],
-                      onPrimary: Colors.white,
+                      backgroundColor: Colors.orange[800],
+                      foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),

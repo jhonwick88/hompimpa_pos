@@ -2,14 +2,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/auth_repository.dart';
 
-final authControllerProvider = StateNotifierProvider<AuthController, AsyncValue<void>>((ref) {
-  return AuthController(ref.read(authRepositoryProvider));
-});
+final authControllerProvider = NotifierProvider<AuthController, AsyncValue<void>>(AuthController.new);
 
-class AuthController extends StateNotifier<AsyncValue<void>> {
-  final AuthRepository _authRepository;
+class AuthController extends Notifier<AsyncValue<void>> {
+  
+  AuthRepository get _authRepository => ref.read(authRepositoryProvider);
 
-  AuthController(this._authRepository) : super(const AsyncData(null));
+  @override
+  AsyncValue<void> build() {
+    return const AsyncData(null);
+  }
 
   Future<void> signInWithGoogle() async {
     state = const AsyncLoading();

@@ -16,164 +16,201 @@ class AppEndDrawer extends ConsumerWidget {
     // final cashierController = ref.read(cashierProvider.notifier); // Not used directly in build
 
     return Drawer(
-      backgroundColor: AppColors.creamBackground,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.horizontal(left: Radius.circular(16)),
-      ),
-      child: userAsync.when(
-        data: (user) {
-          final String initial = user?.displayName?.isNotEmpty == true
-              ? user!.displayName![0].toUpperCase()
-              : '?';
+  backgroundColor: const Color(0xFFF4F4F4), // lebih netral modern
+  shape: const RoundedRectangleBorder(
+    borderRadius: BorderRadius.horizontal(left: Radius.circular(16)),
+  ),
+  child: userAsync.when(
+    data: (user) {
+      final String initial = user?.displayName?.isNotEmpty == true
+          ? user!.displayName![0].toUpperCase()
+          : '?';
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // HEADER SECTION
-              Container(
-                padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4)),
-                  ],
-                ),
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    CircleAvatar(
-                      radius: 36,
-                      backgroundColor: AppColors.freshGreen.withOpacity(0.2),
-                      child: Text(
-                        initial,
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.freshGreen,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      user?.displayName ?? 'Kasir',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      cashierState.activeShift?.shiftName ?? '-',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+
+                    // ===== HEADER GRADIENT =====
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: cashierState.isOpen ? AppColors.freshGreen : AppColors.softRed,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: cashierState.isLoading 
-                        ? const SizedBox(
-                            width: 16, height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
-                          )
-                        : Text(
-                          cashierState.isOpen ? 'Kasir Aktif' : 'Kasir Tutup',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      padding: const EdgeInsets.fromLTRB(20, 60, 20, 24),
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Color(0xFFB71C1C),
+                            Color(0xFFFF6D00),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
+                        borderRadius: BorderRadius.vertical(
+                          bottom: Radius.circular(28),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          CircleAvatar(
+                            radius: 36,
+                            backgroundColor: Colors.white,
+                            child: Text(
+                              initial,
+                              style: const TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFFB71C1C),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            user?.displayName ?? 'Kasir',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            cashierState.activeShift?.shiftName ?? '-',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.white70,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // STATUS BADGE
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: cashierState.isOpen
+                                  ? Colors.green
+                                  : Colors.black.withOpacity(0.25),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: cashierState.isLoading
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Text(
+                                    cashierState.isOpen
+                                        ? 'Kasir Aktif'
+                                        : 'Kasir Tutup',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    if (cashierState.error != null)
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        color: Colors.red.shade100,
+                        child: Text(
+                          cashierState.error!,
+                          style: TextStyle(
+                              color: Colors.red.shade800, fontSize: 12),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+
+                    const SizedBox(height: 20),
+                    const Divider(height: 1),
+
+                    // ===== OPERASIONAL =====
+                    const SizedBox(height: 16),
+                    const _SectionTitle('Operasional Kasir'),
+
+                    if (cashierState.isOpen)
+                      _DrawerButton(
+                        icon: Icons.remove_circle_outline,
+                        label: 'Kurangi Laci',
+                        color: Colors.black87,
+                        onTap: () => _showReduceCashDialog(context, ref),
+                      ),
+
+                    if (!cashierState.isOpen)
+                      _DrawerButton(
+                        icon: Icons.storefront,
+                        label: 'Open Kasir',
+                        color: const Color(0xFF2E7D32),
+                        isPrimary: true,
+                        onTap: () => _showOpenRegisterDialog(context, ref),
+                      )
+                    else
+                      _DrawerButton(
+                        icon: Icons.lock_outline,
+                        label: 'Close Kasir',
+                        color: const Color(0xFFB71C1C),
+                        isPrimary: true,
+                        onTap: () => _showCloseRegisterDialog(context, ref),
+                      ),
+
+                    const SizedBox(height: 10),
+                    const Divider(),
+
+                    // ===== AKUN =====
+                    const SizedBox(height: 16),
+                    const _SectionTitle('Akun'),
+
+                    _DrawerButton(
+                      icon: Icons.person_outline,
+                      label: 'Profil',
+                      onTap: () {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Profile feature coming soon')),
+                        );
+                      },
+                    ),
+
+                    _DrawerButton(
+                      icon: Icons.logout,
+                      label: 'Logout',
+                      color: const Color(0xFFB71C1C),
+                      onTap: () => _showLogoutDialog(context, ref),
+                    ),
+
+                    const Spacer(),
+
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        'v1.0.0',
+                        textAlign: TextAlign.center,
+                        style:
+                            TextStyle(color: Colors.grey[500], fontSize: 12),
+                      ),
                     ),
                   ],
                 ),
               ),
-
-              if (cashierState.error != null)
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  color: Colors.red.shade100,
-                  child: Text(
-                    cashierState.error!,
-                    style: TextStyle(color: Colors.red.shade800, fontSize: 12),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-
-              const SizedBox(height: 20),
-              const Divider(height: 1),
-              
-              // OPERASIONAL KASIR SECTION
-              _SectionTitle('Operasional Kasir'),
-              
-              if (cashierState.isOpen)
-                _DrawerButton(
-                  icon: Icons.remove_circle_outline,
-                  label: 'Kurangi Laci',
-                  color: AppColors.textPrimary,
-                  onTap: () => _showReduceCashDialog(context, ref),
-                ),
-
-              if (!cashierState.isOpen)
-                _DrawerButton(
-                  icon: Icons.storefront,
-                  label: 'Open Kasir',
-                  color: AppColors.freshGreen,
-                  isPrimary: true,
-                  onTap: () => _showOpenRegisterDialog(context, ref),
-                )
-              else
-                _DrawerButton(
-                  icon: Icons.lock_outline,
-                  label: 'Close Kasir',
-                  color: AppColors.softRed,
-                  isPrimary: true,
-                  onTap: () => _showCloseRegisterDialog(context, ref),
-                ),
-
-              const SizedBox(height: 10),
-              const Divider(),
-
-              // AKUN SECTION
-              _SectionTitle('Akun'),
-
-              _DrawerButton(
-                icon: Icons.person_outline,
-                label: 'Profil',
-                onTap: () { 
-                   Navigator.pop(context);
-                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile feature coming soon')));
-                },
-              ),
-
-              _DrawerButton(
-                icon: Icons.logout,
-                label: 'Logout',
-                color: AppColors.softRed,
-                onTap: () => _showLogoutDialog(context, ref),
-              ),
-              
-              const Spacer(),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  'v1.0.0',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey[400], fontSize: 12),
-                ),
-              ),
-            ],
+            ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('Error: $e')),
-      ),
-    );
+      );
+    },
+    loading: () => const Center(child: CircularProgressIndicator()),
+    error: (e, st) => Center(child: Text('Error: $e')),
+  ),
+);
+
   }
 
   void _showReduceCashDialog(BuildContext context, WidgetRef ref) {

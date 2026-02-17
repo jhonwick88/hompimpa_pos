@@ -42,7 +42,8 @@ class TabletCartPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cart = ref.watch(cc.cartProvider);
+    final cartState = ref.watch(cc.cartProvider);
+    final cart = cartState.items;
     final cartTotal = ref.watch(cc.cartTotalProvider);
     bool isNameFilled = nameController.text.trim().isNotEmpty;
 
@@ -266,8 +267,8 @@ class TabletCartPanel extends ConsumerWidget {
                             }
                           },
                     style: ElevatedButton.styleFrom(
-                      primary: existingOrderId != null ? Colors.blue[800] : Colors.orange[800],
-                      onPrimary: Colors.white,
+                      backgroundColor: existingOrderId != null ? Colors.blue[800] : Colors.orange[800],
+                      foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),

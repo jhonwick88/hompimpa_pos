@@ -17,6 +17,7 @@ import '../domain/product.dart';
 import '../../orders/domain/order.dart';
 import 'package:uuid/uuid.dart';
 import '../domain/topping.dart';
+import '../../../core/widgets/gradient_app_bar.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -80,11 +81,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       onWillPop: _onWillPop,
       child: Scaffold(
         endDrawer: const AppEndDrawer(),
-        appBar: AppBar(
+        appBar: GradientAppBar(
           title: const Text('Hompimpa POS'),
           actions: [
             Padding(
-              padding: const EdgeInsets.only(right: 16),
+              padding: EdgeInsets.only(right: 16),
               child: Center(
                 child: RichText(
                   text: TextSpan(
@@ -114,7 +115,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Summary Cards
-              if (authState.value?.role == UserRole.dev) ...[
+              
                 Row(
                   children: [
                     Expanded(
@@ -168,6 +169,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ),
                   ],
                 ),
+                if (authState.value?.role == UserRole.dev) ...[
                 const SizedBox(height: 12),
                 InkWell(
                   onTap: () => context.push('/void-orders'),
@@ -205,9 +207,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
-              ],
-              if(authState.value?.role == UserRole.dev) ...[
                 const SizedBox(height: 12),
                 SizedBox(
                   height: 50,
@@ -216,8 +215,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     icon: const Icon(Icons.add_box),
                     label: const Text('TAMBAH PRODUK BARU'),
                     style: ElevatedButton.styleFrom(
-                      primary: Colors.green[700],
-                      onPrimary: Colors.white,
+                      backgroundColor: Colors.green[700],
+                      foregroundColor: Colors.white,
                       elevation: 4,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),

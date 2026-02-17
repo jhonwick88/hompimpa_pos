@@ -103,15 +103,46 @@ class _HompimpaAppState extends ConsumerState<HompimpaApp> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final router = ref.watch(routerProvider);
-    return MaterialApp.router(
-      title: 'Hompimpa POS',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.orange,
+ Widget build(BuildContext context) {
+  final router = ref.watch(routerProvider);
+
+  return MaterialApp.router(
+    title: 'Hompimpa POS',
+    debugShowCheckedModeBanner: false,
+    theme: ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.light(
+        primary: Color(0xFFB71C1C),     // Deep Red (AppBar)
+        secondary: Color(0xFFFF6D00),   // Orange untuk tombol
+        surface: Colors.white,
+        background: Color(0xFFF4F4F4),
       ),
-      routerConfig: router,
-    );
-  }
+
+      scaffoldBackgroundColor: Color(0xFFF4F4F4),
+
+      appBarTheme: AppBarTheme(
+        backgroundColor: Color(0xFFB71C1C),
+        foregroundColor: Colors.white,
+        elevation: 4,
+        centerTitle: false,
+      ),
+
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: Color(0xFFFF6D00),
+        foregroundColor: Colors.white,
+      ),
+
+cardTheme: const CardThemeData(
+  color: Colors.white,
+  elevation: 2,
+  margin: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.all(Radius.circular(16)),
+  ),
+),
+
+    ),
+    routerConfig: router,
+  );
+}
 }

@@ -12,6 +12,8 @@ import 'package:hompimpa_pos/features/orders/presentation/order_list_screen.dart
 import 'package:hompimpa_pos/features/products/data/topping_repository.dart';
 import 'package:hompimpa_pos/features/orders/presentation/widgets/product_option_dialog.dart';
 import 'package:hompimpa_pos/features/orders/domain/order.dart';
+import 'package:hompimpa_pos/core/widgets/gradient_app_bar.dart';
+import 'package:hompimpa_pos/core/widgets/gradient_status_tab_bar.dart';
 
 /// Phone-specific order entry page (< 600px)
 /// - Full-screen product grid
@@ -152,7 +154,7 @@ class _PhoneOrderPageState extends ConsumerState<PhoneOrderPage> {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        appBar: AppBar(
+        appBar: GradientAppBar(
           title: Text(widget.isQuickOrder ? 'Quick Order' : 'New Order'),
           actions: [
             MobileActionBar(
@@ -161,11 +163,26 @@ class _PhoneOrderPageState extends ConsumerState<PhoneOrderPage> {
               onQuickOrderPressed: () {},
             ),
           ],
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Semua'),
-              Tab(text: 'Makanan'),
-              Tab(text: 'Minuman'),
+          bottom: GradientStatusTabBar(
+            items: const [
+              GradientStatusTabItem(
+                title: 'Semua',
+                icon: Icons.all_inclusive,
+                count: 0,
+                color: Colors.blue,
+              ),
+              GradientStatusTabItem(
+                title: 'Makanan',
+                icon: Icons.fastfood,
+                count: 0,
+                color: Colors.orange,
+              ),
+              GradientStatusTabItem(
+                title: 'Minuman',
+                icon: Icons.local_drink,
+                count: 0,
+                color: Colors.green,
+              ),
             ],
           ),
         ),
@@ -286,7 +303,8 @@ class _MobileCartView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cart = ref.watch(cartProvider);
+    final cartState = ref.watch(cartProvider);
+    final cart = cartState.items;
     final cartTotal = ref.watch(cartTotalProvider);
     bool isNameFilled = nameController.text.trim().isNotEmpty;
 
@@ -505,8 +523,8 @@ class _MobileCartView extends ConsumerWidget {
                             }
                           },
                     style: ElevatedButton.styleFrom(
-                      primary: existingOrderId != null ? Colors.blue[800] : Colors.orange[800],
-                      onPrimary: Colors.white,
+                      backgroundColor: existingOrderId != null ? Colors.blue[800] : Colors.orange[800],
+                      foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),

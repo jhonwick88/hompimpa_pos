@@ -38,12 +38,17 @@ class CashierState {
   }
 }
 
-class CashierController extends StateNotifier<CashierState> {
-  final CashierRepository _repository;
-  final OrderRepository _orderRepository;
+class CashierController extends Notifier<CashierState> {
+  // Dependencies are accessed via ref
+  CashierRepository get _repository => ref.read(cashierRepositoryProvider);
+  OrderRepository get _orderRepository => ref.read(orderRepositoryProvider);
 
-  CashierController(this._repository, this._orderRepository) : super(CashierState()) {
-    _loadActiveShift();
+  @override
+  CashierState build() {
+    // Initial state
+    // We trigger load logic. Using Future.microtask to avoid build-phase side effects
+    Future.microtask(() => _loadActiveShift());
+    return CashierState(); 
   }
 
   Future<void> _loadActiveShift() async {
@@ -211,8 +216,4 @@ class CashierController extends StateNotifier<CashierState> {
   }
 }
 
-final cashierProvider = StateNotifierProvider<CashierController, CashierState>((ref) {
-  final cashierRepo = ref.watch(cashierRepositoryProvider);
-  final orderRepo = ref.watch(orderRepositoryProvider);
-  return CashierController(cashierRepo, orderRepo);
-});
+final cashierProvider = NotifierProvider<CashierController, CashierState>(CashierController.new);

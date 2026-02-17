@@ -168,7 +168,7 @@ class _NotaPreviewDialogState extends ConsumerState<NotaPreviewDialog> {
               ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
               : const Icon(Icons.print),
           label: Text(_isPrinting ? 'Printing...' : 'PRINT'),
-          style: ElevatedButton.styleFrom(primary: Colors.blue[800]),
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[800]),
         ),
       ],
     );
