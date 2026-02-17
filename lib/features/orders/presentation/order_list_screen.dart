@@ -220,7 +220,14 @@ class _OrderListTab extends ConsumerWidget {
     if (order.customerPhone == null || order.customerPhone!.isEmpty) return;
 
     final dateStr = DateFormat('dd/MM/yyyy').format(order.orderDate);
-    final itemsSummary = order.items.map((i) => "${i.productName} x${i.qty}").join("\n");
+    final itemsSummary = order.items.map((i) {
+      String itemText = "- *${i.productName} x${i.qty}*";
+      if (i.toppings != null && i.toppings!.isNotEmpty) {
+        final toppings = i.toppings!.map((t) => t.name).join(", ");
+        itemText += "\n  *+ $toppings*";
+      }
+      return itemText;
+    }).join("\n");
     
     final message = "*Hi, Hompier !*\n"
         "Terima kasih telah memesan *Hompimpa Mie & Pangsit*.\n\n"
