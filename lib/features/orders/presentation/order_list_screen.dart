@@ -376,7 +376,14 @@ class _OrderListTab extends ConsumerWidget {
           );
         }
 
-        return ListView.builder(
+        return RefreshIndicator(
+          onRefresh: () async {
+            await Future.wait([
+               ref.refresh(filteredOrdersProvider.future),
+               ref.refresh(dailyOrdersProvider.future),
+            ]);
+          },
+          child: ListView.builder(
           itemCount: filtered.length,
           itemBuilder: (context, index) {
             final order = filtered[index];
@@ -435,6 +442,7 @@ class _OrderListTab extends ConsumerWidget {
   ),
 );
           },
+          ),
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),

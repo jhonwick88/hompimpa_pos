@@ -109,7 +109,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           ],
         ),
-        body: SingleChildScrollView(
+        body: RefreshIndicator(
+          onRefresh: () async {
+            // Refresh providers
+            ref.refresh(todaysSalesProvider);
+            ref.refresh(todaysOrdersProvider);
+            ref.refresh(productListProvider);
+            ref.refresh(toppingListProvider);
+            await Future.delayed(const Duration(seconds: 1)); // UX delay
+          },
+          child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -620,6 +629,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
               const SizedBox(height: 32), // Bottom padding
             ],
+          ),
           ),
         ),
         floatingActionButton: SpeedDial(
