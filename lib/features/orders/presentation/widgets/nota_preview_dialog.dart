@@ -160,15 +160,19 @@ class _NotaPreviewDialogState extends ConsumerState<NotaPreviewDialog> {
       actions: [
         TextButton(
           onPressed: _isPrinting ? null : () => Navigator.pop(context),
-          child: const Text('BATAL', style: TextStyle(color: Colors.grey)),
+          child: const Text('BATAL', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
         ),
         ElevatedButton.icon(
           onPressed: _isPrinting ? null : _handlePrint,
           icon: _isPrinting 
               ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
               : const Icon(Icons.print),
-          label: Text(_isPrinting ? 'Printing...' : 'PRINT'),
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[800]),
+          label: Text(_isPrinting ? 'Printing...' : 'PRINT', style: const TextStyle(fontWeight: FontWeight.bold)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue[800],
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          ),
         ),
       ],
     );

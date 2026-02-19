@@ -13,6 +13,7 @@ import 'package:hompimpa_pos/features/orders/presentation/widgets/product_option
 import 'package:hompimpa_pos/features/orders/domain/order.dart';
 import 'package:hompimpa_pos/core/widgets/gradient_app_bar.dart';
 import 'package:hompimpa_pos/core/widgets/gradient_status_tab_bar.dart';
+import 'package:hompimpa_pos/features/cashier/presentation/cashier_controller.dart';
 
 /// Tablet-specific order entry page (>= 600px)
 /// - Split layout: product grid + side cart panel
@@ -349,6 +350,18 @@ class _ProductGrid extends ConsumerWidget {
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: () {
+                          // Check Cashier State
+                          final cashierState = ref.read(cashierProvider);
+                          if (!cashierState.isOpen) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Kasir belum dibuka. Silakan buka kasir terlebih dahulu.'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+
                           print('DEBUG: Tablet Tapped ${product.name}, Stock: ${product.stock}');
 
                           if (product.stock <= 0) {
