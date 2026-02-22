@@ -229,7 +229,7 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
                 ),
               ),
               const SizedBox(height: 16),
-              if (!isMie || isSmallScreen) _buildTotalSection(allToppings),
+              if (!isLevelable || isSmallScreen) _buildTotalSection(allToppings),
             ],
           );
         }
@@ -241,6 +241,7 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
             children: [
               const Text('Topping', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
+              if(isMie)
               // Default Pangsit (Locked)
               Container(
                 margin: const EdgeInsets.only(bottom: 8),
@@ -316,9 +317,9 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
         return AlertDialog(
           title: Text('Customization: ${widget.product.name}'),
           content: SizedBox(
-            width: (isMie && !isSmallScreen) ? 800 : (isSmallScreen ? screenWidth : 450),
+            width: (isLevelable && !isSmallScreen) ? 800 : (isSmallScreen ? screenWidth : 450),
             child: SingleChildScrollView(
-              child: isMie 
+              child: isLevelable 
                 ? (isSmallScreen 
                     ? Column(
                         mainAxisSize: MainAxisSize.min,
