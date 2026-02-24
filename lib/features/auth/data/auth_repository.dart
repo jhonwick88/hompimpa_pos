@@ -76,11 +76,39 @@ class AuthRepository {
       if (userCredential.user != null) {
         final user = userCredential.user!;
         
-        // CHECK Firestore ONLY
-        final doc = await _firestore.collection('users').doc(user.uid).get();
+        // 1. Try fetching by UID first
+        var doc = await _firestore.collection('users').doc(user.uid).get();
+        
+        if (!doc.exists) {
+          // 2. Try fetching by Email (pre-registered users)
+          final emailQuery = await _firestore
+              .collection('users')
+              .where('email', isEqualTo: user.email)
+              .limit(1)
+              .get();
+          
+          if (emailQuery.docs.isNotEmpty) {
+            final oldDoc = emailQuery.docs.first;
+            final userData = oldDoc.data();
+            
+            // Migrate document to real UID
+            await _firestore.collection('users').doc(user.uid).set({
+              ...userData,
+              'displayName': userData['displayName'] ?? user.displayName,
+            });
+            
+            // Delete old placeholder document if UID was different
+            if (oldDoc.id != user.uid) {
+              await _firestore.collection('users').doc(oldDoc.id).delete();
+            }
+            
+            doc = await _firestore.collection('users').doc(user.uid).get();
+          }
+        }
+
         if (!doc.exists) {
            await signOut(); // Force signout immediately
-           throw Exception('Akses Ditolak: Akun Anda tidak terdaftar di sistem.');
+           throw Exception('Akses Ditolak: Akun ${user.email} tidak terdaftar di sistem.');
         } else {
            return AppUser.fromMap(doc.data()!, user.uid);
         }

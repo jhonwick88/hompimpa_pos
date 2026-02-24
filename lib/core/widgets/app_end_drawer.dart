@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hompimpa_pos/core/presentation/theme/app_colors.dart';
 import 'package:hompimpa_pos/features/auth/data/auth_repository.dart';
 import 'package:hompimpa_pos/features/cashier/presentation/cashier_controller.dart';
+import 'package:hompimpa_pos/core/enums/user_role.dart';
 import 'package:intl/intl.dart';
 
 class AppEndDrawer extends ConsumerWidget {
@@ -162,7 +163,56 @@ class AppEndDrawer extends ConsumerWidget {
                       ),
 
                     const SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     const Divider(),
+
+                    // ===== MASTER DATA (DEV ONLY) =====
+                    if (user?.role == UserRole.dev) ...[
+                      const SizedBox(height: 16),
+                      const _SectionTitle('Master Data'),
+                      _DrawerButton(
+                        icon: Icons.inventory_2_outlined,
+                        label: 'Produk',
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push('/master/products');
+                        },
+                      ),
+                      _DrawerButton(
+                        icon: Icons.layers_outlined,
+                        label: 'Topping',
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push('/master/toppings');
+                        },
+                      ),
+                      _DrawerButton(
+                        icon: Icons.people_outline,
+                        label: 'User',
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push('/master/users');
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      const Divider(),
+                    ],
+
+                    // ===== SETTING (DEV ONLY) =====
+                    if (user?.role == UserRole.dev) ...[
+                      const SizedBox(height: 16),
+                      const _SectionTitle('Setting'),
+                      _DrawerButton(
+                        icon: Icons.settings_outlined,
+                        label: 'Edit Nota',
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push('/settings');
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      const Divider(),
+                    ],
 
                     // ===== AKUN =====
                     const SizedBox(height: 16),

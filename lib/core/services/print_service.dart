@@ -9,8 +9,10 @@ import 'package:intl/intl.dart';
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import 'package:hompimpa_pos/features/settings/domain/nota_settings.dart';
+
 abstract class PrintService {
-  Future<void> printOrder(OrderEntity order);
+  Future<void> printOrder(OrderEntity order, NotaSettings settings);
 }
 
 final printServiceProvider = Provider<PrintService>((ref) {
@@ -25,14 +27,14 @@ final printServiceProvider = Provider<PrintService>((ref) {
 
 class WebPrintService implements PrintService {
   @override
-  Future<void> printOrder(OrderEntity order) async {
+  Future<void> printOrder(OrderEntity order, NotaSettings settings) async {
     final doc = pw.Document();
 
     doc.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.roll57, // 58mm width approx
         build: (pw.Context context) {
-          return _buildPdfContent(order);
+          return _buildPdfContent(order, settings);
         },
       ),
     );
@@ -43,7 +45,7 @@ class WebPrintService implements PrintService {
     );
   }
 
-  pw.Widget _buildPdfContent(OrderEntity order) {
+  pw.Widget _buildPdfContent(OrderEntity order, NotaSettings settings) {
     final currencyFormat = NumberFormat.currency(
       locale: 'id_ID',
       symbol: '',
@@ -55,12 +57,16 @@ class WebPrintService implements PrintService {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         // Header
-        pw.Center(child: pw.Text('HOMPIMPA', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10))),
-        pw.Center(child: pw.Text('Spesialis Mie & Pangsit Level', style: const pw.TextStyle(fontSize: 8))),
+        pw.Center(child: pw.Text(settings.storeName, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10))),
+        if (settings.tagline.isNotEmpty)
+          pw.Center(child: pw.Text(settings.tagline, style: const pw.TextStyle(fontSize: 8))),
         pw.SizedBox(height: 4),
-        pw.Center(child: pw.Text('Dsn Bulak 01/05 Ds Nglaban', style: const pw.TextStyle(fontSize: 8))),
-        pw.Center(child: pw.Text('Kec. Loceret Kab. Nganjuk', style: const pw.TextStyle(fontSize: 8))),
-        pw.Center(child: pw.Text('WA : 085934345756', style: const pw.TextStyle(fontSize: 8))),
+        if (settings.address1.isNotEmpty)
+          pw.Center(child: pw.Text(settings.address1, style: const pw.TextStyle(fontSize: 8))),
+        if (settings.address2.isNotEmpty)
+          pw.Center(child: pw.Text(settings.address2, style: const pw.TextStyle(fontSize: 8))),
+        if (settings.phone.isNotEmpty)
+          pw.Center(child: pw.Text('WA : ${settings.phone}', style: const pw.TextStyle(fontSize: 8))),
         pw.Divider(thickness: 0.5),
         
         // Info
@@ -75,7 +81,7 @@ class WebPrintService implements PrintService {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text(item.productName, style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+              pw.Text(item.level != null ? '${item.productName} - Lvl ${item.level} (${item.sambal})' : item.productName, style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
@@ -130,9 +136,8 @@ class WebPrintService implements PrintService {
 
         pw.SizedBox(height: 8),
         pw.Divider(thickness: 0.5),
-        pw.Center(child: pw.Text('Terima kasih', style: const pw.TextStyle(fontSize: 8))),
-        pw.Center(child: pw.Text('Hompimpa', style: const pw.TextStyle(fontSize: 8))),
-        pw.Center(child: pw.Text('Spesialis Mie & Pangsit Level', style: const pw.TextStyle(fontSize: 8))),
+        if (settings.footerMessage.isNotEmpty)
+          pw.Center(child: pw.Text(settings.footerMessage, style: const pw.TextStyle(fontSize: 8), textAlign: pw.TextAlign.center)),
       ],
     );
   }
@@ -142,7 +147,7 @@ class AndroidPrintService implements PrintService {
   BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
 
   @override
-  Future<void> printOrder(OrderEntity order) async {
+  Future<void> printOrder(OrderEntity order, NotaSettings settings) async {
     // 1. Check Permissions
     if (await Permission.bluetoothConnect.request().isGranted &&
         await Permission.bluetoothScan.request().isGranted && 
@@ -182,7 +187,7 @@ class AndroidPrintService implements PrintService {
 
        // 3. Print
        if (await bluetooth.isConnected == true) {
-          _printReceipt(order);
+          _printReceipt(order, settings);
        } else {
           throw Exception('Printer tidak terhubung.');
        }
@@ -192,7 +197,7 @@ class AndroidPrintService implements PrintService {
     }
   }
 
-  void _printReceipt(OrderEntity order) async {
+  void _printReceipt(OrderEntity order, NotaSettings settings) async {
     final currencyFormat = NumberFormat.currency(
       locale: 'id_ID',
       symbol: '',
@@ -201,12 +206,16 @@ class AndroidPrintService implements PrintService {
     final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
 
     // Header
-    bluetooth.printCustom("HOMPIMPA", 1, 1);
-    bluetooth.printCustom("Spesialis Mie & Pangsit Level", 0, 1);
+    bluetooth.printCustom(settings.storeName, 1, 1);
+    if (settings.tagline.isNotEmpty)
+      bluetooth.printCustom(settings.tagline, 0, 1);
     bluetooth.printNewLine();
-    bluetooth.printCustom("Dsn Bulak 01/05 Ds Nglaban", 0, 1);
-    bluetooth.printCustom("Kec. Loceret Kab. Nganjuk", 0, 1);
-    bluetooth.printCustom("WA : 085934345756", 0, 1);
+    if (settings.address1.isNotEmpty)
+      bluetooth.printCustom(settings.address1, 0, 1);
+    if (settings.address2.isNotEmpty)
+      bluetooth.printCustom(settings.address2, 0, 1);
+    if (settings.phone.isNotEmpty)
+      bluetooth.printCustom("WA : ${settings.phone}", 0, 1);
     bluetooth.printCustom("--------------------------------", 0, 1);
 
     // Info
@@ -241,10 +250,8 @@ class AndroidPrintService implements PrintService {
     
     bluetooth.printNewLine();
     bluetooth.printCustom("--------------------------------", 0, 1);
-    bluetooth.printCustom("Terima Kasil", 0, 1); // Typo intentional? Assuming 'Kasih'
-    bluetooth.printCustom("Hompimpa", 0, 1);
-    bluetooth.printCustom("Spesialis Mie & Pangsit Level", 0, 1);
-    bluetooth.printNewLine();
+    if (settings.footerMessage.isNotEmpty)
+      bluetooth.printCustom(settings.footerMessage, 0, 1);
     bluetooth.printNewLine();
     bluetooth.paperCut();
   }

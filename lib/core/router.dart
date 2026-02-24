@@ -13,6 +13,10 @@ import '../../features/reports/presentation/report_screen.dart';
 import '../../features/orders/presentation/void_orders_screen.dart'; // Add this line
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/data/auth_repository.dart';
+import '../../features/products/presentation/product_master_screen.dart';
+import '../../features/products/presentation/topping_master_screen.dart';
+import '../../features/auth/presentation/user_master_screen.dart';
+import '../../features/settings/presentation/settings_screen.dart';
 import '../core/widgets/animated_splash_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -81,6 +85,22 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/void-orders',
         builder: (context, state) => const VoidOrdersScreen(),
+      ),
+      GoRoute(
+        path: '/master/products',
+        builder: (context, state) => const ProductMasterScreen(),
+      ),
+      GoRoute(
+        path: '/master/toppings',
+        builder: (context, state) => const ToppingMasterScreen(),
+      ),
+      GoRoute(
+        path: '/master/users',
+        builder: (context, state) => const UserMasterScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
     ],
   );

@@ -27,25 +27,25 @@ class MobileActionBar extends ConsumerWidget {
           alignment: Alignment.center,
           children: [
             IconButton(
-              icon: const Icon(Icons.shopping_cart),
+              icon: const Icon(Icons.shopping_cart, size: 28),
               tooltip: 'Cart',
               onPressed: onCartPressed,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.all(12),
             ),
             if (cartCount > 0)
               Positioned(
-                right: 8,
-                top: 8,
+                right: 4,
+                top: 4,
                 child: Container(
-                  padding: const EdgeInsets.all(2),
+                  padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     color: Colors.red,
                     borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.white, width: 1.5),
                   ),
                   constraints: const BoxConstraints(
-                    minWidth: 16,
-                    minHeight: 16,
+                    minWidth: 18,
+                    minHeight: 18,
                   ),
                   child: Text(
                     '$cartCount',

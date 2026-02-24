@@ -137,7 +137,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           padding: const EdgeInsets.all(16.0),
                           child: Column(
                             children: [
-                              const Text('Omzet Hari Ini', style: TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.bold)),
+                              const Text('Omzet', style: TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.bold)),
                               const SizedBox(height: 4),
                               sales == 0 
                                 ? const Skeleton(width: 100, height: 24)
@@ -161,7 +161,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           padding: const EdgeInsets.all(16.0),
                           child: Column(
                             children: [
-                              const Text('Total Order', style: TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.bold)),
+                              const Text('Order', style: TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.bold)),
                               const SizedBox(height: 4),
                               ordersAsync.when(
                                 data: (data) => Text(
@@ -176,60 +176,44 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         ),
                       ),
                     ),
+                    Expanded(
+                      child: _buildActionButton(
+                        context: context,
+                        onTap: () => context.push('/void-orders'),
+                        label: 'VOID',
+                        color: Colors.red[700]!,
+                        ordersAsync: ordersAsync,
+                        isVoid: true,
+                      ),
+                    ),
                   ],
                 ),
                 if (authState.value?.role == UserRole.dev) ...[
                 const SizedBox(height: 12),
-                InkWell(
-                  onTap: () => context.push('/void-orders'),
-                  child: Card(
-                    elevation: 8,
-                    shadowColor: Colors.red.withOpacity(0.5),
-                    color: Colors.red[700],
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                           Column(
-                             crossAxisAlignment: CrossAxisAlignment.start,
-                             children: [
-                               const Text('Void / Batal (Hari Ini)', style: TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.bold)),
-                               const SizedBox(height: 4),
-                               ordersAsync.when(
-                                 data: (orders) {
-                                   final voidCount = orders.where((o) => o.status == OrderStatus.batal).length;
-                                   return Text(
-                                     '$voidCount Order',
-                                     style: const TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
-                                   );
-                                 },
-                                 loading: () => const Skeleton(width: 40, height: 24),
-                                 error: (_, __) => const Text('-', style: TextStyle(color: Colors.white)),
-                               ),
-                             ],
-                           ),
-                           const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 16),
-                        ],
+                Row(
+                  children: [
+                    // Product Button
+                    Expanded(
+                      child: _buildActionButton(
+                        context: context,
+                        onTap: () => _showAddProductDialog(context, ref),
+                        icon: Icons.add_box,
+                        label: 'PRODUK',
+                        color: Colors.green[700]!,
                       ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 50,
-                  child: ElevatedButton.icon(
-                    onPressed: () => _showAddProductDialog(context, ref),
-                    icon: const Icon(Icons.add_box),
-                    label: const Text('TAMBAH PRODUK BARU'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green[700],
-                      foregroundColor: Colors.white,
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    const SizedBox(width: 12),
+                    // Topping Button
+                    Expanded(
+                      child: _buildActionButton(
+                        context: context,
+                        onTap: () => _showAddToppingDialog(context, ref),
+                        icon: Icons.add_circle_outline,
+                        label: 'TOPPING',
+                        color: Colors.orange[700]!,
+                      ),
                     ),
-                  ),
+                  ],
                 ),
                 const SizedBox(height: 24),
               ],
@@ -666,6 +650,64 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
+  Widget _buildActionButton({
+    required BuildContext context,
+    required VoidCallback onTap,
+    IconData? icon,
+    required String label,
+    required Color color,
+    AsyncValue<List<OrderEntity>>? ordersAsync,
+    bool isVoid = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Card(
+        elevation: 8,
+        shadowColor: color.withOpacity(0.4),
+        color: color,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              icon != null ? Icon(icon, color: Colors.white, size: 28) : const SizedBox.shrink(),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              if (isVoid && ordersAsync != null) ...[
+                const SizedBox(height: 4),
+                ordersAsync.when(
+                  data: (orders) {
+                    final voidCount = orders.where((o) => o.status == OrderStatus.batal).length;
+                    return Text(
+                      '$voidCount',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  },
+                  loading: () => const Skeleton(width: 20, height: 16),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showUpdateStockDialog(BuildContext context, WidgetRef ref, Product product, AppUser user) {
     final stockController = TextEditingController(text: product.stock.toString());
     final reasonController = TextEditingController(text: 'Manual by ${user.displayName ?? 'Admin'}');
@@ -796,18 +838,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       final price = double.tryParse(priceController.text) ?? 0;
                       final stock = int.tryParse(stockController.text) ?? 0;
                       final imageUrl = imageUrlController.text;
-                      
+
                       final newProduct = Product(
                         id: const Uuid().v4(),
                         name: title,
                         category: category,
                         price: price,
                         stock: stock,
-                        imageUrl: imageUrl.isEmpty ? null : imageUrl,
-                        isActive: true, // Default per request
+                        imageUrl: imageUrl.isNotEmpty ? imageUrl : null,
+                        isActive: true,
                       );
-                      
+
                       await ref.read(productRepositoryProvider).addProduct(newProduct);
+                      ref.refresh(productListProvider);
+                      
                       Navigator.pop(contextDialog);
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Produk berhasil ditambahkan')));
                     } catch (e) {
@@ -818,12 +862,94 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
               ],
             );
-          }
+          },
         );
       },
     );
   }
 
+  void _showAddToppingDialog(BuildContext context, WidgetRef ref) {
+    final nameController = TextEditingController();
+    final priceController = TextEditingController();
+    final stockController = TextEditingController();
+    final imageUrlController = TextEditingController(text: 'assets/images/logo.png');
+
+    showDialog(
+      context: context,
+      builder: (contextDialog) {
+        return AlertDialog(
+          title: const Text('Tambah Topping Baru'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Nama Topping'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: priceController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Harga (Rp)'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: stockController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Stok Awal'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: imageUrlController,
+                  decoration: const InputDecoration(labelText: 'Image URL (Assets/Network)'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(contextDialog),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (nameController.text.isEmpty || priceController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nama dan Harga wajib diisi')));
+                  return;
+                }
+
+                try {
+                  final title = nameController.text;
+                  final price = double.tryParse(priceController.text) ?? 0;
+                  final stock = int.tryParse(stockController.text) ?? 0;
+                  final imageUrl = imageUrlController.text;
+
+                  final newTopping = Topping(
+                    id: const Uuid().v4(),
+                    name: title,
+                    price: price,
+                    stock: stock,
+                    imageUrl: imageUrl.isNotEmpty ? imageUrl : null,
+                    isActive: true,
+                  );
+
+                  await ref.read(toppingRepositoryProvider).addTopping(newTopping);
+                  ref.refresh(toppingListProvider);
+
+                  Navigator.pop(contextDialog);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Topping berhasil ditambahkan')));
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menambah topping: $e')));
+                }
+              },
+              child: const Text('Simpan'),
+            ),
+          ],
+        );
+      },
+    );
+  }
   void _showUpdateToppingStockDialog(BuildContext context, WidgetRef ref, Topping topping) {
     final stockController = TextEditingController(text: topping.stock.toString());
     final reasonController = TextEditingController(text: 'Manual Update');
@@ -871,6 +997,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   );
                   Navigator.pop(contextDialog);
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Stock topping updated successfully')));
+                  ref.refresh(toppingListProvider);
                 } catch (e) {
                   Navigator.pop(contextDialog);
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update stock: $e')));

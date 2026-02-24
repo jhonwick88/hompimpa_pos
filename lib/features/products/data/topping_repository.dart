@@ -4,8 +4,11 @@ import '../domain/topping.dart';
 
 abstract class ToppingRepository {
   Future<List<Topping>> getToppings();
+  Future<void> addTopping(Topping topping);
   Future<void> reduceStock(String id, int qty);
   Future<void> updateStock(String id, int newStock, {String? reason, String? username});
+  Future<void> updateTopping(Topping topping);
+  Future<void> deleteTopping(String id);
   Future<void> seedToppings();
 }
 
@@ -26,6 +29,21 @@ class FirestoreToppingRepository implements ToppingRepository {
       print('Error fetching toppings: $e');
       return [];
     }
+  }
+
+  @override
+  Future<void> addTopping(Topping topping) async {
+    await _firestore.collection('toppings').doc(topping.id).set(topping.toJson());
+  }
+
+  @override
+  Future<void> updateTopping(Topping topping) async {
+    await _firestore.collection('toppings').doc(topping.id).update(topping.toJson());
+  }
+
+  @override
+  Future<void> deleteTopping(String id) async {
+    await _firestore.collection('toppings').doc(id).delete();
   }
 
   @override
@@ -95,33 +113,33 @@ class FirestoreToppingRepository implements ToppingRepository {
 }
 
 // Keeping InMemory for unexpected rollback needs, but provider uses Firestore now
-class InMemoryToppingRepository implements ToppingRepository {
-  final List<Topping> _toppings = [
-    const Topping(id: 'pangsit', name: 'Pangsit', price: 1500, stock: 10000, isActive: true),
-    const Topping(id: 'bakso', name: 'Bakso', price: 3000, stock: 10000, isActive: true),
-    const Topping(id: 'sosis', name: 'Sosis', price: 3000, stock: 10000, isActive: false),
-  ];
+// class InMemoryToppingRepository implements ToppingRepository {
+//   final List<Topping> _toppings = [
+//     const Topping(id: 'pangsit', name: 'Pangsit', price: 1500, stock: 10000, isActive: true),
+//     const Topping(id: 'bakso', name: 'Bakso', price: 4000, stock: 10000, isActive: true),
+//     const Topping(id: 'sosis', name: 'Sosis', price: 3000, stock: 10000, isActive: false),
+//   ];
 
-  @override
-  Future<List<Topping>> getToppings() async {
-    return _toppings;
-  }
+//   @override
+//   Future<List<Topping>> getToppings() async {
+//     return _toppings;
+//   }
 
-  @override
-  Future<void> reduceStock(String id, int qty) async {
-     // no-op
-  }
+//   @override
+//   Future<void> reduceStock(String id, int qty) async {
+//      // no-op
+//   }
 
-  @override
-  Future<void> updateStock(String id, int newStock, {String? reason, String? username}) async {
-     // no-op
-  }
+//   @override
+//   Future<void> updateStock(String id, int newStock, {String? reason, String? username}) async {
+//      // no-op
+//   }
   
-  @override
-  Future<void> seedToppings() async {
-    print("Mock Seed Done");
-  }
-}
+//   @override
+//   Future<void> seedToppings() async {
+//     print("Mock Seed Done");
+//   }
+// }
 
 final toppingRepositoryProvider = Provider<ToppingRepository>((ref) {
   return FirestoreToppingRepository(FirebaseFirestore.instance);

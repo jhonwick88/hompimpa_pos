@@ -258,7 +258,15 @@ class _OrderListTab extends ConsumerWidget {
   Future<void> _processOrder(BuildContext context, WidgetRef ref, OrderEntity order) async {
     try {
       final messenger = ScaffoldMessenger.of(context);
-      await ref.read(orderRepositoryProvider).updateOrderStatus(order.id, OrderStatus.proses, order.items);
+      final user = ref.read(authStateChangesProvider).value;
+      
+      await ref.read(orderRepositoryProvider).updateOrderStatus(
+        order.id, 
+        OrderStatus.proses, 
+        order.items,
+        executorId: user?.uid,
+        executorName: user?.displayName ?? user?.email,
+      );
       messenger.showSnackBar(const SnackBar(content: Text('Pesanan diproses')));
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal memproses pesanan: $e')));
