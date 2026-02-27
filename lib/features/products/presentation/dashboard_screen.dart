@@ -3,7 +3,6 @@ import 'package:hompimpa_pos/core/widgets/app_end_drawer.dart';
 import 'package:hompimpa_pos/core/widgets/skeleton.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:hompimpa_pos/features/reports/presentation/daily_sales_provider.dart';
 import 'package:hompimpa_pos/features/products/presentation/product_provider.dart';
 import 'package:hompimpa_pos/core/utils/responsive_layout.dart';
