@@ -5,6 +5,8 @@ import 'package:hompimpa_pos/core/presentation/theme/app_colors.dart';
 import 'package:hompimpa_pos/features/auth/data/auth_repository.dart';
 import 'package:hompimpa_pos/features/cashier/presentation/cashier_controller.dart';
 import 'package:hompimpa_pos/core/enums/user_role.dart';
+import 'package:hompimpa_pos/features/settings/data/settings_repository.dart';
+import 'package:hompimpa_pos/features/settings/domain/sambal_settings.dart';
 import 'package:intl/intl.dart';
 
 class AppEndDrawer extends ConsumerWidget {
@@ -208,6 +210,19 @@ class AppEndDrawer extends ConsumerWidget {
                         onTap: () {
                           Navigator.pop(context);
                           context.push('/settings');
+                        },
+                      ),
+                      _DrawerButton(
+                        icon: Icons.local_fire_department_outlined,
+                        label: 'Setting Harga Sambal',
+                        onTap: () => _showSambalSettingsDialog(context, ref),
+                      ),
+                      _DrawerButton(
+                        icon: Icons.analytics_outlined,
+                        label: 'Laporan Penjualan',
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push('/reports');
                         },
                       ),
                       const SizedBox(height: 10),
@@ -473,6 +488,67 @@ class AppEndDrawer extends ConsumerWidget {
           Text(
             '$prefix Rp ${NumberFormat("#,##0", "id_ID").format(value)}', 
             style: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: color)
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSambalSettingsDialog(BuildContext context, WidgetRef ref) async {
+    final settings = await ref.read(settingsRepositoryProvider).getSambalSettings();
+    
+    if (!context.mounted) return;
+
+    final lv03Controller = TextEditingController(text: settings.level0to3Price.toStringAsFixed(0));
+    final lv45Controller = TextEditingController(text: settings.level4to5Price.toStringAsFixed(0));
+    final lv67Controller = TextEditingController(text: settings.level6to7Price.toStringAsFixed(0));
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Setting Harga Sambal'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: lv03Controller,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Harga Level 0-3', prefixText: 'Rp '),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: lv45Controller,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Harga Level 4-5', prefixText: 'Rp '),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: lv67Controller,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Harga Level 6-7', prefixText: 'Rp '),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
+          ElevatedButton(
+            onPressed: () async {
+              final newSettings = settings.copyWith(
+                level0to3Price: double.tryParse(lv03Controller.text) ?? 0,
+                level4to5Price: double.tryParse(lv45Controller.text) ?? 500,
+                level6to7Price: double.tryParse(lv67Controller.text) ?? 1000,
+              );
+              
+              Navigator.pop(context);
+              try {
+                await ref.read(settingsRepositoryProvider).updateSambalSettings(newSettings);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Berhasil memperbarui setting sambal')));
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal: $e')));
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.freshGreen),
+            child: const Text('Simpan'),
           ),
         ],
       ),

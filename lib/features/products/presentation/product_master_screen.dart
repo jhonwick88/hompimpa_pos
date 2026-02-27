@@ -24,8 +24,9 @@ class ProductMasterScreen extends ConsumerWidget {
         ],
       ),
       body: productsAsync.when(
-        data: (products) => ListView.builder(
+        data: (products) => ListView.separated(
           itemCount: products.length,
+          separatorBuilder: (context, index) => const Divider(height: 1),
           itemBuilder: (context, index) {
             final product = products[index];
             return ListTile(

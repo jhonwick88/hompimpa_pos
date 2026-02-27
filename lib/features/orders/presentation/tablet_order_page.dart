@@ -205,13 +205,16 @@ class _TabletOrderPageState extends ConsumerState<TabletOrderPage> {
             Expanded(
               flex: 2,
               child: productsAsync.when(
-                data: (products) => TabBarView(
-                  children: [
-                    _ProductGrid(products: products),
-                    _ProductGrid(products: products.where((p) => p.category == 'makanan').toList()),
-                    _ProductGrid(products: products.where((p) => p.category == 'minuman').toList()),
-                  ],
-                ),
+                data: (products) {
+                  final activeProducts = products.where((p) => p.isActive).toList();
+                  return TabBarView(
+                    children: [
+                      _ProductGrid(products: activeProducts),
+                      _ProductGrid(products: activeProducts.where((p) => p.category == 'makanan').toList()),
+                      _ProductGrid(products: activeProducts.where((p) => p.category == 'minuman').toList()),
+                    ],
+                  );
+                },
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, st) => Center(child: Text('Error: $e')),
               ),

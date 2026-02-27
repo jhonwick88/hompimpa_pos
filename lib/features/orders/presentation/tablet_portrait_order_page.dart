@@ -205,19 +205,22 @@ class _TabletPortraitOrderPageState extends ConsumerState<TabletPortraitOrderPag
             Positioned.fill(
               right: _cartExpanded ? 350 : 0,
               child: productsAsync.when(
-                data: (products) => TabBarView(
-                  children: [
-                    _ProductGrid(products: products, cartExpanded: _cartExpanded),
-                    _ProductGrid(
-                      products: products.where((p) => p.category == 'makanan').toList(),
-                      cartExpanded: _cartExpanded,
-                    ),
-                    _ProductGrid(
-                      products: products.where((p) => p.category == 'minuman').toList(),
-                      cartExpanded: _cartExpanded,
-                    ),
-                  ],
-                ),
+                data: (products) {
+                  final activeProducts = products.where((p) => p.isActive).toList();
+                  return TabBarView(
+                    children: [
+                      _ProductGrid(products: activeProducts, cartExpanded: _cartExpanded),
+                      _ProductGrid(
+                        products: activeProducts.where((p) => p.category == 'makanan').toList(),
+                        cartExpanded: _cartExpanded,
+                      ),
+                      _ProductGrid(
+                        products: activeProducts.where((p) => p.category == 'minuman').toList(),
+                        cartExpanded: _cartExpanded,
+                      ),
+                    ],
+                  );
+                },
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, st) => Center(child: Text('Error: $e')),
               ),

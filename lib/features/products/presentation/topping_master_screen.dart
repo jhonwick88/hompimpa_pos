@@ -22,8 +22,9 @@ class ToppingMasterScreen extends ConsumerWidget {
         ],
       ),
       body: toppingsAsync.when(
-        data: (toppings) => ListView.builder(
+        data: (toppings) => ListView.separated(
           itemCount: toppings.length,
+          separatorBuilder: (context, index) => const Divider(height: 1),
           itemBuilder: (context, index) {
             final topping = toppings[index];
             return ListTile(

@@ -157,21 +157,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         shadowColor: orderColor.withOpacity(0.5),
                         color: orderColor,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            children: [
-                              const Text('Order', style: TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.bold)),
-                              const SizedBox(height: 4),
-                              ordersAsync.when(
-                                data: (data) => Text(
-                                  '${data.length}',
-                                  style: const TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold),
+                        child: InkWell(
+                          onTap: () => context.push('/orders'),
+                          borderRadius: BorderRadius.circular(16),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    Text('Order', style: TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.bold)),
+                                    Icon(Icons.chevron_right, size: 16, color: Colors.white70),
+                                  ],
                                 ),
-                                loading: () => const Skeleton(width: 40, height: 28),
-                                error: (_, __) => const Text('Error', style: TextStyle(color: Colors.white)),
-                              ),
-                            ],
+                                const SizedBox(height: 4),
+                                ordersAsync.when(
+                                  data: (data) => Text(
+                                    '${data.length}',
+                                    style: const TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold),
+                                  ),
+                                  loading: () => const Skeleton(width: 40, height: 28),
+                                  error: (_, __) => const Text('Error', style: TextStyle(color: Colors.white)),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -225,9 +235,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               
               // Product Stock List
               productsAsync.when(
-                  data: (products) {
+                  data: (allProducts) {
+                    final products = allProducts.where((p) => p.isActive).toList();
                     if (products.isEmpty) {
-                      return const Center(child: Text('Belum ada produk'));
+                      return const Center(child: Text('Belum ada produk aktif'));
                     }
                     
                     final cardColors = [
@@ -422,9 +433,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
               // Topping Stock List
               toppingsAsync.when(
-                data: (toppings) {
+                data: (allToppings) {
+                   final toppings = allToppings.where((t) => t.isActive).toList();
                    if (toppings.isEmpty) {
-                      return const Center(child: Text('Belum ada topping'));
+                      return const Center(child: Text('Belum ada topping aktif'));
                    }
                    
                    final cardColors = [
@@ -616,36 +628,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
           ),
         ),
-        floatingActionButton: SpeedDial(
-          icon: Icons.menu,
-          activeIcon: Icons.close,
-          backgroundColor: Colors.orange,
-          foregroundColor: Colors.white,
-          children: [
-            SpeedDialChild(
-              child: const Icon(Icons.add_shopping_cart),
-              label: 'Input Order Via WA',
-              onTap: () => context.push('/entry'),
-            ),
-            if(authState.value?.role == UserRole.dev) ...[
-              SpeedDialChild(
-                child: const Icon(Icons.add),
-                label: 'Tambah Produk',
-                onTap: () => _showAddProductDialog(context, ref),
-              ),
-              SpeedDialChild(
-                child: const Icon(Icons.analytics),
-                label: 'Laporan Penjualan',
-                onTap: () => context.push('/reports'),
-              ),
-            ],
-            SpeedDialChild(
-              child: const Icon(Icons.history),
-              label: 'Pesanan Pelanggan',
-              onTap: () => context.push('/orders'),
-            ),
-          ],
-        ),
+        floatingActionButton: FloatingActionButton.extended(
+            onPressed: () => context.push('/entry?quick=true'),
+            label: const Text('Quick Order'),
+            icon: const Icon(Icons.flash_on),
+            backgroundColor: Colors.orange,
+          ),
       ),
     );
   }

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hompimpa_pos/features/products/domain/product.dart';
 import 'package:hompimpa_pos/features/products/data/topping_repository.dart';
 import 'package:hompimpa_pos/features/products/domain/topping.dart';
+import 'package:hompimpa_pos/features/settings/data/settings_repository.dart';
+import 'package:hompimpa_pos/features/settings/domain/sambal_settings.dart';
 import '../cart_controller.dart';
 
 class ProductOptionDialog extends ConsumerStatefulWidget {
@@ -35,66 +37,9 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
   }
 
   double _calculateTotal(List<Topping> availableToppings) {
-    double total = widget.product.price * _qty;
-    
-    // Calculate toppings
-    _selectedToppings.forEach((id, qty) {
-      final topping = availableToppings.firstWhere((t) => t.id == id, orElse: () => const Topping(id: '', name: '', price: 0, stock: 0));
-      
-      if (id == 'pangsit' && (widget.product.category.toLowerCase().contains('mie') || widget.product.name.toLowerCase().contains('mie'))) {
-         // Default pangsit logic
-         // The rule says: Each mie order automatically adds default pangsit price = 3000
-         // So for the FIRST pangsit (per mie qty), price is 3000.
-         // BUT wait, "Each mie order automatically adds default pangsit price = 3000"
-         // This implies the base price of the Mie includes the Pangsit or it's an add-on.
-         // "total = mie_price + default_pangsit_price + extra_toppings_price"
-         // So default pangsit IS charged extra 3000.
-         
-         // Logic: 
-         // For every 1 qty of Mie, we have 1 Default Pangsit (mandatory).
-         // If user adds EXTRA pangsit, that's extra.
-         // Wait, the UI asks to "Select extra toppings". 
-         // "One order mie: Auto add default topping: PANGSIT"
-         // "Default pangsit: Mandatory, Cannot be removed"
-         
-         // Implementation:
-         // We track toppings per Item line.
-         // If I order 2 Mie, do I get 2 Default Pangsit? Yes.
-         // Do I pay 3000 * 2? Yes.
-         
-         // Let's assume _selectedToppings stores TOTAL toppings for this line item.
-         // Base mandatory = 1 per Mie Qty? Or 1 per Line Item? 
-         // Usually toppings are per single item unit, but here we have `_qty` for the product.
-         // Standard POS: Toppings apply to the unit.
-         // So if I have 2 Mie, and I selected "Bakso", I get Bakso on both? Or is this a single bowl builder?
-         // Given "Jumlah (Qty)" selector, it implies X bowls of this configuration.
-         // So if Qty = 2, and Topping Bakso Selected, it means 2 Bowls each with Bakso.
-         // Total = (Mie + DefaultPangsit + Bakso) * Qty.
-         
-         // Let's re-read: "One order mie: Can have multiple toppings. AUTO add default topping: PANGSIT"
-         // "Pricing Logic: Each mie order automatically adds default pangsit price = 3000"
-         
-         // Interpretation:
-         // Unit Price = Product Price + 3000 (Default Pangsit) + Sum(Extra Toppings Price)
-         // Total = Unit Price * Qty
-         
-         // wait, "Default pangsit: stock: 10000 | price: 1500" in Master Data.
-         // BUT "Pricing Logic: Each mie order automatically adds default pangsit price = 3000"
-         // So Default Pangsit is special price 3000. Extra Pangsit would be 1500.
-         
-         // To make this simple:
-         // We will NOT put Default Pangsit in `_selectedToppings` as a user selection if it works differently.
-         // OR we put it there but calculate differently.
-         
-         // Let's store Extra Toppings in `_selectedToppings`.
-         // And always add Default Pangsit Programmatically.
-      }
-    });
-
-    // Let's try a cleaner approach.
-    // Base Price = widget.product.price
-    // + Default Pangsit (3000) [If Mie]
-    // + Extra Toppings * TheirPrice
+    // Watch settings inside build if possible, but here we are in a helper.
+    // We'll pass the settings to this function or read them from ref.
+    final sambalSettings = ref.read(sambalSettingsProvider).value ?? const SambalSettings();
     
     double unitPrice = widget.product.price;
     final isMie = widget.product.category.toLowerCase().contains('mie') || widget.product.name.toLowerCase().contains('mie');
@@ -109,13 +54,13 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
     });
 
     // Spicy Level Charge
-    // "Level Pedas Mie atau Pangsit adalah 6 atau 7 maka Harga + 1000"
-    // Spicy Level Charge
     if (isMie || widget.product.category.toLowerCase().contains('pangsit') || widget.product.name.toLowerCase().contains('pangsit')) {
        if (_level >= 6) {
-         unitPrice += 1000;
+         unitPrice += sambalSettings.level6to7Price;
        } else if (_level >= 4) {
-         unitPrice += 500;
+         unitPrice += sambalSettings.level4to5Price;
+       } else {
+         unitPrice += sambalSettings.level0to3Price;
        }
     }
 
@@ -135,8 +80,8 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
       loading: () => const AlertDialog(content: Center(child: CircularProgressIndicator())),
       error: (e, s) => AlertDialog(title: const Text('Error'), content: Text('$e')),
       data: (allToppings) {
-        // Filter toppings
-        print('DEBUG: All Toppings: ${allToppings.length}');
+        // Watch sambal settings to ensure rebuild when they change
+        ref.watch(sambalSettingsProvider);
         final isMie = widget.product.category.toLowerCase().contains('mie') || widget.product.name.toLowerCase().contains('mie');
         final isLevelable = isMie || widget.product.category.toLowerCase().contains('pangsit') || widget.product.name.toLowerCase().contains('pangsit');
         final screenWidth = MediaQuery.of(context).size.width;

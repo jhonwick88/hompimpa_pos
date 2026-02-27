@@ -23,8 +23,9 @@ class UserMasterScreen extends ConsumerWidget {
         ],
       ),
       body: usersAsync.when(
-        data: (users) => ListView.builder(
+        data: (users) => ListView.separated(
           itemCount: users.length,
+          separatorBuilder: (context, index) => const Divider(height: 1),
           itemBuilder: (context, index) {
             final user = users[index];
             return ListTile(

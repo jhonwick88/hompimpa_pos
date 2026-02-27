@@ -119,6 +119,10 @@ class CartController extends Notifier<CartState> {
     bool isQuickOrder = false,
     required DateTime pickupDate,
     required String pickupTime,
+    String orderSource = 'Offline',
+    bool isDineIn = false,
+    String tableNumber = '0',
+    String paymentMethod = 'Cash',
   }) async {
     if (state.items.isEmpty) return;
     
@@ -145,6 +149,10 @@ class CartController extends Notifier<CartState> {
       createdAt: now,
       updatedAt: now,
       shiftId: shiftId,
+      orderSource: orderSource,
+      isDineIn: isDineIn,
+      tableNumber: tableNumber,
+      paymentMethod: paymentMethod,
     );
 
     await repository.addOrder(order);
@@ -173,6 +181,10 @@ class CartController extends Notifier<CartState> {
     String? customerPhone,
     required DateTime pickupDate,
     required String pickupTime,
+    String? orderSource,
+    bool? isDineIn,
+    String? tableNumber,
+    String? paymentMethod,
   }) async {
     if (state.items.isEmpty) return;
 
@@ -187,6 +199,10 @@ class CartController extends Notifier<CartState> {
       orderTime: pickupTime,
       items: state.items,
       updatedAt: now,
+      orderSource: orderSource ?? existingOrder.orderSource,
+      isDineIn: isDineIn ?? existingOrder.isDineIn,
+      tableNumber: tableNumber ?? existingOrder.tableNumber,
+      paymentMethod: paymentMethod ?? existingOrder.paymentMethod,
     );
 
     await repository.updateOrder(updatedOrder);

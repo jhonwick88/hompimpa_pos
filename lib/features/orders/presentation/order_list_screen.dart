@@ -431,6 +431,21 @@ class _OrderListTab extends ConsumerWidget {
         ),
       ],
       if (order.status == OrderStatus.selesai) ...[
+        TextButton.icon(
+          onPressed: () => _showUpdatePaymentMethodDialog(context, ref, order),
+          icon: Icon(
+            order.paymentMethod == 'QRIS' ? Icons.qr_code : Icons.money,
+            size: 18,
+            color: order.paymentMethod == 'QRIS' ? Colors.blue[700] : Colors.green[700],
+          ),
+          label: Text(
+            order.paymentMethod,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: order.paymentMethod == 'QRIS' ? Colors.blue[700] : Colors.green[700],
+            ),
+          ),
+        ),
         ElevatedButton.icon(
           onPressed: () => _showPrintPreview(context, order),
           icon: const Icon(Icons.print, size: 18),
@@ -481,6 +496,46 @@ class _OrderListTab extends ConsumerWidget {
       context: context,
       builder: (context) => NotaPreviewDialog(order: order),
     );
+  }
+
+  Future<void> _showUpdatePaymentMethodDialog(BuildContext context, WidgetRef ref, OrderEntity order) async {
+    final newPayment = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Pilih Metode Pembayaran'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.money, color: Colors.green),
+              title: const Text('Cash'),
+              onTap: () => Navigator.pop(context, 'Cash'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.qr_code, color: Colors.blue),
+              title: const Text('QRIS'),
+              onTap: () => Navigator.pop(context, 'QRIS'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (newPayment != null && newPayment != order.paymentMethod) {
+      try {
+        final messenger = ScaffoldMessenger.of(context);
+        await ref.read(orderRepositoryProvider).updateOrder(order.copyWith(paymentMethod: newPayment));
+        messenger.showSnackBar(SnackBar(
+          content: Text('Metode pembayaran diperbarui ke $newPayment'),
+          backgroundColor: Colors.green,
+        ));
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Gagal memperbarui metode pembayaran: $e'),
+          backgroundColor: Colors.red,
+        ));
+      }
+    }
   }
 }
 

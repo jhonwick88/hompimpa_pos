@@ -30,6 +30,9 @@ abstract class OrderEntity with _$OrderEntity {
     String? voidBy,
     @TimestampNullableConverter() DateTime? voidAt,
     @Default('Cash') String paymentMethod,
+    @Default('Offline') String orderSource,
+    @Default(false) bool isDineIn,
+    @Default('0') String tableNumber,
     double? paidAmount,
     double? changeAmount,
     String? shiftId, // Link to Shift
@@ -49,6 +52,8 @@ abstract class OrderEntity with _$OrderEntity {
     
     // Payment Fields
     normalized['paymentMethod'] ??= json['MetodePembayaran'] ?? json['PaymentMethod'] ?? 'Cash';
+    normalized['isDineIn'] ??= json['DineIn'] ?? json['IsDineIn'] ?? false;
+    normalized['tableNumber'] ??= (json['NoMeja'] ?? json['TableNumber'] ?? '0').toString();
     normalized['paidAmount'] ??= (json['Bayar'] ?? json['PaidAmount'])?.toDouble();
     normalized['changeAmount'] ??= (json['Kembali'] ?? json['ChangeAmount'])?.toDouble();
 
