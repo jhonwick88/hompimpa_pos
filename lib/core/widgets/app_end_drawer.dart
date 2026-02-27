@@ -8,6 +8,7 @@ import 'package:hompimpa_pos/core/enums/user_role.dart';
 import 'package:hompimpa_pos/features/settings/data/settings_repository.dart';
 import 'package:hompimpa_pos/features/settings/domain/sambal_settings.dart';
 import 'package:intl/intl.dart';
+import 'package:hompimpa_pos/features/orders/presentation/order_list_screen.dart';
 
 class AppEndDrawer extends ConsumerWidget {
   const AppEndDrawer({Key? key}) : super(key: key);
@@ -164,12 +165,20 @@ class AppEndDrawer extends ConsumerWidget {
                         onTap: () => _showCloseRegisterDialog(context, ref),
                       ),
 
-                    const SizedBox(height: 10),
+                    _DrawerButton(
+                      icon: Icons.rate_review_outlined,
+                      label: 'Review Pesanan',
+                      badgeCount: ref.watch(reviewOrdersCountProvider).value ?? 0,
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.push('/review-orders');
+                      },
+                    ),
                     const SizedBox(height: 10),
                     const Divider(),
 
-                    // ===== MASTER DATA (DEV ONLY) =====
-                    if (user?.role == UserRole.dev) ...[
+                    // ===== MASTER DATA (DEV & ADMIN) =====
+                    if (user?.role == UserRole.dev || user?.role == UserRole.admin) ...[
                       const SizedBox(height: 16),
                       const _SectionTitle('Master Data'),
                       _DrawerButton(
@@ -606,6 +615,7 @@ class _DrawerButton extends StatelessWidget {
   final VoidCallback onTap;
   final Color color;
   final bool isPrimary;
+  final int badgeCount;
 
   const _DrawerButton({
     required this.icon,
@@ -613,6 +623,7 @@ class _DrawerButton extends StatelessWidget {
     required this.onTap,
     this.color = AppColors.textPrimary,
     this.isPrimary = false,
+    this.badgeCount = 0,
   });
 
   @override
@@ -639,6 +650,24 @@ class _DrawerButton extends StatelessWidget {
                     color: isPrimary ? Colors.white : color,
                   ),
                 ),
+                if (badgeCount > 0) ...[
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '$badgeCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

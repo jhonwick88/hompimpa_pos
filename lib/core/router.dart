@@ -18,6 +18,9 @@ import '../../features/products/presentation/topping_master_screen.dart';
 import '../../features/auth/presentation/user_master_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../core/widgets/animated_splash_screen.dart';
+import '../../features/public_menu/presentation/public_menu_screen.dart';
+import '../../features/public_menu/presentation/public_cart_screen.dart';
+import '../../features/orders/presentation/review_orders_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
@@ -27,12 +30,15 @@ final routerProvider = Provider<GoRouter>((ref) {
     refreshListenable: GoRouterRefreshStream(authRepository.authStateChanges()),
     redirect: (context, state) {
        final isLoggedIn = FirebaseAuth.instance.currentUser != null;
-       final isLoggingIn = state.uri.toString() == '/login';
-       final isSplash = state.uri.toString() == '/splash';
+       final path = state.uri.path;
+       final isLoggingIn = path == '/login';
+       final isSplash = path == '/splash';
+       final isPublic = path == '/menu' || path == '/cart';
        
        if (!isLoggedIn) {
          if (isSplash) return null; 
          if (isLoggingIn) return null; 
+         if (isPublic) return null;
          return '/login'; 
        }
 
@@ -58,8 +64,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const DashboardScreen(),
       ),
       GoRoute(
+        path: '/menu',
+        builder: (context, state) => const PublicMenuScreen(),
+      ),
+      GoRoute(
+        path: '/cart',
+        builder: (context, state) => const PublicCartScreen(),
+      ),
+      GoRoute(
         path: '/orders',
         builder: (context, state) => const OrderListScreen(),
+      ),
+      GoRoute(
+        path: '/review-orders',
+        builder: (context, state) => const ReviewOrdersScreen(),
       ),
       GoRoute(
         path: '/entry',

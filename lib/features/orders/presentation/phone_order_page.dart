@@ -41,10 +41,34 @@ class _PhoneOrderPageState extends ConsumerState<PhoneOrderPage> {
   TimeOfDay _selectedTime = TimeOfDay.now();
   OrderEntity? _existingOrder;
   
+  // New State Variables
+  String _selectedVia = 'Offline';
+  bool _isDineIn = false;
+  final _tableController = TextEditingController(text: '0');
+  String _selectedPayment = 'Cash';
+  
   @override
   void initState() {
     super.initState();
     _initOrderType();
+  }
+
+  void _onViaSelected(String via) {
+    setState(() {
+      _selectedVia = via;
+      
+      final currentName = _nameController.text.trim();
+      // Remove existing prefixes if any
+      String baseName = currentName.replaceAll(RegExp(r'^(Offline - |Grab - )'), '');
+      
+      if (via == 'Offline') {
+        _nameController.text = 'Offline - $baseName';
+      } else if (via == 'GrabFood') {
+        _nameController.text = 'Grab - $baseName';
+      } else {
+        _nameController.text = baseName;
+      }
+    });
   }
 
   @override
@@ -91,6 +115,13 @@ class _PhoneOrderPageState extends ConsumerState<PhoneOrderPage> {
           _selectedDate = order.orderDate;
           _selectedTime = _parseTime(order.orderTime);
           _existingOrder = order;
+          
+          // Restore new fields
+          _selectedVia = order.orderSource;
+          _isDineIn = order.isDineIn;
+          _tableController.text = order.tableNumber;
+          _selectedPayment = order.paymentMethod;
+          
           ref.read(cartProvider.notifier).setCartItems(order.items);
           setState(() {});
         } else if (mounted) {
@@ -105,8 +136,13 @@ class _PhoneOrderPageState extends ConsumerState<PhoneOrderPage> {
     // 3. Setup form fields
     if (widget.isQuickOrder) {
       _nameController.text = "Offline - ${const Uuid().v4().substring(0,4)}";
+      _selectedVia = 'Offline';
     } else if (widget.existingOrderId == null) {
       _nameController.clear();
+      _selectedVia = 'Offline';
+      _isDineIn = false;
+      _tableController.text = '0';
+      _selectedPayment = 'Cash';
     }
     setState(() {});
   }
@@ -269,6 +305,19 @@ class _PhoneOrderPageState extends ConsumerState<PhoneOrderPage> {
                     existingOrderId: widget.existingOrderId,
                     existingOrder: _existingOrder,
                     standardizePhoneNumber: _standardizePhoneNumber,
+                    selectedVia: _selectedVia,
+                    isDineIn: _isDineIn,
+                    tableController: _tableController,
+                    selectedPayment: _selectedPayment,
+                    onViaSelected: _onViaSelected,
+                    onDineInChanged: (v) {
+                       setModalState(() => _isDineIn = v);
+                       setState(() => _isDineIn = v);
+                    },
+                    onPaymentSelected: (p) {
+                       setModalState(() => _selectedPayment = p);
+                       setState(() => _selectedPayment = p);
+                    },
                   ),
                 ),
               ],
@@ -280,7 +329,7 @@ class _PhoneOrderPageState extends ConsumerState<PhoneOrderPage> {
   }
 }
 
-class _MobileCartView extends ConsumerWidget {
+class _MobileCartView extends ConsumerStatefulWidget {
   final TextEditingController nameController;
   final TextEditingController phoneController;
   final DateTime selectedDate;
@@ -291,6 +340,15 @@ class _MobileCartView extends ConsumerWidget {
   final String? existingOrderId;
   final OrderEntity? existingOrder;
   final Function(String) standardizePhoneNumber;
+
+  // Passed state and callbacks from parent
+  final String selectedVia;
+  final bool isDineIn;
+  final TextEditingController tableController;
+  final String selectedPayment;
+  final Function(String) onViaSelected;
+  final Function(bool) onDineInChanged;
+  final Function(String) onPaymentSelected;
 
   const _MobileCartView({
     required this.nameController,
@@ -303,18 +361,31 @@ class _MobileCartView extends ConsumerWidget {
     this.existingOrderId,
     this.existingOrder,
     required this.standardizePhoneNumber,
+    required this.selectedVia,
+    required this.isDineIn,
+    required this.tableController,
+    required this.selectedPayment,
+    required this.onViaSelected,
+    required this.onDineInChanged,
+    required this.onPaymentSelected,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_MobileCartView> createState() => _MobileCartViewState();
+}
+
+class _MobileCartViewState extends ConsumerState<_MobileCartView> {
+  @override
+  Widget build(BuildContext context) {
     final cartState = ref.watch(cartProvider);
     final cart = cartState.items;
     final cartTotal = ref.watch(cartTotalProvider);
-    bool isNameFilled = nameController.text.trim().isNotEmpty;
+    bool isNameFilled = widget.nameController.text.trim().isNotEmpty;
+    bool isWhatsAppValid = widget.selectedVia != 'WhatsApp' || 
+        (widget.nameController.text.trim().isNotEmpty && widget.phoneController.text.trim().isNotEmpty);
 
     return Column(
       children: [
-        // ... (title padding remains same)
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
@@ -322,13 +393,12 @@ class _MobileCartView extends ConsumerWidget {
               Icon(Icons.shopping_basket_outlined, color: Colors.orange[700]),
               const SizedBox(width: 12),
               Text(
-                existingOrderId != null ? 'Update Pesanan' : 'Detail Pesanan',
+                widget.existingOrderId != null ? 'Update Pesanan' : 'Detail Pesanan',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: Colors.orange[900],
                     ),
               ),
-// ...
               const Spacer(),
               if (cart.isNotEmpty)
                 Chip(
@@ -343,41 +413,135 @@ class _MobileCartView extends ConsumerWidget {
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             children: [
+              // Order Via Section
+              const Text('Order Via', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                   Expanded(
+                     child: _ViaButtonSmall(
+                        label: 'Offline',
+                        isSelected: widget.selectedVia == 'Offline',
+                        icon: Icons.storefront,
+                        onTap: () => widget.onViaSelected('Offline'),
+                      ),
+                   ),
+                   const SizedBox(width: 8),
+                   Expanded(
+                     child: _ViaButtonSmall(
+                        label: 'WA',
+                        isSelected: widget.selectedVia == 'WhatsApp',
+                        icon: Icons.message,
+                        color: Colors.green,
+                        onTap: () => widget.onViaSelected('WhatsApp'),
+                      ),
+                   ),
+                   const SizedBox(width: 8),
+                   Expanded(
+                     child: _ViaButtonSmall(
+                        label: 'Grab',
+                        isSelected: widget.selectedVia == 'GrabFood',
+                        icon: Icons.delivery_dining,
+                        color: Colors.green[700],
+                        onTap: () => widget.onViaSelected('GrabFood'),
+                      ),
+                   ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Dine In & Table Section
+              Row(
+                children: [
+                  const Text('Dine In', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
+                  const SizedBox(width: 8),
+                  Switch(
+                    value: widget.isDineIn,
+                    onChanged: widget.onDineInChanged,
+                    activeColor: Colors.orange[800],
+                  ),
+                  if (widget.isDineIn) ...[
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextField(
+                        controller: widget.tableController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'No. Meja',
+                          isDense: true,
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Payment Method Section
+              const Text('Metode Pembayaran', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _ViaButtonSmall(
+                      label: 'Cash',
+                      isSelected: widget.selectedPayment == 'Cash',
+                      icon: Icons.money,
+                      onTap: () => widget.onPaymentSelected('Cash'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _ViaButtonSmall(
+                      label: 'QRIS',
+                      isSelected: widget.selectedPayment == 'QRIS',
+                      icon: Icons.qr_code_scanner,
+                      onTap: () => widget.onPaymentSelected('QRIS'),
+                      color: Colors.blue[700],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
               TextField(
-                controller: nameController,
+                controller: widget.nameController,
                 decoration: const InputDecoration(
                   labelText: 'Nama Pelanggan (Wajib)',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.person),
                 ),
+                onChanged: (v) => setState(() {}),
               ),
               const SizedBox(height: 12),
               TextField(
-                controller: phoneController,
+                controller: widget.phoneController,
                 keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'Nomor WhatsApp (Opsional)',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.phone),
+                decoration: InputDecoration(
+                  labelText: widget.selectedVia == 'WhatsApp' ? 'Nomor WhatsApp (Wajib)' : 'Nomor WhatsApp (Opsional)',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.phone),
                   hintText: '0812...',
                 ),
+                onChanged: (v) => setState(() {}),
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: onSelectDate,
+                      onPressed: widget.onSelectDate,
                       icon: const Icon(Icons.calendar_today, size: 18),
-                      label: Text(DateFormat('dd/MM/yyyy').format(selectedDate)),
+                      label: Text(DateFormat('dd/MM/yyyy').format(widget.selectedDate)),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: onSelectTime,
+                      onPressed: widget.onSelectTime,
                       icon: const Icon(Icons.access_time, size: 18),
-                      label: Text(selectedTime.format(context)),
+                      label: Text(widget.selectedTime.format(context)),
                     ),
                   ),
                 ],
@@ -414,7 +578,7 @@ class _MobileCartView extends ConsumerWidget {
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text(
-                          '${item.note != null ? '(${item.note})' : ''}\n${item.toppings != null && item.toppings!.isNotEmpty ? '+ ${item.toppings!.map((t) => t.name).join(", ")}' : ''}',
+                          '${item.note != null ? '(${item.note})\n' : ''}${item.toppings != null && item.toppings!.isNotEmpty ? '+ ${item.toppings!.map((t) => t.name).join(", ")}\n' : ''}Rp ${(item.price * item.qty).toStringAsFixed(0)}',
                           style: TextStyle(color: Colors.orange[800], fontSize: 13),
                         ),
                         isThreeLine: true,
@@ -469,23 +633,27 @@ class _MobileCartView extends ConsumerWidget {
                   width: double.infinity,
                   height: 54,
                   child: ElevatedButton(
-                    onPressed: (cart.isEmpty || !isNameFilled)
+                    onPressed: (cart.isEmpty || !isNameFilled || !isWhatsAppValid)
                         ? null
                         : () async {
-                            final standardizedPhone = phoneController.text.isNotEmpty ? standardizePhoneNumber(phoneController.text) : null;
+                            final standardizedPhone = widget.phoneController.text.isNotEmpty ? widget.standardizePhoneNumber(widget.phoneController.text) : null;
                             final messenger = ScaffoldMessenger.of(context);
 
-                            if (existingOrderId != null && existingOrder != null) {
+                            if (widget.existingOrderId != null && widget.existingOrder != null) {
                               try {
                                 final CartController controller = ref.read(cartProvider.notifier);
                                 await controller.updateOrder(
                                       ref.read(orderRepositoryProvider),
-                                      ref.read(toppingRepositoryProvider), // Added
-                                      existingOrder!,
-                                      nameController.text.trim(),
+                                      ref.read(toppingRepositoryProvider),
+                                      widget.existingOrder!,
+                                      widget.nameController.text.trim(),
                                       customerPhone: standardizedPhone,
-                                      pickupDate: selectedDate,
-                                      pickupTime: selectedTime.format(context),
+                                      pickupDate: widget.selectedDate,
+                                      pickupTime: widget.selectedTime.format(context),
+                                      orderSource: widget.selectedVia,
+                                      isDineIn: widget.isDineIn,
+                                      tableNumber: widget.tableController.text,
+                                      paymentMethod: widget.selectedPayment,
                                     );
                                     
                                 Navigator.pop(context); // Close cart sheet
@@ -505,12 +673,16 @@ class _MobileCartView extends ConsumerWidget {
                                 final CartController controller = ref.read(cartProvider.notifier);
                                 await controller.submitOrder(
                                       ref.read(orderRepositoryProvider),
-                                      ref.read(toppingRepositoryProvider), // Added
-                                      nameController.text.trim(),
+                                      ref.read(toppingRepositoryProvider),
+                                      widget.nameController.text.trim(),
                                       customerPhone: standardizedPhone,
-                                      isQuickOrder: isQuickOrder,
-                                      pickupDate: selectedDate,
-                                      pickupTime: selectedTime.format(context),
+                                      isQuickOrder: widget.isQuickOrder,
+                                      pickupDate: widget.selectedDate,
+                                      pickupTime: widget.selectedTime.format(context),
+                                      orderSource: widget.selectedVia,
+                                      isDineIn: widget.isDineIn,
+                                      tableNumber: widget.tableController.text,
+                                      paymentMethod: widget.selectedPayment,
                                     );
                                 Navigator.pop(context);
                                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -527,13 +699,13 @@ class _MobileCartView extends ConsumerWidget {
                             }
                           },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: existingOrderId != null ? Colors.blue[800] : Colors.orange[800],
+                      backgroundColor: widget.existingOrderId != null ? Colors.blue[800] : Colors.orange[800],
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     child: Text(
-                      existingOrderId != null ? 'UPDATE PESANAN' : 'PROSES PESANAN',
+                      widget.existingOrderId != null ? 'UPDATE PESANAN' : 'PROSES PESANAN',
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.2),
                     ),
                   ),
@@ -543,6 +715,57 @@ class _MobileCartView extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ViaButtonSmall extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final IconData icon;
+  final VoidCallback onTap;
+  final Color? color;
+
+  const _ViaButtonSmall({
+    required this.label,
+    required this.isSelected,
+    required this.icon,
+    required this.onTap,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final activeColor = color ?? Colors.orange[800]!;
+    return Material(
+      color: isSelected ? activeColor : Colors.white,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          height: 44,
+          decoration: BoxDecoration(
+            border: Border.all(color: isSelected ? activeColor : Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 16, color: isSelected ? Colors.white : Colors.grey[600]),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? Colors.white : Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

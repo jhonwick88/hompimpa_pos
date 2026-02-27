@@ -34,6 +34,13 @@ final dailyOrdersProvider = StreamProvider<List<OrderEntity>>((ref) {
   return repository.getOrdersStream(date: date);
 });
 
+final reviewOrdersCountProvider = StreamProvider<int>((ref) {
+  final repository = ref.watch(orderRepositoryProvider);
+  // We want to watch for ALL orders waiting review, maybe not just for today?
+  // User usually wants to see total pending reviews.
+  return repository.getOrdersStream(status: OrderStatus.menungguReview).map((list) => list.length);
+});
+
 class OrderListScreen extends ConsumerStatefulWidget {
   const OrderListScreen({Key? key}) : super(key: key);
 

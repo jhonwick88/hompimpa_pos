@@ -7,7 +7,7 @@ import 'order_item.dart';
 part 'order.freezed.dart';
 part 'order.g.dart';
 
-enum OrderStatus { belum, proses, selesai, batal }
+enum OrderStatus { belum, proses, selesai, batal, menungguReview, ditolak }
 
 @freezed
 abstract class OrderEntity with _$OrderEntity {
@@ -62,6 +62,8 @@ abstract class OrderEntity with _$OrderEntity {
       if (statusStr.contains('selesai')) normalized['status'] = 'selesai';
       else if (statusStr.contains('proses')) normalized['status'] = 'proses';
       else if (statusStr.contains('batal') || statusStr.contains('void')) normalized['status'] = 'batal';
+      else if (statusStr.contains('review')) normalized['status'] = 'menungguReview';
+      else if (statusStr.contains('tolak')) normalized['status'] = 'ditolak';
       else normalized['status'] = 'belum';
     }
     

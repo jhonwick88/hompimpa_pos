@@ -67,4 +67,6 @@ const _$OrderStatusEnumMap = {
   OrderStatus.proses: 'proses',
   OrderStatus.selesai: 'selesai',
   OrderStatus.batal: 'batal',
+  OrderStatus.menungguReview: 'menungguReview',
+  OrderStatus.ditolak: 'ditolak',
 };
