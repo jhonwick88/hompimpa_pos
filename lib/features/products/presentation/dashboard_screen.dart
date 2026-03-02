@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hompimpa_pos/core/widgets/app_end_drawer.dart';
 import 'package:hompimpa_pos/core/widgets/skeleton.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hompimpa_pos/features/reports/presentation/daily_sales_provider.dart';
@@ -17,6 +18,7 @@ import '../../orders/domain/order.dart';
 import 'package:uuid/uuid.dart';
 import '../domain/topping.dart';
 import '../../../core/widgets/gradient_app_bar.dart';
+import '../../../core/widgets/app_image.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -31,6 +33,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    FlutterNativeSplash.remove();
     // Role Guard
     WidgetsBinding.instance?.addPostFrameCallback((_) {
       final authState = ref.read(authStateChangesProvider);
@@ -296,25 +299,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                             Container(color: bgColor),
                                             
                                             // Product Image or Icon
-                                            if (product.imageUrl != null)
-                                              Positioned.fill(
-                                                child: Image.asset(
-                                                  product.imageUrl!,
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder: (context, error, stackTrace) {
-                                                    return const Center(
-                                                      child: Icon(Icons.broken_image,color: Colors.white54),
-                                                    );
-                                                  },
-                                                ),
-                                              )
-                                            else
-                                              const Center(
-                                                child: Opacity(
-                                                  opacity: 0.1,
-                                                  child: Icon(Icons.fastfood, size: 64),
-                                                ),
+                                            Positioned.fill(
+                                              child: AppImage(
+                                                url: product.imageUrl,
+                                                fit: BoxFit.cover,
                                               ),
+                                            ),
                                       
                                             // Name Label at Bottom with Gradient
                                             Positioned(
@@ -494,25 +484,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                             Container(color: bgColor),
                                             
                                             // Product Image or Icon
-                                            if (topping.imageUrl != null)
-                                              Positioned.fill(
-                                                child: Image.asset(
-                                                  topping.imageUrl!,
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder: (context, error, stackTrace) {
-                                                    return const Center(
-                                                      child: Icon(Icons.broken_image,color: Colors.white54),
-                                                    );
-                                                  },
-                                                ),
-                                              )
-                                            else
-                                              const Center(
-                                                child: Opacity(
-                                                  opacity: 0.1,
-                                                  child: Icon(Icons.grain, size: 64),
+                                            Positioned.fill(
+                                              child: AppImage(
+                                                url: topping.imageUrl,
+                                                fit: BoxFit.cover,
+                                                errorWidget: const Center(
+                                                  child: Opacity(
+                                                    opacity: 0.1,
+                                                    child: Icon(Icons.grain, size: 64),
+                                                  ),
                                                 ),
                                               ),
+                                            ),
                                       
                                             // Name Label at Bottom with Gradient
                                             Positioned(

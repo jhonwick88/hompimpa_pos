@@ -26,7 +26,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
   
   return GoRouter(
-    initialLocation: '/splash',
+    initialLocation: '/',
     refreshListenable: GoRouterRefreshStream(authRepository.authStateChanges()),
     redirect: (context, state) {
        final isLoggedIn = FirebaseAuth.instance.currentUser != null;

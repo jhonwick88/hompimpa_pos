@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:go_router/go_router.dart';
 import './public_cart_provider.dart';
 import '../../orders/data/order_repository.dart';
@@ -22,6 +23,7 @@ class _PublicCartScreenState extends ConsumerState<PublicCartScreen> {
   @override
   void initState() {
     super.initState();
+    FlutterNativeSplash.remove();
     // Initialize with current value from provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _tableController.text = ref.read(publicCartProvider).tableNumber ?? '1';

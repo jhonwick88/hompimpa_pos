@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'auth_controller.dart';
 
 class LoginScreen extends ConsumerWidget {
@@ -8,6 +9,7 @@ class LoginScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    FlutterNativeSplash.remove();
     // Listen to error states
     ref.listen<AsyncValue<void>>(authControllerProvider, (previous, state) {
       state.maybeWhen(

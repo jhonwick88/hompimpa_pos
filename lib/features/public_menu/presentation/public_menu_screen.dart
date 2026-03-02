@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:go_router/go_router.dart';
 import '../../products/presentation/product_provider.dart';
 import '../../products/domain/product.dart';
@@ -8,6 +9,7 @@ import '../../../core/widgets/gradient_app_bar.dart';
 import '../../../core/widgets/skeleton.dart';
 
 import './public_product_option_dialog.dart';
+import '../../../core/widgets/app_image.dart';
 
 class PublicMenuScreen extends ConsumerStatefulWidget {
   const PublicMenuScreen({Key? key}) : super(key: key);
@@ -18,6 +20,12 @@ class PublicMenuScreen extends ConsumerStatefulWidget {
 
 class _PublicMenuScreenState extends ConsumerState<PublicMenuScreen> {
   String selectedCategory = 'Semua';
+  
+  @override
+  void initState() {
+    super.initState();
+    FlutterNativeSplash.remove();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -180,23 +188,50 @@ class _PremiumHeader extends ConsumerWidget {
 
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-      color: Colors.white,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.red, Colors.orange, Colors.white],
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Hompimpa',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Spesialis Mie & Pangsit',
-            style: TextStyle(
-              color: Colors.grey,
-            ),
+          Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  'assets/images/favicon.png',
+                  width: 50,
+                  height: 50,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Hompimpa',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Spesialis Mie & Pangsit',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           Row(
@@ -209,15 +244,15 @@ class _PremiumHeader extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                   child: Row(
                     children: [
-                      const Icon(Icons.table_restaurant, size: 20, color: Colors.orange),
+                      const Icon(Icons.table_restaurant, size: 20, color: Colors.white),
                       const SizedBox(width: 8),
                       Text(
                         'Meja $tableNumber',
                         style: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 16),
+                            fontWeight: FontWeight.w600, fontSize: 16, color: Colors.white),
                       ),
                       const SizedBox(width: 4),
-                      const Icon(Icons.edit, size: 14, color: Colors.grey),
+                      const Icon(Icons.edit, size: 14, color: Colors.white70),
                     ],
                   ),
                 ),
@@ -225,7 +260,7 @@ class _PremiumHeader extends ConsumerWidget {
               Stack(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.shopping_cart_outlined),
+                    icon: const Icon(Icons.shopping_cart_outlined, color: Colors.white),
                     onPressed: () => context.push('/cart'),
                   ),
                   if (totalCount > 0)
@@ -235,7 +270,7 @@ class _PremiumHeader extends ConsumerWidget {
                       child: Container(
                         padding: const EdgeInsets.all(4),
                         decoration: const BoxDecoration(
-                          color: Colors.orange,
+                          color: Colors.red,
                           shape: BoxShape.circle,
                         ),
                         child: Text(
@@ -249,7 +284,7 @@ class _PremiumHeader extends ConsumerWidget {
               )
             ],
           ),
-          const Divider(height: 20),
+          const Divider(height: 20, color: Colors.white24),
         ],
       ),
     );
@@ -281,7 +316,7 @@ class _CategorySelector extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.only(right: 12),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
+          duration: const Duration(milliseconds: 1000),
           padding:
               const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           decoration: BoxDecoration(
@@ -340,13 +375,10 @@ class _ProductCard extends ConsumerWidget {
               child: Stack(
                 children: [
                   Positioned.fill(
-                    child: product.imageUrl != null &&
-                            product.imageUrl!.isNotEmpty
-                        ? Image.network(product.imageUrl!,
-                            fit: BoxFit.cover)
-                        : Container(
-                            color: Colors.grey[200],
-                          ),
+                    child: AppImage(
+                      url: product.imageUrl,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ],
               ),
@@ -385,13 +417,13 @@ class _ProductCard extends ConsumerWidget {
                                                     if(product.category != 'makanan'){
                              // Default add 1
                          ref.read(publicCartProvider.notifier).addItem(product, 1);
-                         ScaffoldMessenger.of(context).showSnackBar(
-                           SnackBar(
-                             content: Text('${product.name} ditambah ke keranjang'),
-                             duration: const Duration(seconds: 1),
-                             action: SnackBarAction(label: 'LIHAT', onPressed: () => context.push('/cart')),
-                           )
-                           );
+                        //  ScaffoldMessenger.of(context).showSnackBar(
+                        //    SnackBar(
+                        //      content: Text('${product.name} ditambah ke keranjang'),
+                        //      duration: const Duration(seconds: 1),
+                        //      action: SnackBarAction(label: 'LIHAT', onPressed: () => context.push('/cart')),
+                        //    )
+                        //    );
                           }else{
                             showDialog(
                             context: context,

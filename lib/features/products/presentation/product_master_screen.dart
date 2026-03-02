@@ -4,6 +4,7 @@ import 'package:hompimpa_pos/features/products/presentation/product_provider.dar
 import 'package:hompimpa_pos/features/products/domain/product.dart';
 import 'package:hompimpa_pos/features/products/data/product_repository.dart';
 import 'package:hompimpa_pos/features/auth/presentation/auth_controller.dart';
+import 'package:hompimpa_pos/core/widgets/app_image.dart';
 import 'package:uuid/uuid.dart';
 
 class ProductMasterScreen extends ConsumerWidget {
@@ -30,9 +31,11 @@ class ProductMasterScreen extends ConsumerWidget {
           itemBuilder: (context, index) {
             final product = products[index];
             return ListTile(
-              leading: product.imageUrl != null 
-                ? Image.network(product.imageUrl!, width: 40, height: 40, errorBuilder: (_, __, ___) => const Icon(Icons.fastfood))
-                : const Icon(Icons.fastfood),
+              leading: AppImage(
+                url: product.imageUrl,
+                width: 40,
+                height: 40,
+              ),
               title: Text(product.name),
               subtitle: Text('Rp ${product.price} | Stok: ${product.stock}'),
               trailing: Row(

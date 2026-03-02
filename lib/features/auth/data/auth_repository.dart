@@ -11,7 +11,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(
     FirebaseAuth.instance,
     FirebaseFirestore.instance,
-    GoogleSignIn(),
+    kIsWeb ? null : GoogleSignIn(),
   );
 });
 
@@ -22,7 +22,7 @@ final authStateChangesProvider = StreamProvider<AppUser?>((ref) {
 class AuthRepository {
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
-  final GoogleSignIn _googleSignIn;
+  final GoogleSignIn? _googleSignIn;
 
   AuthRepository(this._auth, this._firestore, this._googleSignIn);
 
@@ -60,7 +60,10 @@ class AuthRepository {
         GoogleAuthProvider authProvider = GoogleAuthProvider();
         userCredential = await _auth.signInWithPopup(authProvider);
       } else {
-        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+        if (_googleSignIn == null) {
+           throw Exception('Google Sign In is not available on this platform configuration.');
+        }
+        final GoogleSignInAccount? googleUser = await _googleSignIn!.signIn();
         if (googleUser == null) return null; // Cancelled
 
         final GoogleSignInAuthentication googleAuth =
@@ -127,7 +130,7 @@ class AuthRepository {
   }
 
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
+    await _googleSignIn?.signOut();
     await _auth.signOut();
   }
 }
