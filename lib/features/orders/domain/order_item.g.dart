@@ -17,6 +17,7 @@ OrderItem _$OrderItemFromJson(Map<String, dynamic> json) => OrderItem(
   toppings: (json['toppings'] as List<dynamic>?)
       ?.map((e) => Topping.fromJson(e as Map<String, dynamic>))
       .toList(),
+  storeId: json['storeId'] as String?,
 );
 
 Map<String, dynamic> _$OrderItemToJson(OrderItem instance) => <String, dynamic>{
@@ -28,4 +29,5 @@ Map<String, dynamic> _$OrderItemToJson(OrderItem instance) => <String, dynamic>{
   'sambal': instance.sambal,
   'note': instance.note,
   'toppings': instance.toppings,
+  'storeId': instance.storeId,
 };

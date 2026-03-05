@@ -4,6 +4,7 @@ import 'package:hompimpa_pos/features/products/presentation/product_provider.dar
 import 'package:hompimpa_pos/features/products/domain/product.dart';
 import 'package:hompimpa_pos/features/products/data/product_repository.dart';
 import 'package:hompimpa_pos/features/auth/presentation/auth_controller.dart';
+import 'package:hompimpa_pos/features/settings/data/store_repository.dart';
 import 'package:hompimpa_pos/core/widgets/app_image.dart';
 import 'package:uuid/uuid.dart';
 
@@ -74,6 +75,8 @@ class ProductMasterScreen extends ConsumerWidget {
     final stockController = TextEditingController(text: product?.stock.toString() ?? '');
     final imageUrlController = TextEditingController(text: product?.imageUrl ?? 'assets/images/logo.png');
     String category = product?.category ?? 'makanan';
+    String? selectedStoreId = product?.storeId;
+    final storesAsync = ref.read(activeStoresProvider);
 
     showDialog(
       context: context,
@@ -98,6 +101,20 @@ class ProductMasterScreen extends ConsumerWidget {
                 TextField(controller: priceController, decoration: const InputDecoration(labelText: 'Harga'), keyboardType: TextInputType.number),
                 TextField(controller: stockController, decoration: const InputDecoration(labelText: 'Stok'), keyboardType: TextInputType.number),
                 TextField(controller: imageUrlController, decoration: const InputDecoration(labelText: 'Image URL')),
+                const SizedBox(height: 16),
+                storesAsync.when(
+                  data: (stores) => DropdownButtonFormField<String?>(
+                    value: selectedStoreId,
+                    decoration: const InputDecoration(labelText: 'Store'),
+                    items: [
+                      const DropdownMenuItem(value: null, child: Text('No Store')),
+                      ...stores.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))),
+                    ],
+                    onChanged: (v) => setState(() => selectedStoreId = v),
+                  ),
+                  loading: () => const LinearProgressIndicator(),
+                  error: (_, __) => const Text('Error loading stores'),
+                ),
               ],
             ),
           ),
@@ -110,9 +127,10 @@ class ProductMasterScreen extends ConsumerWidget {
                   name: nameController.text,
                   category: category,
                   price: double.tryParse(priceController.text) ?? 0,
-                  stock: int.tryParse(stockController.text) ?? 0,
+                   stock: int.tryParse(stockController.text) ?? 0,
                   imageUrl: imageUrlController.text.isNotEmpty ? imageUrlController.text : null,
                   isActive: product?.isActive ?? true,
+                  storeId: selectedStoreId,
                 );
 
                 if (product == null) {

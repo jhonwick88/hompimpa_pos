@@ -174,11 +174,20 @@ class AppEndDrawer extends ConsumerWidget {
                         context.push('/review-orders');
                       },
                     ),
+                    if (user?.role == UserRole.dev) ...[
+                    _DrawerButton(
+                      icon: Icons.rate_review_outlined,
+                      label: 'Void Order',
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.push('/void-orders');
+                      },
+                    ),
                     const SizedBox(height: 10),
                     const Divider(),
 
-                    // ===== MASTER DATA (DEV & ADMIN) =====
-                    if (user?.role == UserRole.dev || user?.role == UserRole.admin) ...[
+                    // ===== MASTER DATA (DEV) =====
+                    
                       const SizedBox(height: 16),
                       const _SectionTitle('Master Data'),
                       _DrawerButton(
@@ -203,6 +212,14 @@ class AppEndDrawer extends ConsumerWidget {
                         onTap: () {
                           Navigator.pop(context);
                           context.push('/master/users');
+                        },
+                      ),
+                      _DrawerButton(
+                        icon: Icons.storefront_outlined,
+                        label: 'Store',
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push('/master/stores');
                         },
                       ),
                       const SizedBox(height: 10),

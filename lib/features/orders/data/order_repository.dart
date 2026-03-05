@@ -2,13 +2,20 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/order.dart';
 import '../domain/order_item.dart';
+import '../../auth/domain/user_model.dart';
+import '../../../core/enums/user_role.dart';
 
 final orderRepositoryProvider = Provider<OrderRepository>((ref) {
   return FirestoreOrderRepository(FirebaseFirestore.instance);
 });
 
 abstract class OrderRepository {
-  Stream<List<OrderEntity>> getOrdersStream({DateTime? date, OrderStatus? status, String? searchQuery});
+  Stream<List<OrderEntity>> getOrdersStream({
+    DateTime? date, 
+    OrderStatus? status, 
+    String? searchQuery,
+    AppUser? currentUser,
+  });
   Future<void> addOrder(OrderEntity order);
   Future<void> updateOrder(OrderEntity order);
   Future<void> updateOrderStatus(String orderId, OrderStatus newStatus, List<OrderItem> items, {String? executorName, String? executorId});
@@ -27,15 +34,50 @@ class FirestoreOrderRepository implements OrderRepository {
   FirestoreOrderRepository(this._firestore);
 
   @override
-  Stream<List<OrderEntity>> getOrdersStream({DateTime? date, OrderStatus? status, String? searchQuery}) {
-    // Fetch everything and filter on client-side to ensure visibility during development
-    // (Avoiding composite index requirements for now)
-    return _firestore.collection('orders').snapshots().map((snapshot) {
+  Stream<List<OrderEntity>> getOrdersStream({
+    DateTime? date, 
+    OrderStatus? status, 
+    String? searchQuery,
+    AppUser? currentUser,
+  }) {
+    // 1. Fetch active stores first to handle isActive logic
+    // For simplicity, we'll fetch all stores and filter in memory.
+    // In a large system, we'd use a more reactive approach.
+    final storesStream = _firestore.collection('stores').snapshots();
+
+    return _firestore.collection('orders').snapshots().asyncMap((orderSnapshot) async {
+      // Get all stores to check isActive
+      final storeDocs = await _firestore.collection('stores').get();
+      final activeStoreIds = storeDocs.docs
+          .where((doc) => doc.data()['isActive'] == true)
+          .map((doc) => doc.id)
+          .toSet();
+
       final baseOrders = <OrderEntity>[];
-      for (final doc in snapshot.docs) {
+      for (final doc in orderSnapshot.docs) {
         try {
           final data = doc.data() as Map<String, dynamic>;
-          baseOrders.add(OrderEntity.fromJsonRobust({...data, 'id': doc.id}));
+          var order = OrderEntity.fromJsonRobust({...data, 'id': doc.id});
+          
+          // Role-based Isolation Logic
+          if (currentUser != null && currentUser.role != UserRole.dev) {
+            // Filter items: must match user.storeId AND store must be active
+            final filteredItems = order.items.where((item) {
+              final itemStoreId = item.storeId ?? order.storeId; // Fallback to order-level storeId
+              return itemStoreId == currentUser.storeId && activeStoreIds.contains(itemStoreId);
+            }).toList();
+
+            if (filteredItems.isEmpty) continue; // Hide orders with no visible items
+
+            // Re-calculate total based on filtered items
+            final newTotal = filteredItems.fold<double>(0, (sum, item) => sum + (item.price * item.qty));
+            order = order.copyWith(items: filteredItems, total: newTotal);
+          } else if (currentUser != null && currentUser.role == UserRole.dev) {
+             // DEV sees everything, but we still want to label them? 
+             // No specific instruction for labeling, just "can see all".
+          }
+
+          baseOrders.add(order);
         } catch (e) {
           print("DEBUG: Failed to parse order ${doc.id}: $e");
         }
@@ -65,7 +107,7 @@ class FirestoreOrderRepository implements OrderRepository {
         ).toList();
       }
 
-      // Client-side sorting (Oldest first as requested: "Jam order default adalah ascending")
+      // Client-side sorting
       filtered.sort((a, b) {
         final dateA = a.createdAt ?? a.orderDate;
         final dateB = b.createdAt ?? b.orderDate;

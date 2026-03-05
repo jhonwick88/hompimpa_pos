@@ -15,6 +15,7 @@ import 'package:hompimpa_pos/features/orders/domain/order.dart';
 import 'package:hompimpa_pos/core/widgets/gradient_app_bar.dart';
 import 'package:hompimpa_pos/core/widgets/gradient_status_tab_bar.dart';
 import 'package:hompimpa_pos/features/cashier/presentation/cashier_controller.dart';
+import 'package:add_to_cart_animation/add_to_cart_animation.dart';
 
 /// Phone-specific order entry page (< 600px)
 /// - Full-screen product grid
@@ -46,6 +47,7 @@ class _PhoneOrderPageState extends ConsumerState<PhoneOrderPage> {
   bool _isDineIn = false;
   final _tableController = TextEditingController(text: '0');
   String _selectedPayment = 'Cash';
+  Function(GlobalKey)? _runAddToCartAnimation;
   
   @override
   void initState() {
@@ -66,7 +68,7 @@ class _PhoneOrderPageState extends ConsumerState<PhoneOrderPage> {
       } else if (via == 'GrabFood') {
         _nameController.text = 'Grab - $baseName';
       } else {
-        _nameController.text = baseName;
+         _nameController.text = baseName;
       }
     });
   }
@@ -190,52 +192,74 @@ class _PhoneOrderPageState extends ConsumerState<PhoneOrderPage> {
 
     return DefaultTabController(
       length: 3,
-      child: Scaffold(
-        appBar: GradientAppBar(
-          title: Text(widget.isQuickOrder ? 'Quick Order' : 'New Order'),
-          actions: [
-            MobileActionBar(
-              onCartPressed: () => _showMobileCart(context),
-              onManualOrderPressed: () {},
-              onQuickOrderPressed: () {},
-            ),
-          ],
-          bottom: GradientStatusTabBar(
-            items: const [
-              GradientStatusTabItem(
-                title: 'Semua',
-                icon: Icons.all_inclusive,
-                count: 0,
-                color: Colors.blue,
-              ),
-              GradientStatusTabItem(
-                title: 'Makanan',
-                icon: Icons.fastfood,
-                count: 0,
-                color: Colors.orange,
-              ),
-              GradientStatusTabItem(
-                title: 'Minuman',
-                icon: Icons.local_drink,
-                count: 0,
-                color: Colors.green,
+      child: AddToCartAnimation(
+        cartKey: cartIconKey,
+        height: 30,
+        width: 30,
+        opacity: 0.85,
+        dragAnimation: const DragToCartAnimationOptions(
+          rotation: true,
+        ),
+        jumpAnimation: const JumpAnimationOptions(),
+        createAddToCartAnimation: (runAnimation) {
+          _runAddToCartAnimation = runAnimation;
+        },
+        child: Scaffold(
+          appBar: GradientAppBar(
+            title: Text(widget.isQuickOrder ? 'Quick Order' : 'New Order'),
+            actions: [
+              MobileActionBar(
+                onCartPressed: () => _showMobileCart(context),
+                onManualOrderPressed: () {},
+                onQuickOrderPressed: () {},
               ),
             ],
-          ),
-        ),
-        body: productsAsync.when(
-          data: (products) {
-            final activeProducts = products.where((p) => p.isActive).toList();
-            return TabBarView(
-              children: [
-                _ProductGrid(products: activeProducts),
-                _ProductGrid(products: activeProducts.where((p) => p.category == 'makanan').toList()),
-                _ProductGrid(products: activeProducts.where((p) => p.category == 'minuman').toList()),
+            bottom: GradientStatusTabBar(
+              items: const [
+                GradientStatusTabItem(
+                  title: 'Semua',
+                  icon: Icons.all_inclusive,
+                  count: 0,
+                  color: Colors.blue,
+                ),
+                GradientStatusTabItem(
+                  title: 'Makanan',
+                  icon: Icons.fastfood,
+                  count: 0,
+                  color: Colors.orange,
+                ),
+                GradientStatusTabItem(
+                  title: 'Minuman',
+                  icon: Icons.local_drink,
+                  count: 0,
+                  color: Colors.green,
+                ),
               ],
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, st) => Center(child: Text('Error: $e')),
+            ),
+          ),
+          body: productsAsync.when(
+            data: (products) {
+              final activeProducts = products.where((p) => p.isActive).toList();
+              return TabBarView(
+                children: [
+                  _ProductGrid(
+                    products: activeProducts,
+                    runAddToCartAnimation: _runAddToCartAnimation,
+                  ),
+                  _ProductGrid(
+                    products: activeProducts.where((p) => p.category == 'makanan').toList(),
+                    runAddToCartAnimation: _runAddToCartAnimation,
+                  ),
+                  _ProductGrid(
+                    products: activeProducts.where((p) => p.category == 'minuman').toList(),
+                    runAddToCartAnimation: _runAddToCartAnimation,
+                  ),
+                ],
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, st) => Center(child: Text('Error: $e')),
+          ),
         ),
       ),
     );
@@ -309,7 +333,9 @@ class _PhoneOrderPageState extends ConsumerState<PhoneOrderPage> {
                     isDineIn: _isDineIn,
                     tableController: _tableController,
                     selectedPayment: _selectedPayment,
-                    onViaSelected: _onViaSelected,
+                    onViaSelected: (v) {
+                       setModalState(() => _onViaSelected(v));
+                    },
                     onDineInChanged: (v) {
                        setModalState(() => _isDineIn = v);
                        setState(() => _isDineIn = v);
@@ -432,8 +458,8 @@ class _MobileCartViewState extends ConsumerState<_MobileCartView> {
                         label: 'WA',
                         isSelected: widget.selectedVia == 'WhatsApp',
                         icon: Icons.message,
-                        color: Colors.green,
                         onTap: () => widget.onViaSelected('WhatsApp'),
+                        color: Colors.green,
                       ),
                    ),
                    const SizedBox(width: 8),
@@ -442,8 +468,8 @@ class _MobileCartViewState extends ConsumerState<_MobileCartView> {
                         label: 'Grab',
                         isSelected: widget.selectedVia == 'GrabFood',
                         icon: Icons.delivery_dining,
-                        color: Colors.green[700],
                         onTap: () => widget.onViaSelected('GrabFood'),
+                        color: Colors.green[700],
                       ),
                    ),
                 ],
@@ -772,7 +798,14 @@ class _ViaButtonSmall extends StatelessWidget {
 
 class _ProductGrid extends ConsumerWidget {
   final List<dynamic> products;
-  const _ProductGrid({required this.products});
+  final Function(GlobalKey)? runAddToCartAnimation;
+  
+  _ProductGrid({
+    required this.products,
+    this.runAddToCartAnimation,
+  });
+
+  final Map<String, GlobalKey> _itemKeys = {};
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -797,6 +830,9 @@ class _ProductGrid extends ConsumerWidget {
             final product = products[index];
             final isFood = product.category == 'makanan';
             
+            // Generate or get key for this product
+            final key = _itemKeys.putIfAbsent(product.id, () => GlobalKey());
+            
             return Card(
               elevation: 2,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -807,30 +843,33 @@ class _ProductGrid extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Expanded(
-                        child: product.imageUrl != null
-                            ? Image.asset(
-                                product.imageUrl!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Container(
-                                    color: isFood ? Colors.orange.shade100 : Colors.blue.shade100,
-                                    child: Center(
-                                      child: Icon(Icons.broken_image,
-                                          color: isFood ? Colors.orange : Colors.blue),
+                        child: Container(
+                          key: key,
+                          child: product.imageUrl != null
+                              ? Image.asset(
+                                  product.imageUrl!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      color: isFood ? Colors.orange.shade100 : Colors.blue.shade100,
+                                      child: Center(
+                                        child: Icon(Icons.broken_image,
+                                            color: isFood ? Colors.orange : Colors.blue),
+                                      ),
+                                    );
+                                  },
+                                )
+                              : Container(
+                                  color: isFood ? Colors.orange.shade100 : Colors.blue.shade100,
+                                  child: Center(
+                                    child: Icon(
+                                      isFood ? Icons.fastfood : Icons.local_drink,
+                                      size: 40,
+                                      color: isFood ? Colors.orange : Colors.blue,
                                     ),
-                                  );
-                                },
-                              )
-                            : Container(
-                                color: isFood ? Colors.orange.shade100 : Colors.blue.shade100,
-                                child: Center(
-                                  child: Icon(
-                                    isFood ? Icons.fastfood : Icons.local_drink,
-                                    size: 40,
-                                    color: isFood ? Colors.orange : Colors.blue,
                                   ),
                                 ),
-                              ),
+                        ),
                       ),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
@@ -895,8 +934,6 @@ class _ProductGrid extends ConsumerWidget {
                             return;
                           }
 
-                          print('DEBUG: Tablet Tapped ${product.name}, Stock: ${product.stock}');
-
                           if (product.stock <= 0) {
                              ScaffoldMessenger.of(context).hideCurrentSnackBar();
                              ScaffoldMessenger.of(context).showSnackBar(
@@ -914,9 +951,16 @@ class _ProductGrid extends ConsumerWidget {
                           if (isFood) {
                             showDialog(
                               context: context,
-                              builder: (context) => ProductOptionDialog(product: product),
+                              builder: (context) => ProductOptionDialog(
+                                product: product,
+                                runAddToCartAnimation: runAddToCartAnimation,
+                                itemKey: key,
+                              ),
                             );
                           } else {
+                            if (runAddToCartAnimation != null) {
+                              runAddToCartAnimation!(key);
+                            }
                             ref.read(cartProvider.notifier).addItem(product, 1);
                           }
                         },

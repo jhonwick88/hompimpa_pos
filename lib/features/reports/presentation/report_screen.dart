@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'report_provider.dart';
+import '../../settings/data/store_repository.dart';
+import '../../auth/data/auth_repository.dart';
+import '../../../core/enums/user_role.dart';
 import 'package:hompimpa_pos/core/widgets/gradient_app_bar.dart';
 
 class ReportsScreen extends ConsumerWidget {
@@ -13,6 +16,9 @@ class ReportsScreen extends ConsumerWidget {
     final selectedDate = ref.watch(reportDateProvider);
     final salesAsync = ref.watch(dailyProductSalesProvider);
     final filteredSales = ref.watch(filteredProductSalesProvider);
+    final user = ref.watch(authStateChangesProvider).value;
+    final storesAsync = ref.watch(activeStoresProvider);
+    final selectedStoreId = ref.watch(selectedStoreIdProvider);
 
     return Scaffold(
       appBar: GradientAppBar(
@@ -44,7 +50,32 @@ class ReportsScreen extends ConsumerWidget {
                 'Penjualan Per Produk: ${DateFormat('dd MMMM yyyy').format(selectedDate)}',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 8),
+
+              // Dev Store Filter
+              if (user?.role == UserRole.dev) 
+                storesAsync.when(
+                  data: (stores) => Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: DropdownButtonFormField<String?>(
+                      value: selectedStoreId,
+                      decoration: const InputDecoration(
+                        labelText: 'Filter Store (Dev Only)',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                      items: [
+                        const DropdownMenuItem(value: null, child: Text('Semua Store')),
+                        ...stores.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))),
+                      ],
+                      onChanged: (val) => ref.read(selectedStoreIdProvider.notifier).state = val,
+                    ),
+                  ),
+                  loading: () => const LinearProgressIndicator(),
+                  error: (_, __) => const SizedBox(),
+                ),
+
+              const SizedBox(height: 16),
               
               // Chart Section
               SizedBox(

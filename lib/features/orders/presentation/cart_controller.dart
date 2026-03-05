@@ -7,6 +7,7 @@ import '../../products/domain/product.dart';
 import '../../products/domain/topping.dart';
 import '../../products/data/topping_repository.dart';
 import '../../cashier/presentation/cashier_controller.dart';
+import '../../auth/data/auth_repository.dart';
 import 'package:collection/collection.dart';
 
 // wrapper class for state
@@ -94,6 +95,7 @@ class CartController extends Notifier<CartState> {
         sambal: sambal,
         note: note,
         toppings: toppings,
+        storeId: product.storeId,
       );
       state = state.copyWith(items: [...currentItems, item]);
     }
@@ -136,6 +138,7 @@ class CartController extends Notifier<CartState> {
 
     final cashierState = ref.read(cashierProvider);
     final String? shiftId = cashierState.isOpen ? cashierState.activeShift?.id : null;
+    final user = ref.read(authStateChangesProvider).value;
 
     final order = OrderEntity(
       id: const Uuid().v4(),
@@ -153,6 +156,7 @@ class CartController extends Notifier<CartState> {
       isDineIn: isDineIn,
       tableNumber: tableNumber,
       paymentMethod: paymentMethod,
+      storeId: user?.storeId,
     );
 
     await repository.addOrder(order);

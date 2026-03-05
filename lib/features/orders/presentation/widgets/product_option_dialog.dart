@@ -9,7 +9,15 @@ import '../cart_controller.dart';
 
 class ProductOptionDialog extends ConsumerStatefulWidget {
   final Product product;
-  const ProductOptionDialog({Key? key, required this.product}) : super(key: key);
+  final Function(GlobalKey)? runAddToCartAnimation;
+  final GlobalKey? itemKey;
+
+  const ProductOptionDialog({
+    Key? key,
+    required this.product,
+    this.runAddToCartAnimation,
+    this.itemKey,
+  }) : super(key: key);
 
   @override
   ConsumerState<ProductOptionDialog> createState() => _ProductOptionDialogState();
@@ -359,6 +367,9 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
                     note: _noteController.text.isNotEmpty ? _noteController.text : null,
                     toppings: finalToppings.isNotEmpty ? finalToppings : null,
                   );
+                  if (widget.runAddToCartAnimation != null && widget.itemKey != null) {
+                    widget.runAddToCartAnimation!(widget.itemKey!);
+                  }
                   Navigator.pop(context);
                 } catch (e) {
                    ScaffoldMessenger.of(context).showSnackBar(

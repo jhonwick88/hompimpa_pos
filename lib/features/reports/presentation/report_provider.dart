@@ -1,9 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../orders/data/order_repository.dart';
 import '../../orders/domain/order.dart';
+import '../../auth/data/auth_repository.dart';
+import '../../../core/enums/user_role.dart';
 
 final reportDateProvider = StateProvider<DateTime>((ref) => DateTime.now());
 final reportSearchQueryProvider = StateProvider<String>((ref) => '');
+final selectedStoreIdProvider = StateProvider<String?>((ref) => null); // For Dev to filter
 
 class ProductSalesReport {
   final String productName;
@@ -20,8 +23,16 @@ class ProductSalesReport {
 final dailyProductSalesProvider = StreamProvider<List<ProductSalesReport>>((ref) {
   final repository = ref.watch(orderRepositoryProvider);
   final date = ref.watch(reportDateProvider);
+  final user = ref.watch(authStateChangesProvider).value;
+  final selectedStoreId = ref.watch(selectedStoreIdProvider);
 
-  return repository.getOrdersStream(date: date).map((orders) {
+  return repository.getOrdersStream(date: date, currentUser: user).map((orders) {
+    var filtered = orders;
+    
+    // Additional Dev Filtering
+    if (user?.role == UserRole.dev && selectedStoreId != null) {
+      filtered = filtered.where((o) => o.items.any((i) => i.storeId == selectedStoreId)).toList();
+    }
     // Only count completed orders
     final completedOrders = orders.where((o) => o.status == OrderStatus.selesai).toList();
     

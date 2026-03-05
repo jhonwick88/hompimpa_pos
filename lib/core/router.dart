@@ -17,6 +17,7 @@ import '../../features/products/presentation/product_master_screen.dart';
 import '../../features/products/presentation/topping_master_screen.dart';
 import '../../features/auth/presentation/user_master_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
+import '../../features/settings/presentation/store_management_screen.dart';
 import '../core/widgets/animated_splash_screen.dart';
 import '../../features/public_menu/presentation/public_menu_screen.dart';
 import '../../features/public_menu/presentation/public_cart_screen.dart';
@@ -115,6 +116,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/master/users',
         builder: (context, state) => const UserMasterScreen(),
+      ),
+      GoRoute(
+        path: '/master/stores',
+        builder: (context, state) => const StoreManagementScreen(),
       ),
       GoRoute(
         path: '/settings',

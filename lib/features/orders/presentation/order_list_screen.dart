@@ -25,20 +25,21 @@ final filteredOrdersProvider = StreamProvider<List<OrderEntity>>((ref) {
   final status = ref.watch(orderStatusFilterProvider);
   final query = ref.watch(orderSearchQueryProvider);
   final date = ref.watch(orderDateFilterProvider);
-  return repository.getOrdersStream(status: status, searchQuery: query, date: date);
+  final user = ref.watch(authStateChangesProvider).value;
+  return repository.getOrdersStream(status: status, searchQuery: query, date: date, currentUser: user);
 });
 
 final dailyOrdersProvider = StreamProvider<List<OrderEntity>>((ref) {
   final repository = ref.watch(orderRepositoryProvider);
   final date = ref.watch(orderDateFilterProvider);
-  return repository.getOrdersStream(date: date);
+  final user = ref.watch(authStateChangesProvider).value;
+  return repository.getOrdersStream(date: date, currentUser: user);
 });
 
 final reviewOrdersCountProvider = StreamProvider<int>((ref) {
   final repository = ref.watch(orderRepositoryProvider);
-  // We want to watch for ALL orders waiting review, maybe not just for today?
-  // User usually wants to see total pending reviews.
-  return repository.getOrdersStream(status: OrderStatus.menungguReview).map((list) => list.length);
+  final user = ref.watch(authStateChangesProvider).value;
+  return repository.getOrdersStream(status: OrderStatus.menungguReview, currentUser: user).map((list) => list.length);
 });
 
 class OrderListScreen extends ConsumerStatefulWidget {

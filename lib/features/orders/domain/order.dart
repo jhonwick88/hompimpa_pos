@@ -36,6 +36,7 @@ abstract class OrderEntity with _$OrderEntity {
     double? paidAmount,
     double? changeAmount,
     String? shiftId, // Link to Shift
+    String? storeId,
   }) = _Order;
 
   factory OrderEntity.fromJson(Map<String, dynamic> json) => _$OrderEntityFromJson(json);

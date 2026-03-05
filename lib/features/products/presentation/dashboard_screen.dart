@@ -188,16 +188,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         ),
                       ),
                     ),
-                    Expanded(
-                      child: _buildActionButton(
-                        context: context,
-                        onTap: () => context.push('/void-orders'),
-                        label: 'VOID',
-                        color: Colors.red[700]!,
-                        ordersAsync: ordersAsync,
-                        isVoid: true,
-                      ),
-                    ),
+                    // Expanded(
+                    //   child: _buildActionButton(
+                    //     context: context,
+                    //     onTap: () => context.push('/void-orders'),
+                    //     label: 'VOID',
+                    //     color: Colors.red[700]!,
+                    //     ordersAsync: ordersAsync,
+                    //     isVoid: true,
+                    //   ),
+                    // ),
                   ],
                 ),
                 if (authState.value?.role == UserRole.dev) ...[

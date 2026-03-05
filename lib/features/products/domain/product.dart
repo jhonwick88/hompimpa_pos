@@ -13,6 +13,7 @@ abstract class Product with _$Product {
     required int stock,
     String? imageUrl,
     @Default(true) bool isActive,
+    String? storeId,
   }) = _Product;
 
   factory Product.fromJson(Map<String, dynamic> json) => _$ProductFromJson(json);

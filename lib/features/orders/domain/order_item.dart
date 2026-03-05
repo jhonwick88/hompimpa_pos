@@ -13,6 +13,7 @@ class OrderItem {
   final String? sambal;
   final String? note; // Added missing field
   final List<Topping>? toppings;
+  final String? storeId;
 
   OrderItem({
     required this.productId,
@@ -23,6 +24,7 @@ class OrderItem {
     this.sambal,
     this.note,
     this.toppings,
+    this.storeId,
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
@@ -31,6 +33,7 @@ class OrderItem {
     normalized['qty'] ??= json['Qty'] ?? json['Jumlah'] ?? 0;
     normalized['price'] ??= json['Harga'] ?? 0.0;
     normalized['note'] ??= json['Keterangan'] ?? json['Catatan'];
+    normalized['storeId'] ??= json['StoreId'] ?? json['store_id'];
     
     return _$OrderItemFromJson(normalized);
   }
@@ -52,6 +55,7 @@ class OrderItem {
     String? sambal,
     String? note,
     List<Topping>? toppings,
+    String? storeId,
   }) {
     return OrderItem(
       productId: productId ?? this.productId,
@@ -62,6 +66,7 @@ class OrderItem {
       sambal: sambal ?? this.sambal,
       note: note ?? this.note,
       toppings: toppings ?? this.toppings,
+      storeId: storeId ?? this.storeId,
     );
   }
 }

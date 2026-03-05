@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hompimpa_pos/features/auth/data/user_repository.dart';
 import 'package:hompimpa_pos/features/auth/domain/user_model.dart';
 import 'package:hompimpa_pos/core/enums/user_role.dart';
+import 'package:hompimpa_pos/features/settings/data/store_repository.dart';
 import 'package:uuid/uuid.dart';
 
 class UserMasterScreen extends ConsumerWidget {
@@ -58,6 +59,8 @@ class UserMasterScreen extends ConsumerWidget {
     final emailController = TextEditingController(text: user?.email ?? '');
     final nameController = TextEditingController(text: user?.displayName ?? '');
     UserRole role = user?.role ?? UserRole.user;
+    String? selectedStoreId = user?.storeId;
+    final storesAsync = ref.read(activeStoresProvider);
 
     showDialog(
       context: context,
@@ -87,6 +90,20 @@ class UserMasterScreen extends ConsumerWidget {
                   onChanged: (v) => setState(() => role = v!),
                   decoration: const InputDecoration(labelText: 'Role'),
                 ),
+                const SizedBox(height: 16),
+                storesAsync.when(
+                  data: (stores) => DropdownButtonFormField<String?>(
+                    value: selectedStoreId,
+                    decoration: const InputDecoration(labelText: 'Store'),
+                    items: [
+                      const DropdownMenuItem(value: null, child: Text('No Store')),
+                      ...stores.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))),
+                    ],
+                    onChanged: (v) => setState(() => selectedStoreId = v),
+                  ),
+                  loading: () => const LinearProgressIndicator(),
+                  error: (_, __) => const Text('Error loading stores'),
+                ),
               ],
             ),
           ),
@@ -96,9 +113,10 @@ class UserMasterScreen extends ConsumerWidget {
               onPressed: () async {
                 final newUser = AppUser(
                   uid: user?.uid ?? const Uuid().v4(), // Temporary UID for new users
-                  email: emailController.text.trim(),
+                   email: emailController.text.trim(),
                   displayName: nameController.text.trim(),
                   role: role,
+                  storeId: selectedStoreId,
                 );
 
                 if (user == null) {
