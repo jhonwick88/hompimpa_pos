@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hompimpa_pos/features/orders/domain/order.dart';
 import 'package:hompimpa_pos/features/orders/data/order_repository.dart';
-import '../../features/products/data/product_repository.dart'; // Just needed import? No.
-import 'notification_service.dart';
+import 'package:hompimpa_pos/features/products/data/product_repository.dart';
+import 'package:hompimpa_pos/core/services/notification_service.dart';
 
 // Provider that manages the subscription
 final orderNotificationControllerProvider = Provider<OrderNotificationController>((ref) {

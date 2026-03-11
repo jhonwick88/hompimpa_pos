@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../domain/order.dart';
-import '../domain/order_item.dart';
-import '../../auth/domain/user_model.dart';
-import '../../../core/enums/user_role.dart';
+import 'package:hompimpa_pos/features/orders/domain/order.dart';
+import 'package:hompimpa_pos/features/orders/domain/order_item.dart';
+import 'package:hompimpa_pos/features/auth/domain/user_model.dart';
+import 'package:hompimpa_pos/core/enums/user_role.dart';
 
 final orderRepositoryProvider = Provider<OrderRepository>((ref) {
   return FirestoreOrderRepository(FirebaseFirestore.instance);

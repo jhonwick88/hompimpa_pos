@@ -1,6 +1,6 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/auth_repository.dart';
+import 'package:hompimpa_pos/features/auth/data/auth_repository.dart';
 
 final authControllerProvider = NotifierProvider<AuthController, AsyncValue<void>>(AuthController.new);
 

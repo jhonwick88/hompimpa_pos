@@ -1,5 +1,5 @@
 
-import '../../../core/enums/user_role.dart';
+import 'package:hompimpa_pos/core/enums/user_role.dart';
 
 class AppUser {
   final String uid;

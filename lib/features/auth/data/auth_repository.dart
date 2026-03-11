@@ -4,8 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart'; // For kIsWeb
-import '../domain/user_model.dart';
-import '../../../core/enums/user_role.dart';
+import 'package:hompimpa_pos/features/auth/domain/user_model.dart';
+import 'package:hompimpa_pos/core/enums/user_role.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(

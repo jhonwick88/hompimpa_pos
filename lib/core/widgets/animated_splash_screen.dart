@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../features/auth/data/auth_repository.dart';
-import '../services/notification_service.dart';
-import '../../core/enums/user_role.dart';
+import 'package:hompimpa_pos/features/auth/data/auth_repository.dart';
+import 'package:hompimpa_pos/core/services/notification_service.dart';
+import 'package:hompimpa_pos/core/enums/user_role.dart';
 
 class AnimatedSplashScreen extends ConsumerStatefulWidget {
   final String nextRoutePath;

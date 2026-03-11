@@ -9,6 +9,7 @@ import 'package:hompimpa_pos/features/settings/data/settings_repository.dart';
 import 'package:hompimpa_pos/features/settings/domain/sambal_settings.dart';
 import 'package:intl/intl.dart';
 import 'package:hompimpa_pos/features/orders/presentation/order_list_screen.dart';
+import 'package:hompimpa_pos/features/reports/presentation/report_provider.dart';
 
 class AppEndDrawer extends ConsumerWidget {
   const AppEndDrawer({Key? key}) : super(key: key);
@@ -183,12 +184,20 @@ class AppEndDrawer extends ConsumerWidget {
                         context.push('/void-orders');
                       },
                     ),
+                    _DrawerButton(
+                        icon: Icons.analytics_outlined,
+                        label: 'Laporan Penjualan',
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push('/reports');
+                        },
+                      ),
                     const SizedBox(height: 10),
                     const Divider(),
 
                     // ===== MASTER DATA (DEV) =====
                     
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 10),
                       const _SectionTitle('Master Data'),
                       _DrawerButton(
                         icon: Icons.inventory_2_outlined,
@@ -240,19 +249,9 @@ class AppEndDrawer extends ConsumerWidget {
                       ),
                       _DrawerButton(
                         icon: Icons.local_fire_department_outlined,
-                        label: 'Setting Harga Sambal',
+                        label: 'Harga Sambal',
                         onTap: () => _showSambalSettingsDialog(context, ref),
                       ),
-                      _DrawerButton(
-                        icon: Icons.analytics_outlined,
-                        label: 'Laporan Penjualan',
-                        onTap: () {
-                          Navigator.pop(context);
-                          context.push('/reports');
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      const Divider(),
                     ],
 
                     // ===== AKUN =====

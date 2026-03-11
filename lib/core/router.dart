@@ -5,23 +5,23 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'enums/user_role.dart';
-import '../../features/products/presentation/dashboard_screen.dart';
-import '../../features/orders/presentation/order_list_screen.dart';
-import '../../features/orders/presentation/order_page.dart';
-import '../../features/reports/presentation/report_screen.dart';
-import '../../features/orders/presentation/void_orders_screen.dart'; // Add this line
-import '../../features/auth/presentation/login_screen.dart';
-import '../../features/auth/data/auth_repository.dart';
-import '../../features/products/presentation/product_master_screen.dart';
-import '../../features/products/presentation/topping_master_screen.dart';
-import '../../features/auth/presentation/user_master_screen.dart';
-import '../../features/settings/presentation/settings_screen.dart';
-import '../../features/settings/presentation/store_management_screen.dart';
-import '../core/widgets/animated_splash_screen.dart';
-import '../../features/public_menu/presentation/public_menu_screen.dart';
-import '../../features/public_menu/presentation/public_cart_screen.dart';
-import '../../features/orders/presentation/review_orders_screen.dart';
+import 'package:hompimpa_pos/core/enums/user_role.dart';
+import 'package:hompimpa_pos/features/products/presentation/dashboard_screen.dart';
+import 'package:hompimpa_pos/features/orders/presentation/order_list_screen.dart';
+import 'package:hompimpa_pos/features/orders/presentation/order_page.dart';
+import 'package:hompimpa_pos/features/reports/presentation/report_screen.dart';
+import 'package:hompimpa_pos/features/orders/presentation/void_orders_screen.dart';
+import 'package:hompimpa_pos/features/auth/presentation/login_screen.dart';
+import 'package:hompimpa_pos/features/auth/data/auth_repository.dart';
+import 'package:hompimpa_pos/features/products/presentation/product_master_screen.dart';
+import 'package:hompimpa_pos/features/products/presentation/topping_master_screen.dart';
+import 'package:hompimpa_pos/features/auth/presentation/user_master_screen.dart';
+import 'package:hompimpa_pos/features/settings/presentation/settings_screen.dart';
+import 'package:hompimpa_pos/features/settings/presentation/store_management_screen.dart';
+import 'package:hompimpa_pos/core/widgets/animated_splash_screen.dart';
+import 'package:hompimpa_pos/features/public_menu/presentation/public_menu_screen.dart';
+import 'package:hompimpa_pos/features/public_menu/presentation/public_cart_screen.dart';
+import 'package:hompimpa_pos/features/orders/presentation/review_orders_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
