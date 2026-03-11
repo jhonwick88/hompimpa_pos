@@ -1,4 +1,4 @@
-import "../../products/domain/topping.dart";
+import 'package:hompimpa_pos/features/products/domain/topping.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'order_item.g.dart';

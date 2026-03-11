@@ -1,8 +1,8 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
-import '../../../core/timestamp_converter.dart';
-import 'order_item.dart';
+import 'package:hompimpa_pos/core/timestamp_converter.dart';
+import 'package:hompimpa_pos/features/orders/domain/order_item.dart';
 
 part 'order.freezed.dart';
 part 'order.g.dart';

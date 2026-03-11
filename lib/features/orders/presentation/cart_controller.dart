@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
-import '../domain/order.dart';
-import '../domain/order_item.dart';
-import '../data/order_repository.dart';
-import '../../products/domain/product.dart';
-import '../../products/domain/topping.dart';
-import '../../products/data/topping_repository.dart';
-import '../../cashier/presentation/cashier_controller.dart';
-import '../../auth/data/auth_repository.dart';
+import 'package:hompimpa_pos/features/orders/domain/order.dart';
+import 'package:hompimpa_pos/features/orders/domain/order_item.dart';
+import 'package:hompimpa_pos/features/orders/data/order_repository.dart';
+import 'package:hompimpa_pos/features/products/domain/product.dart';
+import 'package:hompimpa_pos/features/products/domain/topping.dart';
+import 'package:hompimpa_pos/features/products/data/topping_repository.dart';
+import 'package:hompimpa_pos/features/cashier/presentation/cashier_controller.dart';
+import 'package:hompimpa_pos/features/auth/data/auth_repository.dart';
 import 'package:collection/collection.dart';
 
 // wrapper class for state
@@ -73,10 +73,19 @@ class CartController extends Notifier<CartState> {
     }
 
     // Check total stock
-    final totalQtyInCart = currentItems.where((i) => i.productId == product.id).fold<int>(0, (sum, i) => sum + i.qty);
+    int totalQtyInCart = 0;
+    for (var i in currentItems) {
+      if (i.productId == product.id) {
+        totalQtyInCart += i.qty;
+      }
+    }
     
     if (totalQtyInCart + qty > product.stock) {
-      throw Exception('Stok tidak cukup! (Total di keranjang: $totalQtyInCart, Stok: ${product.stock})');
+      if (totalQtyInCart >= product.stock) {
+        throw Exception('Maaf, stok ${product.name} sudah habis dialokasikan ke keranjang (Stok: ${product.stock}).');
+      } else {
+        throw Exception('Maaf, sisa stok ${product.name} hanya ${product.stock - totalQtyInCart} lagi.');
+      }
     }
 
     if (existingIndex != -1) {

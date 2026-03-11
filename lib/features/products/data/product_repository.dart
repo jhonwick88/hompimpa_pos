@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../domain/product.dart';
+import 'package:hompimpa_pos/features/products/domain/product.dart';
 
 // Provider definition
 final productRepositoryProvider = Provider<ProductRepository>((ref) {

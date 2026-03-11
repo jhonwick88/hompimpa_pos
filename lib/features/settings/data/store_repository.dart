@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../domain/store.dart';
+import 'package:hompimpa_pos/features/settings/domain/store.dart';
 
 final storeRepositoryProvider = Provider<StoreRepository>((ref) {
   return StoreRepository(FirebaseFirestore.instance);

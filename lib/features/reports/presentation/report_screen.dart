@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import 'report_provider.dart';
-import '../../settings/data/store_repository.dart';
-import '../../auth/data/auth_repository.dart';
-import '../../../core/enums/user_role.dart';
+import 'package:hompimpa_pos/features/reports/presentation/report_provider.dart';
+import 'package:hompimpa_pos/features/settings/data/store_repository.dart';
+import 'package:hompimpa_pos/features/auth/data/auth_repository.dart';
+import 'package:hompimpa_pos/core/enums/user_role.dart';
 import 'package:hompimpa_pos/core/widgets/gradient_app_bar.dart';
 
 class ReportsScreen extends ConsumerWidget {
@@ -19,11 +19,35 @@ class ReportsScreen extends ConsumerWidget {
     final user = ref.watch(authStateChangesProvider).value;
     final storesAsync = ref.watch(activeStoresProvider);
     final selectedStoreId = ref.watch(selectedStoreIdProvider);
+    final width = MediaQuery.of(context).size.width;
+    final storeSalesAsync = ref.watch(dailyStoreSalesProvider);
 
-    return Scaffold(
-      appBar: GradientAppBar(
-        title: const Text('Laporan Penjualan'),
-        actions: [
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA),
+        appBar: GradientAppBar(
+          title: const Text('Penjualan'),
+          bottom: TabBar(
+            tabs: const [
+              Tab(
+                icon: Icon(Icons.inventory_2_outlined, size: 20),
+                text: 'Produk',
+              ),
+              Tab(
+                icon: Icon(Icons.storefront_outlined, size: 20),
+                text: 'Store',
+              ),
+            ],
+            indicatorColor: Colors.white,
+            indicatorWeight: 4,
+            indicatorSize: TabBarIndicatorSize.label,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white.withOpacity(0.7),
+            labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, letterSpacing: 0.5),
+            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+          ),
+          actions: [
           IconButton(
             icon: const Icon(Icons.calendar_today),
             onPressed: () async {
@@ -40,92 +64,326 @@ class ReportsScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
+      body: TabBarView(
+        children: [
+          // TAB 0: PRODUK
+          SingleChildScrollView(
+            child: Padding(
+          padding: const EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                'Penjualan Per Produk: ${DateFormat('dd MMMM yyyy').format(selectedDate)}',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-
-              // Dev Store Filter
-              if (user?.role == UserRole.dev) 
-                storesAsync.when(
-                  data: (stores) => Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: DropdownButtonFormField<String?>(
-                      value: selectedStoreId,
-                      decoration: const InputDecoration(
-                        labelText: 'Filter Store (Dev Only)',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                      items: [
-                        const DropdownMenuItem(value: null, child: Text('Semua Store')),
-                        ...stores.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))),
-                      ],
-                      onChanged: (val) => ref.read(selectedStoreIdProvider.notifier).state = val,
-                    ),
+              // ===== TOP SUMMARY CARD =====
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green.shade700, Colors.green.shade900],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  loading: () => const LinearProgressIndicator(),
-                  error: (_, __) => const SizedBox(),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.green.withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
-
-              const SizedBox(height: 16),
-              
-              // Chart Section
-              SizedBox(
-                height: 300,
-                child: salesAsync.when(
-                  data: (sales) {
-                    if (sales.isEmpty) {
-                      return const Center(child: Text('Tidak ada data penjualan hari ini'));
-                    }
-                    return _ProductBarChart(sales: sales);
-                  },
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => Center(child: Text('Error: $e')),
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Flex(
+                      direction: width > 600 ? Axis.horizontal : Axis.vertical,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: width > 600 ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: width > 600 ? null : double.infinity,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Ringkasan Produk',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white.withOpacity(0.7),
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                DateFormat('dd MMMM yyyy').format(selectedDate),
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (width <= 600 && user?.role == UserRole.dev) const SizedBox(height: 20),
+                        // Dev Store Filter
+                        if (user?.role == UserRole.dev) 
+                          SizedBox(
+                            width: width > 600 ? 250 : double.infinity,
+                            child: storesAsync.when(
+                              data: (stores) => DropdownButtonFormField<String?>(
+                                value: selectedStoreId,
+                                decoration: InputDecoration(
+                                  labelText: 'Filter Store',
+                                  labelStyle: const TextStyle(color: Colors.white70),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                  ),
+                                  isDense: true,
+                                  filled: true,
+                                  fillColor: Colors.white.withOpacity(0.1),
+                                ),
+                                style: const TextStyle(fontSize: 13, color: Colors.white),
+                                dropdownColor: Colors.green.shade900,
+                                iconEnabledColor: Colors.white,
+                                items: [
+                                  const DropdownMenuItem(value: null, child: Text('Semua Store')),
+                                  ...stores.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))),
+                                ],
+                                onChanged: (val) => ref.read(selectedStoreIdProvider.notifier).state = val,
+                              ),
+                              loading: () => const LinearProgressIndicator(),
+                              error: (_, __) => const SizedBox(),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    // Chart Section
+                    SizedBox(
+                      height: 300,
+                      child: salesAsync.when(
+                        data: (sales) {
+                          if (sales.isEmpty) {
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.analytics_outlined, size: 64, color: Colors.white.withOpacity(0.2)),
+                                  const SizedBox(height: 16),
+                                  Text('Tidak ada data penjualan hari ini', style: TextStyle(color: Colors.white.withOpacity(0.5))),
+                                ],
+                              ),
+                            );
+                          }
+                          return _ProductBarChart(sales: sales);
+                        },
+                        loading: () => const Center(child: CircularProgressIndicator()),
+                        error: (e, _) => Center(child: Text('Error: $e')),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               
               const SizedBox(height: 40),
-              const Divider(),
-              const SizedBox(height: 20),
               
-              // Table Section
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Detail Laporan',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(
-                    width: 200,
-                    child: TextField(
-                      decoration: const InputDecoration(
-                        hintText: 'Cari produk...',
-                        prefixIcon: Icon(Icons.search),
-                        isDense: true,
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (val) => ref.read(reportSearchQueryProvider.notifier).state = val,
+              // ===== DETAIL SECTION HEADER =====
+
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Detail Penjualan',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w900, 
+                            color: Color(0xFF2D3436),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 150,
+                          child: TextField(
+                            decoration: InputDecoration(
+                              hintText: 'Cari produk...',
+                              prefixIcon: const Icon(Icons.search, size: 20),
+                              isDense: true,
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.grey.shade200),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.grey.shade200),
+                              ),
+                            ),
+                            onChanged: (val) => ref.read(reportSearchQueryProvider.notifier).state = val,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    _ReportTable(sales: filteredSales),
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
-              
-              _ReportTable(sales: filteredSales),
               const SizedBox(height: 40),
             ],
           ),
         ),
       ),
+
+      // TAB 1: STORE
+      SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Ringkasan Penjualan per Store',
+                style: TextStyle(
+                  fontSize: 18, 
+                  fontWeight: FontWeight.w900, 
+                  color: Color(0xFF2D3436),
+                ),
+              ),
+              const SizedBox(height: 20),
+              storeSalesAsync.when(
+                data: (reports) {
+                  if (reports.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 60),
+                          Icon(Icons.storefront_outlined, size: 64, color: Colors.grey.shade300),
+                          const SizedBox(height: 16),
+                          Text('Belum ada penjualan di store mana pun hari ini', 
+                            style: TextStyle(color: Colors.grey.shade500)),
+                        ],
+                      ),
+                    );
+                  }
+                  
+                  final gridCrossAxisCount = width > 700 ? 2 : 1;
+
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: gridCrossAxisCount,
+                      crossAxisSpacing: 20,
+                      mainAxisSpacing: 20,
+                      childAspectRatio: width > 700 ? 3.5 : 4.5,
+                    ),
+                    itemCount: reports.length,
+                    itemBuilder: (context, index) {
+                      final report = reports[index];
+                      return Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.amber.shade700, Colors.orange.shade900],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.orange.withOpacity(0.3),
+                              blurRadius: 15,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: const Icon(Icons.store_rounded, color: Colors.white, size: 28),
+                            ),
+                            const SizedBox(width: 18),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    report.storeName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${report.orderCount} pesanan selesai',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.7),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              'Rp ${NumberFormat("#,##0", "id_ID").format(report.totalRevenue)}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+                loading: () => const Center(child: Padding(
+                  padding: EdgeInsets.all(40.0),
+                  child: CircularProgressIndicator(),
+                )),
+                error: (err, _) => Center(child: Text('Error: $err')),
+              ),
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+      ),
+    ],
+  ),
+),
     );
   }
 }
@@ -178,7 +436,7 @@ class _ProductBarChart extends StatelessWidget {
                       displaySales[value.toInt()].productName.length > 8
                           ? displaySales[value.toInt()].productName.substring(0, 8) + '...'
                           : displaySales[value.toInt()].productName,
-                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white70),
                     ),
                   ),
                 );
@@ -191,7 +449,7 @@ class _ProductBarChart extends StatelessWidget {
               showTitles: true,
               reservedSize: 30,
               getTitlesWidget: (value, meta) {
-                return Text(value.toInt().toString(), style: const TextStyle(fontSize: 10));
+                return Text(value.toInt().toString(), style: const TextStyle(fontSize: 10, color: Colors.white70));
               },
             ),
           ),
@@ -231,27 +489,108 @@ class _ReportTable extends StatelessWidget {
       ));
     }
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: Colors.grey[300]!),
+    final width = MediaQuery.of(context).size.width;
+    final crossAxisCount = width > 700 ? 2 : 1;
+    final childAspectRatio = width > 700 ? 4.0 : 4.2;
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: 20,
+        mainAxisSpacing: 20,
+        childAspectRatio: childAspectRatio,
       ),
-      child: DataTable(
-        columnSpacing: 20,
-        columns: const [
-          DataColumn(label: Text('Nama Produk', style: TextStyle(fontWeight: FontWeight.bold))),
-          DataColumn(label: Text('Qty', style: TextStyle(fontWeight: FontWeight.bold)), numeric: true),
-          DataColumn(label: Text('Total', style: TextStyle(fontWeight: FontWeight.bold)), numeric: true),
-        ],
-        rows: sales.map((s) {
-          return DataRow(cells: [
-            DataCell(Text(s.productName)),
-            DataCell(Text('${s.totalQty}')),
-            DataCell(Text('Rp ${NumberFormat('#,###').format(s.totalRevenue)}')),
-          ]);
-        }).toList(),
-      ),
+      itemCount: sales.length,
+      itemBuilder: (context, index) {
+        final item = sales[index];
+        return MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.blue.shade700, Colors.blue.shade900],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blue.withOpacity(0.3),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      ),
+                      child: const Icon(Icons.inventory_2_rounded, color: Colors.white, size: 26),
+                    ),
+                    const SizedBox(width: 18),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            item.productName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold, 
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '${item.totalQty} terjual',
+                              style: const TextStyle(
+                                color: Colors.white70, 
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      'Rp ${NumberFormat('#,###', 'id_ID').format(item.totalRevenue)}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900, 
+                        color: Colors.lightGreenAccent,
+                        fontSize: 17,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

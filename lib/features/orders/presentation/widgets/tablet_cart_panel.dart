@@ -5,20 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:hompimpa_pos/features/orders/presentation/cart_controller.dart' as cc;
 import 'package:hompimpa_pos/features/orders/data/order_repository.dart';
 import 'package:hompimpa_pos/features/products/data/topping_repository.dart';
-import 'package:hompimpa_pos/features/orders/presentation/widgets/pos_action_buttons.dart';
+import 'package:hompimpa_pos/features/orders/presentation/order_state.dart';
+import 'package:hompimpa_pos/features/orders/domain/order.dart';
 
-import 'package:hompimpa_pos/features/orders/presentation/order_list_screen.dart';
-import '../../domain/order.dart';
-
-class TabletCartPanel extends ConsumerStatefulWidget {
+class TabletCartPanel extends ConsumerWidget {
   final TextEditingController nameController;
   final TextEditingController phoneController;
-  final DateTime selectedDate;
-  final TimeOfDay selectedTime;
-  final VoidCallback onSelectDate;
-  final VoidCallback onSelectTime;
-  final VoidCallback onManualOrder;
-  final VoidCallback onQuickOrder;
+  final TextEditingController tableController;
   final bool isQuickOrder;
   final String? existingOrderId;
   final OrderEntity? existingOrder;
@@ -28,12 +21,7 @@ class TabletCartPanel extends ConsumerStatefulWidget {
     Key? key,
     required this.nameController,
     required this.phoneController,
-    required this.selectedDate,
-    required this.selectedTime,
-    required this.onSelectDate,
-    required this.onSelectTime,
-    required this.onManualOrder,
-    required this.onQuickOrder,
+    required this.tableController,
     required this.isQuickOrder,
     this.existingOrderId,
     this.existingOrder,
@@ -41,55 +29,18 @@ class TabletCartPanel extends ConsumerStatefulWidget {
   }) : super(key: key);
 
   @override
-  ConsumerState<TabletCartPanel> createState() => _TabletCartPanelState();
-}
-
-class _TabletCartPanelState extends ConsumerState<TabletCartPanel> {
-  String _selectedVia = 'Offline';
-  bool _isDineIn = false;
-  final _tableController = TextEditingController(text: '0');
-  String _selectedPayment = 'Cash';
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.existingOrder != null) {
-      _selectedVia = widget.existingOrder!.orderSource;
-      _isDineIn = widget.existingOrder!.isDineIn;
-      _tableController.text = widget.existingOrder!.tableNumber;
-      _selectedPayment = widget.existingOrder!.paymentMethod;
-    }
-  }
-
-  void _onViaSelected(String via) {
-    setState(() {
-      _selectedVia = via;
-      
-      final currentName = widget.nameController.text.trim();
-      // Remove existing prefixes if any
-      String baseName = currentName.replaceAll(RegExp(r'^(Offline - |Grab - )'), '');
-      
-      if (via == 'Offline') {
-        widget.nameController.text = 'Offline - $baseName';
-      } else if (via == 'GrabFood') {
-        widget.nameController.text = 'Grab - $baseName';
-      } else {
-        widget.nameController.text = baseName;
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final cartState = ref.watch(cc.cartProvider);
     final cart = cartState.items;
     final cartTotal = ref.watch(cc.cartTotalProvider);
-    bool isNameFilled = widget.nameController.text.trim().isNotEmpty;
-    bool isWhatsAppValid = _selectedVia != 'WhatsApp' || 
-        (widget.nameController.text.trim().isNotEmpty && widget.phoneController.text.trim().isNotEmpty);
+    final metadata = ref.watch(orderMetadataProvider);
+    final metadataNotifier = ref.read(orderMetadataProvider.notifier);
+
+    bool isNameFilled = nameController.text.trim().isNotEmpty;
+    bool isWhatsAppValid = metadata.selectedVia != 'WhatsApp' || 
+        (nameController.text.trim().isNotEmpty && phoneController.text.trim().isNotEmpty);
 
     return Container(
-      width: 400, // Slightly wider for tablet
       decoration: BoxDecoration(
         color: Theme.of(context).canvasColor,
         boxShadow: [
@@ -102,33 +53,28 @@ class _TabletCartPanelState extends ConsumerState<TabletCartPanel> {
       ),
       child: Column(
         children: [
-          // Header with Actions
+          // Header
           Container(
             padding: const EdgeInsets.all(16),
             color: Colors.grey[50],
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    Icon(Icons.shopping_basket_outlined, color: Colors.orange[700]),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Cart Summary',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orange[900],
-                          ),
-                    ),
-                    const Spacer(),
-                    if (cart.isNotEmpty)
-                      Chip(
-                        label: Text('${cart.length} Item'),
-                        backgroundColor: Colors.orange[50],
-                        labelStyle: TextStyle(color: Colors.orange[900], fontWeight: FontWeight.bold),
+                Icon(Icons.shopping_basket_outlined, color: Colors.orange[700]),
+                const SizedBox(width: 12),
+                Text(
+                  existingOrderId != null ? 'Update Pesanan' : 'Detail Pesanan',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange[900],
                       ),
-                  ],
                 ),
+                const Spacer(),
+                if (cart.isNotEmpty)
+                  Chip(
+                    label: Text('${cart.length} Item'),
+                    backgroundColor: Colors.orange[50],
+                    labelStyle: TextStyle(color: Colors.orange[900], fontWeight: FontWeight.bold),
+                  ),
               ],
             ),
           ),
@@ -137,36 +83,38 @@ class _TabletCartPanelState extends ConsumerState<TabletCartPanel> {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                // Order Via Grid
+                // Order Via Section
                 const Text('Order Via', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
                 const SizedBox(height: 8),
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 8,
-                  crossAxisSpacing: 8,
-                  childAspectRatio: 2.5,
+                Row(
                   children: [
-                    _ViaButton(
-                      label: 'Offline',
-                      isSelected: _selectedVia == 'Offline',
-                      icon: Icons.storefront,
-                      onTap: () => _onViaSelected('Offline'),
+                    Expanded(
+                      child: _ViaButton(
+                        label: 'Offline',
+                        isSelected: metadata.selectedVia == 'Offline',
+                        icon: Icons.storefront,
+                        onTap: () => metadataNotifier.updateSelectedVia('Offline'),
+                      ),
                     ),
-                    _ViaButton(
-                      label: 'WhatsApp',
-                      isSelected: _selectedVia == 'WhatsApp',
-                      icon: Icons.message,
-                      color: Colors.green,
-                      onTap: () => _onViaSelected('WhatsApp'),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _ViaButton(
+                        label: 'WhatsApp',
+                        isSelected: metadata.selectedVia == 'WhatsApp',
+                        icon: Icons.message,
+                        color: Colors.green,
+                        onTap: () => metadataNotifier.updateSelectedVia('WhatsApp'),
+                      ),
                     ),
-                    _ViaButton(
-                      label: 'GrabFood',
-                      isSelected: _selectedVia == 'GrabFood',
-                      icon: Icons.delivery_dining,
-                      color: Colors.green[700],
-                      onTap: () => _onViaSelected('GrabFood'),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _ViaButton(
+                        label: 'GrabFood',
+                        isSelected: metadata.selectedVia == 'GrabFood',
+                        icon: Icons.delivery_dining,
+                        color: Colors.green[700],
+                        onTap: () => metadataNotifier.updateSelectedVia('GrabFood'),
+                      ),
                     ),
                   ],
                 ),
@@ -178,21 +126,22 @@ class _TabletCartPanelState extends ConsumerState<TabletCartPanel> {
                     const Text('Dine In', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
                     const SizedBox(width: 8),
                     Switch(
-                      value: _isDineIn,
-                      onChanged: (v) => setState(() => _isDineIn = v),
+                      value: metadata.isDineIn,
+                      onChanged: (v) => metadataNotifier.updateIsDineIn(v),
                       activeColor: Colors.orange[800],
                     ),
-                    if (_isDineIn) ...[
+                    if (metadata.isDineIn) ...[
                       const SizedBox(width: 16),
                       Expanded(
                         child: TextField(
-                          controller: _tableController,
+                          controller: tableController,
                           keyboardType: TextInputType.number,
                           decoration: const InputDecoration(
                             labelText: 'No. Meja',
                             isDense: true,
                             border: OutlineInputBorder(),
                           ),
+                          onChanged: (v) => metadataNotifier.updateTableNumber(v),
                         ),
                       ),
                     ],
@@ -200,7 +149,7 @@ class _TabletCartPanelState extends ConsumerState<TabletCartPanel> {
                 ),
                 const SizedBox(height: 16),
 
-                // Payment Method
+                // Payment Method Section
                 const Text('Metode Pembayaran', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
                 const SizedBox(height: 8),
                 Row(
@@ -208,18 +157,18 @@ class _TabletCartPanelState extends ConsumerState<TabletCartPanel> {
                     Expanded(
                       child: _ViaButton(
                         label: 'Cash',
-                        isSelected: _selectedPayment == 'Cash',
+                        isSelected: metadata.selectedPayment == 'Cash',
                         icon: Icons.money,
-                        onTap: () => setState(() => _selectedPayment = 'Cash'),
+                        onTap: () => metadataNotifier.updateSelectedPayment('Cash'),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: _ViaButton(
                         label: 'QRIS',
-                        isSelected: _selectedPayment == 'QRIS',
+                        isSelected: metadata.selectedPayment == 'QRIS',
                         icon: Icons.qr_code_scanner,
-                        onTap: () => setState(() => _selectedPayment = 'QRIS'),
+                        onTap: () => metadataNotifier.updateSelectedPayment('QRIS'),
                         color: Colors.blue[700],
                       ),
                     ),
@@ -228,42 +177,62 @@ class _TabletCartPanelState extends ConsumerState<TabletCartPanel> {
                 const SizedBox(height: 20),
 
                 TextField(
-                  controller: widget.nameController,
+                  controller: nameController,
                   decoration: const InputDecoration(
                     labelText: 'Nama Pelanggan (Wajib)',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.person),
                   ),
-                  onChanged: (v) => setState(() {}),
+                  onChanged: (v) => metadataNotifier.updateCustomerName(v),
                 ),
                 const SizedBox(height: 12),
                 TextField(
-                  controller: widget.phoneController,
+                  controller: phoneController,
                   keyboardType: TextInputType.phone,
                   decoration: InputDecoration(
-                    labelText: _selectedVia == 'WhatsApp' ? 'Nomor WhatsApp (Wajib)' : 'Nomor WhatsApp (Opsional)',
+                    labelText: metadata.selectedVia == 'WhatsApp' ? 'Nomor WhatsApp (Wajib)' : 'Nomor WhatsApp (Opsional)',
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.phone),
                     hintText: '0812...',
                   ),
-                  onChanged: (v) => setState(() {}),
+                  onChanged: (v) => metadataNotifier.updateCustomerPhone(v),
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: widget.onSelectDate,
+                        onPressed: () async {
+                          final DateTime? picked = await showDatePicker(
+                            context: context,
+                            initialDate: metadata.selectedDate,
+                            firstDate: DateTime.now().subtract(const Duration(days: 1)),
+                            lastDate: DateTime.now().add(const Duration(days: 365)),
+                          );
+                          if (picked != null) metadataNotifier.updateSelectedDate(picked);
+                        },
                         icon: const Icon(Icons.calendar_today, size: 18),
-                        label: Text(DateFormat('dd/MM/yyyy').format(widget.selectedDate)),
+                        label: Text(DateFormat('dd/MM/yyyy').format(metadata.selectedDate)),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: widget.onSelectTime,
+                        onPressed: () async {
+                          final TimeOfDay? picked = await showTimePicker(
+                            context: context,
+                            initialTime: metadata.selectedTime,
+                            builder: (context, child) {
+                              return MediaQuery(
+                                data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+                                child: child!,
+                              );
+                            },
+                          );
+                          if (picked != null) metadataNotifier.updateSelectedTime(picked);
+                        },
                         icon: const Icon(Icons.access_time, size: 18),
-                        label: Text(widget.selectedTime.format(context)),
+                        label: Text('${metadata.selectedTime.hour.toString().padLeft(2, '0')}:${metadata.selectedTime.minute.toString().padLeft(2, '0')}'),
                       ),
                     ),
                   ],
@@ -310,9 +279,9 @@ class _TabletCartPanelState extends ConsumerState<TabletCartPanel> {
                               IconButton(
                                 icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
                                 onPressed: () {
-                                final cc.CartController controller = ref.read(cc.cartProvider.notifier);
-                                controller.removeItem(item);
-                              },
+                                  final cc.CartController controller = ref.read(cc.cartProvider.notifier);
+                                  controller.removeItem(item);
+                                },
                               ),
                             ],
                           ),
@@ -354,24 +323,24 @@ class _TabletCartPanelState extends ConsumerState<TabletCartPanel> {
                     onPressed: (cart.isEmpty || !isNameFilled || !isWhatsAppValid)
                         ? null
                         : () async {
-                            final standardizedPhone = widget.phoneController.text.isNotEmpty ? widget.standardizePhoneNumber(widget.phoneController.text) : null;
+                            final standardizedPhone = phoneController.text.isNotEmpty ? standardizePhoneNumber(phoneController.text) : null;
                             final messenger = ScaffoldMessenger.of(context);
 
-                            if (widget.existingOrderId != null && widget.existingOrder != null) {
+                            if (existingOrderId != null && existingOrder != null) {
                               try {
                                 final cc.CartController controller = ref.read(cc.cartProvider.notifier);
                                 await controller.updateOrder(
                                       ref.read(orderRepositoryProvider),
-                                      ref.read(toppingRepositoryProvider), // Added
-                                      widget.existingOrder!,
-                                      widget.nameController.text.trim(),
+                                      ref.read(toppingRepositoryProvider),
+                                      existingOrder!,
+                                      nameController.text.trim(),
                                       customerPhone: standardizedPhone,
-                                      pickupDate: widget.selectedDate,
-                                      pickupTime: widget.selectedTime.format(context),
-                                      orderSource: _selectedVia,
-                                      isDineIn: _isDineIn,
-                                      tableNumber: _tableController.text,
-                                      paymentMethod: _selectedPayment,
+                                      pickupDate: metadata.selectedDate,
+                                      pickupTime: '${metadata.selectedTime.hour.toString().padLeft(2, '0')}:${metadata.selectedTime.minute.toString().padLeft(2, '0')}',
+                                      orderSource: metadata.selectedVia,
+                                      isDineIn: metadata.isDineIn,
+                                      tableNumber: tableController.text,
+                                      paymentMethod: metadata.selectedPayment,
                                     );
                                     
                                 messenger.showSnackBar(const SnackBar(
@@ -389,16 +358,16 @@ class _TabletCartPanelState extends ConsumerState<TabletCartPanel> {
                               final cc.CartController controller = ref.read(cc.cartProvider.notifier);
                               await controller.submitOrder(
                                     ref.read(orderRepositoryProvider),
-                                    ref.read(toppingRepositoryProvider), // Added
-                                    widget.nameController.text.trim(),
+                                    ref.read(toppingRepositoryProvider),
+                                    nameController.text.trim(),
                                     customerPhone: standardizedPhone,
-                                    isQuickOrder: widget.isQuickOrder,
-                                    pickupDate: widget.selectedDate,
-                                    pickupTime: widget.selectedTime.format(context),
-                                    orderSource: _selectedVia,
-                                    isDineIn: _isDineIn,
-                                    tableNumber: _tableController.text,
-                                    paymentMethod: _selectedPayment,
+                                    isQuickOrder: isQuickOrder,
+                                    pickupDate: metadata.selectedDate,
+                                    pickupTime: '${metadata.selectedTime.hour.toString().padLeft(2, '0')}:${metadata.selectedTime.minute.toString().padLeft(2, '0')}',
+                                    orderSource: metadata.selectedVia,
+                                    isDineIn: metadata.isDineIn,
+                                    tableNumber: tableController.text,
+                                    paymentMethod: metadata.selectedPayment,
                                   );
                               messenger.showSnackBar(const SnackBar(
                                 content: Text('Pesanan berhasil dibuat!'),
@@ -408,13 +377,13 @@ class _TabletCartPanelState extends ConsumerState<TabletCartPanel> {
                             }
                           },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: widget.existingOrderId != null ? Colors.blue[800] : Colors.orange[800],
+                      backgroundColor: existingOrderId != null ? Colors.blue[800] : Colors.orange[800],
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     child: Text(
-                      widget.existingOrderId != null ? 'UPDATE PESANAN' : 'PROSES PESANAN',
+                      existingOrderId != null ? 'UPDATE PESANAN' : 'PROSES PESANAN',
                       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 1.2),
                     ),
                   ),

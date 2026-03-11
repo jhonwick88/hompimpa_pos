@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../../../core/services/print_service.dart'; // Adjust path as needed
-import '../../domain/order.dart';
-import '../../../settings/data/settings_repository.dart';
+import 'package:hompimpa_pos/core/services/print_service.dart';
+import 'package:hompimpa_pos/features/orders/domain/order.dart';
+import 'package:hompimpa_pos/features/settings/data/settings_repository.dart';
 
 class NotaPreviewDialog extends ConsumerStatefulWidget {
   final OrderEntity order;

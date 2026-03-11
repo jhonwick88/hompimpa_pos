@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../orders/domain/order.dart';
-import '../../orders/data/order_repository.dart';
-import '../../../core/widgets/gradient_app_bar.dart';
-import '../../../core/widgets/order_card_modern.dart';
+import 'package:hompimpa_pos/features/orders/domain/order.dart';
+import 'package:hompimpa_pos/features/orders/data/order_repository.dart';
+import 'package:hompimpa_pos/core/widgets/gradient_app_bar.dart';
+import 'package:hompimpa_pos/core/widgets/order_card_modern.dart';
 import 'package:intl/intl.dart';
 
 class ReviewOrdersScreen extends ConsumerWidget {

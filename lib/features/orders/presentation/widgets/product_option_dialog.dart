@@ -5,7 +5,7 @@ import 'package:hompimpa_pos/features/products/data/topping_repository.dart';
 import 'package:hompimpa_pos/features/products/domain/topping.dart';
 import 'package:hompimpa_pos/features/settings/data/settings_repository.dart';
 import 'package:hompimpa_pos/features/settings/domain/sambal_settings.dart';
-import '../cart_controller.dart';
+import 'package:hompimpa_pos/features/orders/presentation/cart_controller.dart';
 
 class ProductOptionDialog extends ConsumerStatefulWidget {
   final Product product;
@@ -269,8 +269,11 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
 
         return AlertDialog(
           title: Text('Customization: ${widget.product.name}'),
-          content: SizedBox(
-            width: (isLevelable && !isSmallScreen) ? 800 : (isSmallScreen ? screenWidth : 450),
+          content: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: (isLevelable && !isSmallScreen) ? 800 : (isSmallScreen ? screenWidth : 450),
+              maxHeight: MediaQuery.of(context).size.height * 0.8,
+            ),
             child: SingleChildScrollView(
               child: isLevelable 
                 ? (isSmallScreen 
@@ -286,7 +289,7 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Left Column: Customization
-                          Expanded(
+                          Flexible(
                             flex: 5,
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
@@ -299,7 +302,7 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
                           ),
                           const VerticalDivider(width: 32),
                           // Right Column: Toppings
-                          Expanded(
+                          Flexible(
                             flex: 5,
                             child: buildToppingsList(),
                           ),
@@ -377,6 +380,10 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
                    );
                 }
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
               child: const Text('SUBMIT'),
             ),
           ],

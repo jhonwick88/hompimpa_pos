@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../domain/nota_settings.dart';
-import '../domain/sambal_settings.dart';
+import 'package:hompimpa_pos/features/settings/domain/nota_settings.dart';
+import 'package:hompimpa_pos/features/settings/domain/sambal_settings.dart';
 
 final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
   return SettingsRepository(FirebaseFirestore.instance);

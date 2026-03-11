@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../domain/topping.dart';
+import 'package:hompimpa_pos/features/products/domain/topping.dart';
 
 abstract class ToppingRepository {
   Future<List<Topping>> getToppings();
