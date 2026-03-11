@@ -72,11 +72,35 @@ class _OrderCardModernState extends State<OrderCardModern> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        Row(
+                          children: [
+                              Text(
                           order.customerName,
                           style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16),
+                          fontWeight: FontWeight.bold, fontSize: 16),
                         ),
+                        if(order.customerPhone != null && order.customerPhone!.isNotEmpty)...[
+                          const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.shade100,
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Text(
+                            'WA ${order.customerPhone}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ),
+                        ]
+                        
+                          ],
+                        ),
+                        
                         if (order.executorName != null)
                           Text(
                             'Eksekutor: ${order.executorName}',

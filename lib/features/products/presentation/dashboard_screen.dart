@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hompimpa_pos/core/widgets/app_end_drawer.dart';
+import 'package:intl/intl.dart';
 import 'package:hompimpa_pos/core/widgets/skeleton.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,16 +10,17 @@ import 'package:hompimpa_pos/features/products/presentation/product_provider.dar
 import 'package:hompimpa_pos/core/utils/responsive_layout.dart';
 import 'package:hompimpa_pos/features/products/data/topping_repository.dart';
 import 'package:hompimpa_pos/features/products/data/product_repository.dart';
-import '../../auth/data/auth_repository.dart';
-import '../../auth/presentation/auth_controller.dart';
-import '../../../core/enums/user_role.dart';
-import '../../auth/domain/user_model.dart';
-import '../domain/product.dart';
-import '../../orders/domain/order.dart';
+import 'package:hompimpa_pos/features/auth/data/auth_repository.dart';
+import 'package:hompimpa_pos/features/auth/presentation/auth_controller.dart';
+import 'package:hompimpa_pos/core/enums/user_role.dart';
+import 'package:hompimpa_pos/features/auth/domain/user_model.dart';
+import 'package:hompimpa_pos/features/products/domain/product.dart';
+import 'package:hompimpa_pos/features/orders/domain/order.dart';
 import 'package:uuid/uuid.dart';
-import '../domain/topping.dart';
-import '../../../core/widgets/gradient_app_bar.dart';
-import '../../../core/widgets/app_image.dart';
+import 'package:hompimpa_pos/features/products/domain/topping.dart';
+import 'package:hompimpa_pos/core/widgets/gradient_app_bar.dart';
+import 'package:hompimpa_pos/core/widgets/app_image.dart';
+import 'package:hompimpa_pos/core/extensions/string_extension.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -86,23 +88,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         appBar: GradientAppBar(
           title: const Text('Hompimpa POS'),
           actions: [
-            Padding(
-              padding: EdgeInsets.only(right: 16),
-              child: Center(
-                child: RichText(
-                  text: TextSpan(
-                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                    children: [
-                      const WidgetSpan(
-                        alignment: PlaceholderAlignment.middle,
-                        child: Icon(Icons.person, size: 18, color: Colors.white),
-                      ),
-                      TextSpan(text: authState.asData?.value?.displayName ?? '',),
-                    ],
-                  ),
-                ),
+            Container(
+              margin: const EdgeInsets.only(right: 8, top: 10, bottom: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(25),
+                border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
               ),
-            ), 
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.person, size: 16, color: Colors.white70),
+                  const SizedBox(width: 8),
+                  Text(
+                    (authState.asData?.value?.displayName ?? '').toTitleCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             Builder(
               builder: (context) => IconButton(
                 icon: const Icon(Icons.menu, color: Colors.white),
@@ -121,7 +131,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             await Future.delayed(const Duration(seconds: 1)); // UX delay
           },
           child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -136,23 +146,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         color: omzetColor,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         child: Padding(
-                          padding: const EdgeInsets.all(16.0),
+                          padding: const EdgeInsets.all(10.0),
                           child: Column(
                             children: [
-                              const Text('Omzet', style: TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.bold)),
+                              Text('Omzet', style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.bold)),
                               const SizedBox(height: 4),
-                              sales == 0 
-                                ? const Skeleton(width: 100, height: 24)
-                                : Text(
-                                    'Rp ${sales.toStringAsFixed(0)}',
-                                    style: const TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
-                                  ),
+                                sales == 0 
+                                  ? const Skeleton(width: 100, height: 24)
+                                  : Text(
+                                      NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(sales),
+                                      style: const TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
+                                    ),
                             ],
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Card(
                         elevation: 8,
@@ -163,14 +173,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           onTap: () => context.push('/orders'),
                           borderRadius: BorderRadius.circular(16),
                           child: Padding(
-                            padding: const EdgeInsets.all(16.0),
+                            padding: const EdgeInsets.all(10.0),
                             child: Column(
                               children: [
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
-                                    Text('Order', style: TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.bold)),
-                                    Icon(Icons.chevron_right, size: 16, color: Colors.white70),
+                                  children: [
+                                    Text('Order', style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.bold)),
+                                    Icon(Icons.chevron_right, size: 16, color: Colors.white.withOpacity(0.9)),
                                   ],
                                 ),
                                 const SizedBox(height: 4),
@@ -201,7 +211,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ],
                 ),
                 if (authState.value?.role == UserRole.dev) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 Row(
                   children: [
                     // Product Button
@@ -214,7 +224,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         color: Colors.green[700]!,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     // Topping Button
                     Expanded(
                       child: _buildActionButton(
@@ -526,7 +536,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                                       overflow: TextOverflow.ellipsis,
                                                     ),
                                                     Text(
-                                                       'Rp ${topping.price.toStringAsFixed(0)}',
+                                                       NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(topping.price),
                                                        style: const TextStyle(
                                                          color: Colors.greenAccent,
                                                          fontSize: 12,
@@ -610,12 +620,47 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
           ),
         ),
-        floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => context.push('/entry?quick=true'),
-            label: const Text('Quick Order'),
-            icon: const Icon(Icons.flash_on),
-            backgroundColor: Colors.orange,
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+        floatingActionButton: Container(
+          height: 70,
+          width: 70,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFF9800), Color(0xFFF57C00)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.orange.withOpacity(0.4),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => context.push('/entry?quick=true'),
+              customBorder: const CircleBorder(),
+              child: const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.flash_on, color: Colors.white, size: 28),
+                  Text(
+                    'Order',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -637,7 +682,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         color: color,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
