@@ -15,18 +15,20 @@ import 'package:hompimpa_pos/core/widgets/gradient_app_bar.dart';
 import 'package:hompimpa_pos/core/widgets/gradient_status_tab_bar.dart';
 import 'package:hompimpa_pos/features/cashier/presentation/cashier_controller.dart';
 
-/// Tablet portrait order entry page with expandable cart
-/// - Cart panel is collapsible to maximize product grid space
-/// - Toggle button to show/hide cart
-/// - Product grid adjusts from 4 to 2 columns when cart expands
 class TabletPortraitOrderPage extends ConsumerStatefulWidget {
   final bool isQuickOrder;
   final String? existingOrderId;
+  final TextEditingController nameController;
+  final TextEditingController phoneController;
+  final TextEditingController tableController;
   
   const TabletPortraitOrderPage({
     Key? key,
     required this.isQuickOrder,
     this.existingOrderId,
+    required this.nameController,
+    required this.phoneController,
+    required this.tableController,
   }) : super(key: key);
 
   @override
@@ -34,125 +36,19 @@ class TabletPortraitOrderPage extends ConsumerStatefulWidget {
 }
 
 class _TabletPortraitOrderPageState extends ConsumerState<TabletPortraitOrderPage> {
-  final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
-  DateTime _selectedDate = DateTime.now();
-  TimeOfDay _selectedTime = TimeOfDay.now();
   OrderEntity? _existingOrder;
-  bool _cartExpanded = false; // Cart starts collapsed
   
   @override
   void initState() {
     super.initState();
-    _initOrderType();
+    _loadExistingOrder();
   }
 
-  @override
-  void didUpdateWidget(TabletPortraitOrderPage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.existingOrderId != oldWidget.existingOrderId) {
-      _initOrderType();
-    }
-  }
-
-  void _initOrderType() {
-    // 1. Always clear cart first
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      final cc.CartController controller = ref.read(cc.cartProvider.notifier);
-      controller.clearCart();
-      
-      // 2. Fetch if editing
-      if (widget.existingOrderId != null) {
-        final repository = ref.read(orderRepositoryProvider);
-        final order = await repository.getOrder(widget.existingOrderId!);
-        
-        if (mounted && order != null) {
-          _nameController.text = order.customerName;
-          _phoneController.text = order.customerPhone ?? '';
-          _selectedDate = order.orderDate;
-          _selectedTime = _parseTime(order.orderTime);
-          _existingOrder = order;
-          final cc.CartController controller = ref.read(cc.cartProvider.notifier);
-          controller.setCartItems(order.items);
-          setState(() {
-            _cartExpanded = true;
-          });
-        } else if (mounted) {
-             ScaffoldMessenger.of(context).showSnackBar(
-               const SnackBar(content: Text('Order not found')),
-             );
-             context.pop();
-        }
-      }
-    });
-
-    // 3. Setup form
-    if (widget.isQuickOrder) {
-      _nameController.text = "Offline - ${const Uuid().v4().substring(0,4)}";
-    } else if (widget.existingOrderId == null) {
-      _nameController.clear();
-    }
-    setState(() {});
-  }
-  
-
-
-
-  TimeOfDay _parseTime(String timeStr) {
-    try {
-      if (timeStr.contains(':')) {
-        final parts = timeStr.split(':');
-        final hour = int.tryParse(parts[0].trim());
-        final minute = int.tryParse(parts[1].split(' ')[0].trim());
-        
-        if (hour != null && minute != null) {
-          if (timeStr.toLowerCase().contains('pm') && hour < 12) {
-             return TimeOfDay(hour: hour + 12, minute: minute);
-          }
-          return TimeOfDay(hour: hour, minute: minute);
-        }
-      }
-      return TimeOfDay.now();
-    } catch (e) {
-      return TimeOfDay.now();
-    }
-  }
-
-  void _switchToQuickOrder() {
-    if (!widget.isQuickOrder) {
-      context.go('/entry?quick=true');
-    }
-  }
-
-  void _switchToManualOrder() {
-    if (widget.isQuickOrder) {
-      context.go('/entry');
-    }
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime.now().subtract(const Duration(days: 1)),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
-  }
-
-  Future<void> _selectTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: _selectedTime,
-    );
-    if (picked != null && picked != _selectedTime) {
-      setState(() {
-        _selectedTime = picked;
-      });
+  Future<void> _loadExistingOrder() async {
+    if (widget.existingOrderId != null) {
+      final repository = ref.read(orderRepositoryProvider);
+      _existingOrder = await repository.getOrder(widget.existingOrderId!);
+      if (mounted) setState(() {});
     }
   }
 
@@ -176,48 +72,85 @@ class _TabletPortraitOrderPageState extends ConsumerState<TabletPortraitOrderPag
       child: Scaffold(
         appBar: GradientAppBar(
           title: Text(widget.isQuickOrder ? 'Quick Order' : 'New Order'),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right:24.0, top: 8.0, bottom: 8.0),
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.white, width: 1.5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                ),
+                onPressed: () => _showCartSheet(context),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(Icons.shopping_cart_outlined, size: 28, color: Colors.white),
+                    Positioned(
+                      top: -4,
+                      right: -8,
+                      child: Consumer(
+                        builder: (context, ref, child) {
+                          final cartCount = ref.watch(cc.cartProvider).items.length;
+                          if (cartCount == 0) return const SizedBox.shrink();
+                          return Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2),
+                                )
+                              ],
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 18,
+                              minHeight: 18,
+                            ),
+                            child: Center(
+                              child: Text(
+                                '$cartCount',
+                                style: const TextStyle(
+                                  color: Color(0xFFB71C1C), // Match red theme
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
           bottom: GradientStatusTabBar(
             items: const [
-              GradientStatusTabItem(
-                title: 'Semua',
-                icon: Icons.all_inclusive,
-                count: 0,
-                color: Colors.blue,
-              ),
-              GradientStatusTabItem(
-                title: 'Makanan',
-                icon: Icons.fastfood,
-                count: 0,
-                color: Colors.orange,
-              ),
-              GradientStatusTabItem(
-                title: 'Minuman',
-                icon: Icons.local_drink,
-                count: 0,
-                color: Colors.green,
-              ),
+              GradientStatusTabItem(title: 'Semua', icon: Icons.all_inclusive, count: 0, color: Colors.blue),
+              GradientStatusTabItem(title: 'Makanan', icon: Icons.fastfood, count: 0, color: Colors.orange),
+              GradientStatusTabItem(title: 'Minuman', icon: Icons.local_drink, count: 0, color: Colors.green),
             ],
           ),
         ),
-        body: Stack(
+        body: Column(
           children: [
-            // Product grid (full width when cart collapsed)
-            Positioned.fill(
-              right: _cartExpanded ? 350 : 0,
+            Expanded(
               child: productsAsync.when(
                 data: (products) {
                   final activeProducts = products.where((p) => p.isActive).toList();
                   return TabBarView(
                     children: [
-                      _ProductGrid(products: activeProducts, cartExpanded: _cartExpanded),
-                      _ProductGrid(
-                        products: activeProducts.where((p) => p.category == 'makanan').toList(),
-                        cartExpanded: _cartExpanded,
-                      ),
-                      _ProductGrid(
-                        products: activeProducts.where((p) => p.category == 'minuman').toList(),
-                        cartExpanded: _cartExpanded,
-                      ),
+                      _ProductGrid(products: activeProducts),
+                      _ProductGrid(products: activeProducts.where((p) => p.category == 'makanan').toList()),
+                      _ProductGrid(products: activeProducts.where((p) => p.category == 'minuman').toList()),
                     ],
                   );
                 },
@@ -225,141 +158,83 @@ class _TabletPortraitOrderPageState extends ConsumerState<TabletPortraitOrderPag
                 error: (e, st) => Center(child: Text('Error: $e')),
               ),
             ),
-            // Expandable cart panel
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              right: _cartExpanded ? 0 : -350,
-              top: 0,
-              bottom: 0,
-              width: 350,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(-2, 0),
-                    ),
-                  ],
-                ),
-                child: TabletCartPanel(
-                  nameController: _nameController,
-                  phoneController: _phoneController,
-                  selectedDate: _selectedDate,
-                  selectedTime: _selectedTime,
-                  onSelectDate: () => _selectDate(context),
-                  onSelectTime: () => _selectTime(context),
-                  onManualOrder: _switchToManualOrder,
-                  onQuickOrder: _switchToQuickOrder,
-                  isQuickOrder: widget.isQuickOrder,
-                  existingOrderId: widget.existingOrderId,
-                  existingOrder: _existingOrder,
-                  standardizePhoneNumber: _standardizePhoneNumber,
-                ),
-              ),
-            ),
-            // Toggle button
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              right: _cartExpanded ? 350 : 0,
-              top: 100,
-              child: Material(
-                elevation: 4,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  bottomLeft: Radius.circular(20),
-                ),
-                child: InkWell(
-                  onTap: () => setState(() => _cartExpanded = !_cartExpanded),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    bottomLeft: Radius.circular(20),
-                  ),
-                  child: Container(
-                    width: 40,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      color: Colors.orange,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(20),
-                        bottomLeft: Radius.circular(20),
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          _cartExpanded ? Icons.chevron_right : Icons.shopping_cart,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                        if (!_cartExpanded) ...[
-                          const SizedBox(height: 4),
-                          Consumer(
-                            builder: (context, ref, _) {
-                              final cartState = ref.watch(cc.cartProvider);
-                              final cart = cartState.items;
-                              if (cart.isEmpty) return const SizedBox.shrink();
-                              return Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
-                                  color: Colors.red,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Text(
-                                  '${cart.length}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
           ],
         ),
       ),
+    );
+  }
+
+  void _showCartSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final h = MediaQuery.of(context).size.height * 0.85;
+        return Material(
+          color: Colors.transparent,
+          child: Container(
+            height: h,
+            decoration: BoxDecoration(
+              color: Theme.of(context).canvasColor,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Expanded(
+                  child: TabletCartPanel(
+                    nameController: widget.nameController,
+                    phoneController: widget.phoneController,
+                    tableController: widget.tableController,
+                    isQuickOrder: widget.isQuickOrder,
+                    existingOrderId: widget.existingOrderId,
+                    existingOrder: _existingOrder,
+                    standardizePhoneNumber: _standardizePhoneNumber,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
 
 class _ProductGrid extends ConsumerWidget {
   final List<dynamic> products;
-  final bool cartExpanded;
   
   const _ProductGrid({
     required this.products,
-    required this.cartExpanded,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final cashierState = ref.watch(cashierProvider);
+
     if (products.isEmpty) {
       return const Center(child: Text('Tidak ada produk di kategori ini'));
     }
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Adjust grid based on cart state
-        // Cart hidden: 4 columns, Cart visible: 2 columns
-        final crossAxisCount = cartExpanded ? 2 : 4;
+        final crossAxisCount = constraints.maxWidth > 900 ? 5 : (constraints.maxWidth > 600 ? 4 : 2);
         
         return GridView.builder(
           padding: const EdgeInsets.all(8),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            childAspectRatio: 0.75,
+            childAspectRatio: 0.8,
             crossAxisSpacing: 8,
             mainAxisSpacing: 8,
           ),
@@ -374,7 +249,7 @@ class _ProductGrid extends ConsumerWidget {
               clipBehavior: Clip.antiAlias,
               child: Stack(
                 children: [
-                   Column(
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Expanded(
@@ -455,12 +330,24 @@ class _ProductGrid extends ConsumerWidget {
                       child: InkWell(
                         onTap: () {
                           // Check Cashier State
-                          final cashierState = ref.read(cashierProvider);
                           if (!cashierState.isOpen) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Kasir belum dibuka. Silakan buka kasir terlebih dahulu.'),
                                 backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+                          if (product.stock <= 0) {
+                             ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                             ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Stok ${product.name} habis!', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                backgroundColor: Colors.red,
+                                duration: const Duration(seconds: 2),
+                                behavior: SnackBarBehavior.floating,
+                                margin: const EdgeInsets.all(20),
                               ),
                             );
                             return;
@@ -487,4 +374,3 @@ class _ProductGrid extends ConsumerWidget {
     );
   }
 }
-

@@ -15,20 +15,25 @@ import 'package:hompimpa_pos/features/orders/domain/order.dart';
 import 'package:hompimpa_pos/core/widgets/gradient_app_bar.dart';
 import 'package:hompimpa_pos/core/widgets/gradient_status_tab_bar.dart';
 import 'package:hompimpa_pos/features/cashier/presentation/cashier_controller.dart';
-import 'package:add_to_cart_animation/add_to_cart_animation.dart';
+import 'package:hompimpa_pos/features/orders/presentation/order_state.dart';
 
 /// Phone-specific order entry page (< 600px)
 /// - Full-screen product grid
 /// - Cart accessed via modal bottom sheet
-/// - NO TabletCartPanel in widget tree
 class PhoneOrderPage extends ConsumerStatefulWidget {
   final bool isQuickOrder;
   final String? existingOrderId;
+  final TextEditingController nameController;
+  final TextEditingController phoneController;
+  final TextEditingController tableController;
   
   const PhoneOrderPage({
     Key? key,
     required this.isQuickOrder,
     this.existingOrderId,
+    required this.nameController,
+    required this.phoneController,
+    required this.tableController,
   }) : super(key: key);
 
   @override
@@ -36,142 +41,19 @@ class PhoneOrderPage extends ConsumerStatefulWidget {
 }
 
 class _PhoneOrderPageState extends ConsumerState<PhoneOrderPage> {
-  final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
-  DateTime _selectedDate = DateTime.now();
-  TimeOfDay _selectedTime = TimeOfDay.now();
   OrderEntity? _existingOrder;
-  
-  // New State Variables
-  String _selectedVia = 'Offline';
-  bool _isDineIn = false;
-  final _tableController = TextEditingController(text: '0');
-  String _selectedPayment = 'Cash';
-  Function(GlobalKey)? _runAddToCartAnimation;
   
   @override
   void initState() {
     super.initState();
-    _initOrderType();
+    _loadExistingOrder();
   }
 
-  void _onViaSelected(String via) {
-    setState(() {
-      _selectedVia = via;
-      
-      final currentName = _nameController.text.trim();
-      // Remove existing prefixes if any
-      String baseName = currentName.replaceAll(RegExp(r'^(Offline - |Grab - )'), '');
-      
-      if (via == 'Offline') {
-        _nameController.text = 'Offline - $baseName';
-      } else if (via == 'GrabFood') {
-        _nameController.text = 'Grab - $baseName';
-      } else {
-         _nameController.text = baseName;
-      }
-    });
-  }
-
-  @override
-  void didUpdateWidget(PhoneOrderPage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.existingOrderId != oldWidget.existingOrderId) {
-      _initOrderType();
-    }
-  }
-
-  TimeOfDay _parseTime(String timeStr) {
-    try {
-      if (timeStr.contains(':')) {
-        final parts = timeStr.split(':');
-        final hour = int.tryParse(parts[0].trim());
-        final minute = int.tryParse(parts[1].split(' ')[0].trim());
-        
-        if (hour != null && minute != null) {
-          if (timeStr.toLowerCase().contains('pm') && hour < 12) {
-             return TimeOfDay(hour: hour + 12, minute: minute);
-          }
-          return TimeOfDay(hour: hour, minute: minute);
-        }
-      }
-      return TimeOfDay.now();
-    } catch (e) {
-      return TimeOfDay.now();
-    }
-  }
-
-  void _initOrderType() {
-    // 1. Always clear cart first to ensure no stale data
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      ref.read(cartProvider.notifier).clearCart();
-      
-      // 2. If editing, fetch and populate
-      if (widget.existingOrderId != null) {
-        final repository = ref.read(orderRepositoryProvider);
-        final order = await repository.getOrder(widget.existingOrderId!);
-        
-        if (mounted && order != null) {
-          _nameController.text = order.customerName;
-          _phoneController.text = order.customerPhone ?? '';
-          _selectedDate = order.orderDate;
-          _selectedTime = _parseTime(order.orderTime);
-          _existingOrder = order;
-          
-          // Restore new fields
-          _selectedVia = order.orderSource;
-          _isDineIn = order.isDineIn;
-          _tableController.text = order.tableNumber;
-          _selectedPayment = order.paymentMethod;
-          
-          ref.read(cartProvider.notifier).setCartItems(order.items);
-          setState(() {});
-        } else if (mounted) {
-             ScaffoldMessenger.of(context).showSnackBar(
-               const SnackBar(content: Text('Order not found')),
-             );
-             context.pop();
-        }
-      }
-    });
-
-    // 3. Setup form fields
-    if (widget.isQuickOrder) {
-      _nameController.text = "Offline - ${const Uuid().v4().substring(0,4)}";
-      _selectedVia = 'Offline';
-    } else if (widget.existingOrderId == null) {
-      _nameController.clear();
-      _selectedVia = 'Offline';
-      _isDineIn = false;
-      _tableController.text = '0';
-      _selectedPayment = 'Cash';
-    }
-    setState(() {});
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime.now().subtract(const Duration(days: 1)),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
-  }
-
-  Future<void> _selectTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: _selectedTime,
-    );
-    if (picked != null && picked != _selectedTime) {
-      setState(() {
-        _selectedTime = picked;
-      });
+  Future<void> _loadExistingOrder() async {
+    if (widget.existingOrderId != null) {
+      final repository = ref.read(orderRepositoryProvider);
+      _existingOrder = await repository.getOrder(widget.existingOrderId!);
+      if (mounted) setState(() {});
     }
   }
 
@@ -192,74 +74,52 @@ class _PhoneOrderPageState extends ConsumerState<PhoneOrderPage> {
 
     return DefaultTabController(
       length: 3,
-      child: AddToCartAnimation(
-        cartKey: cartIconKey,
-        height: 30,
-        width: 30,
-        opacity: 0.85,
-        dragAnimation: const DragToCartAnimationOptions(
-          rotation: true,
-        ),
-        jumpAnimation: const JumpAnimationOptions(),
-        createAddToCartAnimation: (runAnimation) {
-          _runAddToCartAnimation = runAnimation;
-        },
-        child: Scaffold(
-          appBar: GradientAppBar(
-            title: Text(widget.isQuickOrder ? 'Quick Order' : 'New Order'),
-            actions: [
-              MobileActionBar(
-                onCartPressed: () => _showMobileCart(context),
-                onManualOrderPressed: () {},
-                onQuickOrderPressed: () {},
+      child: Scaffold(
+        appBar: GradientAppBar(
+          title: Text(widget.isQuickOrder ? 'Quick Order' : 'New Order'),
+          actions: [
+            MobileActionBar(
+              onCartPressed: () => _showMobileCart(context),
+              onManualOrderPressed: () {},
+              onQuickOrderPressed: () {},
+            ),
+          ],
+          bottom: GradientStatusTabBar(
+            items: const [
+              GradientStatusTabItem(
+                title: 'Semua',
+                icon: Icons.all_inclusive,
+                count: 0,
+                color: Colors.blue,
+              ),
+              GradientStatusTabItem(
+                title: 'Makanan',
+                icon: Icons.fastfood,
+                count: 0,
+                color: Colors.orange,
+              ),
+              GradientStatusTabItem(
+                title: 'Minuman',
+                icon: Icons.local_drink,
+                count: 0,
+                color: Colors.green,
               ),
             ],
-            bottom: GradientStatusTabBar(
-              items: const [
-                GradientStatusTabItem(
-                  title: 'Semua',
-                  icon: Icons.all_inclusive,
-                  count: 0,
-                  color: Colors.blue,
-                ),
-                GradientStatusTabItem(
-                  title: 'Makanan',
-                  icon: Icons.fastfood,
-                  count: 0,
-                  color: Colors.orange,
-                ),
-                GradientStatusTabItem(
-                  title: 'Minuman',
-                  icon: Icons.local_drink,
-                  count: 0,
-                  color: Colors.green,
-                ),
+          ),
+        ),
+        body: productsAsync.when(
+          data: (products) {
+            final activeProducts = products.where((p) => p.isActive).toList();
+            return TabBarView(
+              children: [
+                _ProductGrid(products: activeProducts),
+                _ProductGrid(products: activeProducts.where((p) => p.category == 'makanan').toList()),
+                _ProductGrid(products: activeProducts.where((p) => p.category == 'minuman').toList()),
               ],
-            ),
-          ),
-          body: productsAsync.when(
-            data: (products) {
-              final activeProducts = products.where((p) => p.isActive).toList();
-              return TabBarView(
-                children: [
-                  _ProductGrid(
-                    products: activeProducts,
-                    runAddToCartAnimation: _runAddToCartAnimation,
-                  ),
-                  _ProductGrid(
-                    products: activeProducts.where((p) => p.category == 'makanan').toList(),
-                    runAddToCartAnimation: _runAddToCartAnimation,
-                  ),
-                  _ProductGrid(
-                    products: activeProducts.where((p) => p.category == 'minuman').toList(),
-                    runAddToCartAnimation: _runAddToCartAnimation,
-                  ),
-                ],
-              );
-            },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, st) => Center(child: Text('Error: $e')),
-          ),
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, st) => Center(child: Text('Error: $e')),
         ),
       ),
     );
@@ -270,15 +130,18 @@ class _PhoneOrderPageState extends ConsumerState<PhoneOrderPage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) {
-          return Container(
-            height: MediaQuery.of(context).size.height * 0.85,
+      builder: (context) {
+        final h = MediaQuery.of(context).size.height * 0.85;
+        return Material(
+          color: Colors.transparent,
+          child: Container(
+            height: h,
             decoration: BoxDecoration(
               color: Theme.of(context).canvasColor,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             ),
             child: Column(
+              mainAxisSize: MainAxisSize.max,
               children: [
                 Container(
                   width: 40,
@@ -291,124 +154,54 @@ class _PhoneOrderPageState extends ConsumerState<PhoneOrderPage> {
                 ),
                 Expanded(
                   child: _MobileCartView(
-                    nameController: _nameController,
-                    phoneController: _phoneController,
-                    selectedDate: _selectedDate,
-                    selectedTime: _selectedTime,
-                    onSelectDate: () async {
-                      final DateTime? picked = await showDatePicker(
-                        context: context,
-                        initialDate: _selectedDate,
-                        firstDate: DateTime.now().subtract(const Duration(days: 1)),
-                        lastDate: DateTime.now().add(const Duration(days: 365)),
-                      );
-                      if (picked != null && picked != _selectedDate) {
-                        setModalState(() {
-                          _selectedDate = picked;
-                        });
-                        setState(() {
-                          _selectedDate = picked;
-                        });
-                      }
-                    },
-                    onSelectTime: () async {
-                      final TimeOfDay? picked = await showTimePicker(
-                        context: context,
-                        initialTime: _selectedTime,
-                      );
-                      if (picked != null && picked != _selectedTime) {
-                         setModalState(() {
-                          _selectedTime = picked;
-                        });
-                        setState(() {
-                          _selectedTime = picked;
-                        });
-                      }
-                    },
+                    nameController: widget.nameController,
+                    phoneController: widget.phoneController,
+                    tableController: widget.tableController,
                     isQuickOrder: widget.isQuickOrder,
                     existingOrderId: widget.existingOrderId,
                     existingOrder: _existingOrder,
                     standardizePhoneNumber: _standardizePhoneNumber,
-                    selectedVia: _selectedVia,
-                    isDineIn: _isDineIn,
-                    tableController: _tableController,
-                    selectedPayment: _selectedPayment,
-                    onViaSelected: (v) {
-                       setModalState(() => _onViaSelected(v));
-                    },
-                    onDineInChanged: (v) {
-                       setModalState(() => _isDineIn = v);
-                       setState(() => _isDineIn = v);
-                    },
-                    onPaymentSelected: (p) {
-                       setModalState(() => _selectedPayment = p);
-                       setState(() => _selectedPayment = p);
-                    },
                   ),
                 ),
               ],
             ),
-          );
-        }
-      ),
+          ),
+        );
+      },
     );
   }
 }
 
-class _MobileCartView extends ConsumerStatefulWidget {
+class _MobileCartView extends ConsumerWidget {
   final TextEditingController nameController;
   final TextEditingController phoneController;
-  final DateTime selectedDate;
-  final TimeOfDay selectedTime;
-  final VoidCallback onSelectDate;
-  final VoidCallback onSelectTime;
+  final TextEditingController tableController;
   final bool isQuickOrder;
   final String? existingOrderId;
   final OrderEntity? existingOrder;
   final Function(String) standardizePhoneNumber;
 
-  // Passed state and callbacks from parent
-  final String selectedVia;
-  final bool isDineIn;
-  final TextEditingController tableController;
-  final String selectedPayment;
-  final Function(String) onViaSelected;
-  final Function(bool) onDineInChanged;
-  final Function(String) onPaymentSelected;
-
   const _MobileCartView({
     required this.nameController,
     required this.phoneController,
-    required this.selectedDate,
-    required this.selectedTime,
-    required this.onSelectDate,
-    required this.onSelectTime,
+    required this.tableController,
     required this.isQuickOrder,
     this.existingOrderId,
     this.existingOrder,
     required this.standardizePhoneNumber,
-    required this.selectedVia,
-    required this.isDineIn,
-    required this.tableController,
-    required this.selectedPayment,
-    required this.onViaSelected,
-    required this.onDineInChanged,
-    required this.onPaymentSelected,
   });
 
   @override
-  ConsumerState<_MobileCartView> createState() => _MobileCartViewState();
-}
-
-class _MobileCartViewState extends ConsumerState<_MobileCartView> {
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final cartState = ref.watch(cartProvider);
     final cart = cartState.items;
     final cartTotal = ref.watch(cartTotalProvider);
-    bool isNameFilled = widget.nameController.text.trim().isNotEmpty;
-    bool isWhatsAppValid = widget.selectedVia != 'WhatsApp' || 
-        (widget.nameController.text.trim().isNotEmpty && widget.phoneController.text.trim().isNotEmpty);
+    final metadata = ref.watch(orderMetadataProvider);
+    final metadataNotifier = ref.read(orderMetadataProvider.notifier);
+
+    bool isNameFilled = nameController.text.trim().isNotEmpty;
+    bool isWhatsAppValid = metadata.selectedVia != 'WhatsApp' || 
+        (nameController.text.trim().isNotEmpty && phoneController.text.trim().isNotEmpty);
 
     return Column(
       children: [
@@ -419,7 +212,7 @@ class _MobileCartViewState extends ConsumerState<_MobileCartView> {
               Icon(Icons.shopping_basket_outlined, color: Colors.orange[700]),
               const SizedBox(width: 12),
               Text(
-                widget.existingOrderId != null ? 'Update Pesanan' : 'Detail Pesanan',
+                existingOrderId != null ? 'Update Pesanan' : 'Detail Pesanan',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: Colors.orange[900],
@@ -447,18 +240,18 @@ class _MobileCartViewState extends ConsumerState<_MobileCartView> {
                    Expanded(
                      child: _ViaButtonSmall(
                         label: 'Offline',
-                        isSelected: widget.selectedVia == 'Offline',
+                        isSelected: metadata.selectedVia == 'Offline',
                         icon: Icons.storefront,
-                        onTap: () => widget.onViaSelected('Offline'),
+                        onTap: () => metadataNotifier.updateSelectedVia('Offline'),
                       ),
                    ),
                    const SizedBox(width: 8),
                    Expanded(
                      child: _ViaButtonSmall(
                         label: 'WA',
-                        isSelected: widget.selectedVia == 'WhatsApp',
+                        isSelected: metadata.selectedVia == 'WhatsApp',
                         icon: Icons.message,
-                        onTap: () => widget.onViaSelected('WhatsApp'),
+                        onTap: () => metadataNotifier.updateSelectedVia('WhatsApp'),
                         color: Colors.green,
                       ),
                    ),
@@ -466,9 +259,9 @@ class _MobileCartViewState extends ConsumerState<_MobileCartView> {
                    Expanded(
                      child: _ViaButtonSmall(
                         label: 'Grab',
-                        isSelected: widget.selectedVia == 'GrabFood',
+                        isSelected: metadata.selectedVia == 'GrabFood',
                         icon: Icons.delivery_dining,
-                        onTap: () => widget.onViaSelected('GrabFood'),
+                        onTap: () => metadataNotifier.updateSelectedVia('GrabFood'),
                         color: Colors.green[700],
                       ),
                    ),
@@ -482,21 +275,22 @@ class _MobileCartViewState extends ConsumerState<_MobileCartView> {
                   const Text('Dine In', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
                   const SizedBox(width: 8),
                   Switch(
-                    value: widget.isDineIn,
-                    onChanged: widget.onDineInChanged,
+                    value: metadata.isDineIn,
+                    onChanged: (v) => metadataNotifier.updateIsDineIn(v),
                     activeColor: Colors.orange[800],
                   ),
-                  if (widget.isDineIn) ...[
+                  if (metadata.isDineIn) ...[
                     const SizedBox(width: 16),
                     Expanded(
                       child: TextField(
-                        controller: widget.tableController,
+                        controller: tableController,
                         keyboardType: TextInputType.number,
                         decoration: const InputDecoration(
                           labelText: 'No. Meja',
                           isDense: true,
                           border: OutlineInputBorder(),
                         ),
+                        onChanged: (v) => metadataNotifier.updateTableNumber(v),
                       ),
                     ),
                   ],
@@ -512,18 +306,18 @@ class _MobileCartViewState extends ConsumerState<_MobileCartView> {
                   Expanded(
                     child: _ViaButtonSmall(
                       label: 'Cash',
-                      isSelected: widget.selectedPayment == 'Cash',
+                      isSelected: metadata.selectedPayment == 'Cash',
                       icon: Icons.money,
-                      onTap: () => widget.onPaymentSelected('Cash'),
+                      onTap: () => metadataNotifier.updateSelectedPayment('Cash'),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: _ViaButtonSmall(
                       label: 'QRIS',
-                      isSelected: widget.selectedPayment == 'QRIS',
+                      isSelected: metadata.selectedPayment == 'QRIS',
                       icon: Icons.qr_code_scanner,
-                      onTap: () => widget.onPaymentSelected('QRIS'),
+                      onTap: () => metadataNotifier.updateSelectedPayment('QRIS'),
                       color: Colors.blue[700],
                     ),
                   ),
@@ -532,42 +326,62 @@ class _MobileCartViewState extends ConsumerState<_MobileCartView> {
               const SizedBox(height: 20),
 
               TextField(
-                controller: widget.nameController,
+                controller: nameController,
                 decoration: const InputDecoration(
                   labelText: 'Nama Pelanggan (Wajib)',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.person),
                 ),
-                onChanged: (v) => setState(() {}),
+                onChanged: (v) => metadataNotifier.updateCustomerName(v),
               ),
               const SizedBox(height: 12),
               TextField(
-                controller: widget.phoneController,
+                controller: phoneController,
                 keyboardType: TextInputType.phone,
                 decoration: InputDecoration(
-                  labelText: widget.selectedVia == 'WhatsApp' ? 'Nomor WhatsApp (Wajib)' : 'Nomor WhatsApp (Opsional)',
+                  labelText: metadata.selectedVia == 'WhatsApp' ? 'Nomor WhatsApp (Wajib)' : 'Nomor WhatsApp (Opsional)',
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.phone),
                   hintText: '0812...',
                 ),
-                onChanged: (v) => setState(() {}),
+                onChanged: (v) => metadataNotifier.updateCustomerPhone(v),
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: widget.onSelectDate,
+                      onPressed: () async {
+                        final DateTime? picked = await showDatePicker(
+                          context: context,
+                          initialDate: metadata.selectedDate,
+                          firstDate: DateTime.now().subtract(const Duration(days: 1)),
+                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                        );
+                        if (picked != null) metadataNotifier.updateSelectedDate(picked);
+                      },
                       icon: const Icon(Icons.calendar_today, size: 18),
-                      label: Text(DateFormat('dd/MM/yyyy').format(widget.selectedDate)),
+                      label: Text(DateFormat('dd/MM/yyyy').format(metadata.selectedDate)),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: widget.onSelectTime,
+                      onPressed: () async {
+                        final TimeOfDay? picked = await showTimePicker(
+                          context: context,
+                          initialTime: metadata.selectedTime,
+                          builder: (context, child) {
+                            return MediaQuery(
+                              data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+                              child: child!,
+                            );
+                          },
+                        );
+                        if (picked != null) metadataNotifier.updateSelectedTime(picked);
+                      },
                       icon: const Icon(Icons.access_time, size: 18),
-                      label: Text(widget.selectedTime.format(context)),
+                      label: Text('${metadata.selectedTime.hour.toString().padLeft(2, '0')}:${metadata.selectedTime.minute.toString().padLeft(2, '0')}'),
                     ),
                   ),
                 ],
@@ -662,24 +476,24 @@ class _MobileCartViewState extends ConsumerState<_MobileCartView> {
                     onPressed: (cart.isEmpty || !isNameFilled || !isWhatsAppValid)
                         ? null
                         : () async {
-                            final standardizedPhone = widget.phoneController.text.isNotEmpty ? widget.standardizePhoneNumber(widget.phoneController.text) : null;
+                            final standardizedPhone = phoneController.text.isNotEmpty ? standardizePhoneNumber(phoneController.text) : null;
                             final messenger = ScaffoldMessenger.of(context);
 
-                            if (widget.existingOrderId != null && widget.existingOrder != null) {
+                            if (existingOrderId != null && existingOrder != null) {
                               try {
                                 final CartController controller = ref.read(cartProvider.notifier);
                                 await controller.updateOrder(
                                       ref.read(orderRepositoryProvider),
                                       ref.read(toppingRepositoryProvider),
-                                      widget.existingOrder!,
-                                      widget.nameController.text.trim(),
+                                      existingOrder!,
+                                      nameController.text.trim(),
                                       customerPhone: standardizedPhone,
-                                      pickupDate: widget.selectedDate,
-                                      pickupTime: widget.selectedTime.format(context),
-                                      orderSource: widget.selectedVia,
-                                      isDineIn: widget.isDineIn,
-                                      tableNumber: widget.tableController.text,
-                                      paymentMethod: widget.selectedPayment,
+                                      pickupDate: metadata.selectedDate,
+                                      pickupTime: '${metadata.selectedTime.hour.toString().padLeft(2, '0')}:${metadata.selectedTime.minute.toString().padLeft(2, '0')}',
+                                      orderSource: metadata.selectedVia,
+                                      isDineIn: metadata.isDineIn,
+                                      tableNumber: tableController.text,
+                                      paymentMethod: metadata.selectedPayment,
                                     );
                                     
                                 Navigator.pop(context); // Close cart sheet
@@ -700,15 +514,15 @@ class _MobileCartViewState extends ConsumerState<_MobileCartView> {
                                 await controller.submitOrder(
                                       ref.read(orderRepositoryProvider),
                                       ref.read(toppingRepositoryProvider),
-                                      widget.nameController.text.trim(),
+                                      nameController.text.trim(),
                                       customerPhone: standardizedPhone,
-                                      isQuickOrder: widget.isQuickOrder,
-                                      pickupDate: widget.selectedDate,
-                                      pickupTime: widget.selectedTime.format(context),
-                                      orderSource: widget.selectedVia,
-                                      isDineIn: widget.isDineIn,
-                                      tableNumber: widget.tableController.text,
-                                      paymentMethod: widget.selectedPayment,
+                                      isQuickOrder: isQuickOrder,
+                                      pickupDate: metadata.selectedDate,
+                                      pickupTime: '${metadata.selectedTime.hour.toString().padLeft(2, '0')}:${metadata.selectedTime.minute.toString().padLeft(2, '0')}',
+                                      orderSource: metadata.selectedVia,
+                                      isDineIn: metadata.isDineIn,
+                                      tableNumber: tableController.text,
+                                      paymentMethod: metadata.selectedPayment,
                                     );
                                 Navigator.pop(context);
                                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -725,13 +539,13 @@ class _MobileCartViewState extends ConsumerState<_MobileCartView> {
                             }
                           },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: widget.existingOrderId != null ? Colors.blue[800] : Colors.orange[800],
+                      backgroundColor: existingOrderId != null ? Colors.blue[800] : Colors.orange[800],
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     child: Text(
-                      widget.existingOrderId != null ? 'UPDATE PESANAN' : 'PROSES PESANAN',
+                      existingOrderId != null ? 'UPDATE PESANAN' : 'PROSES PESANAN',
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.2),
                     ),
                   ),
@@ -798,17 +612,15 @@ class _ViaButtonSmall extends StatelessWidget {
 
 class _ProductGrid extends ConsumerWidget {
   final List<dynamic> products;
-  final Function(GlobalKey)? runAddToCartAnimation;
   
-  _ProductGrid({
+  const _ProductGrid({
     required this.products,
-    this.runAddToCartAnimation,
   });
-
-  final Map<String, GlobalKey> _itemKeys = {};
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final cashierState = ref.watch(cashierProvider);
+
     if (products.isEmpty) {
       return const Center(child: Text('Tidak ada produk di kategori ini'));
     }
@@ -830,9 +642,6 @@ class _ProductGrid extends ConsumerWidget {
             final product = products[index];
             final isFood = product.category == 'makanan';
             
-            // Generate or get key for this product
-            final key = _itemKeys.putIfAbsent(product.id, () => GlobalKey());
-            
             return Card(
               elevation: 2,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -843,33 +652,30 @@ class _ProductGrid extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Expanded(
-                        child: Container(
-                          key: key,
-                          child: product.imageUrl != null
-                              ? Image.asset(
-                                  product.imageUrl!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      color: isFood ? Colors.orange.shade100 : Colors.blue.shade100,
-                                      child: Center(
-                                        child: Icon(Icons.broken_image,
-                                            color: isFood ? Colors.orange : Colors.blue),
-                                      ),
-                                    );
-                                  },
-                                )
-                              : Container(
-                                  color: isFood ? Colors.orange.shade100 : Colors.blue.shade100,
-                                  child: Center(
-                                    child: Icon(
-                                      isFood ? Icons.fastfood : Icons.local_drink,
-                                      size: 40,
-                                      color: isFood ? Colors.orange : Colors.blue,
+                        child: product.imageUrl != null
+                            ? Image.asset(
+                                product.imageUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: isFood ? Colors.orange.shade100 : Colors.blue.shade100,
+                                    child: Center(
+                                      child: Icon(Icons.broken_image,
+                                          color: isFood ? Colors.orange : Colors.blue),
                                     ),
+                                  );
+                                },
+                              )
+                            : Container(
+                                color: isFood ? Colors.orange.shade100 : Colors.blue.shade100,
+                                child: Center(
+                                  child: Icon(
+                                    isFood ? Icons.fastfood : Icons.local_drink,
+                                    size: 40,
+                                    color: isFood ? Colors.orange : Colors.blue,
                                   ),
                                 ),
-                        ),
+                              ),
                       ),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
@@ -923,7 +729,6 @@ class _ProductGrid extends ConsumerWidget {
                       child: InkWell(
                         onTap: () {
                           // Check Cashier State
-                          final cashierState = ref.read(cashierProvider);
                           if (!cashierState.isOpen) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -953,14 +758,9 @@ class _ProductGrid extends ConsumerWidget {
                               context: context,
                               builder: (context) => ProductOptionDialog(
                                 product: product,
-                                runAddToCartAnimation: runAddToCartAnimation,
-                                itemKey: key,
                               ),
                             );
                           } else {
-                            if (runAddToCartAnimation != null) {
-                              runAddToCartAnimation!(key);
-                            }
                             ref.read(cartProvider.notifier).addItem(product, 1);
                           }
                         },
@@ -976,4 +776,3 @@ class _ProductGrid extends ConsumerWidget {
     );
   }
 }
-

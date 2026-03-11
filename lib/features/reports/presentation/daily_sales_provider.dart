@@ -1,14 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../orders/data/order_repository.dart';
-import '../../orders/domain/order.dart';
+import 'package:hompimpa_pos/features/orders/data/order_repository.dart';
+import 'package:hompimpa_pos/features/orders/domain/order.dart';
+import 'package:hompimpa_pos/features/auth/data/auth_repository.dart';
 
 final todaysOrdersProvider = StreamProvider<List<OrderEntity>>((ref) {
   final repository = ref.watch(orderRepositoryProvider);
+  final authUser = ref.watch(authStateChangesProvider).value;
   final now = DateTime.now();
   // Simply fetching all for today. 
   // Ideally repo should support date range filtering more precisely.
   // For MVP rely on client side filtering or repo's basic date support.
-  return repository.getOrdersStream(date: now);
+  return repository.getOrdersStream(date: now, currentUser: authUser);
 });
 
 final todaysSalesProvider = Provider<double>((ref) {

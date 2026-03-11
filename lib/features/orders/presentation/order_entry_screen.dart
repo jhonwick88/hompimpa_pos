@@ -151,6 +151,12 @@ class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: _selectedTime,
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+          child: child!,
+        );
+      },
     );
     if (picked != null && picked != _selectedTime) {
       setState(() {
@@ -527,7 +533,7 @@ class _MobileCartViewState extends ConsumerState<_MobileCartView> {
                     child: OutlinedButton.icon(
                       onPressed: widget.onSelectTime,
                       icon: const Icon(Icons.access_time, size: 18),
-                      label: Text(widget.selectedTime.format(context)),
+                      label: Text('${widget.selectedTime.hour.toString().padLeft(2, '0')}:${widget.selectedTime.minute.toString().padLeft(2, '0')}'),
                     ),
                   ),
                 ],
@@ -633,7 +639,7 @@ class _MobileCartViewState extends ConsumerState<_MobileCartView> {
                                        widget.nameController.text.trim(),
                                        customerPhone: standardizedPhone,
                                        pickupDate: widget.selectedDate,
-                                       pickupTime: widget.selectedTime.format(context),
+                                       pickupTime: '${widget.selectedTime.hour.toString().padLeft(2, '0')}:${widget.selectedTime.minute.toString().padLeft(2, '0')}',
                                        orderSource: widget.selectedVia,
                                        isDineIn: widget.isDineIn,
                                        tableNumber: widget.tableController.text,
@@ -661,7 +667,7 @@ class _MobileCartViewState extends ConsumerState<_MobileCartView> {
                                       customerPhone: standardizedPhone,
                                       isQuickOrder: widget.isQuickOrder,
                                       pickupDate: widget.selectedDate,
-                                      pickupTime: widget.selectedTime.format(context),
+                                      pickupTime: '${widget.selectedTime.hour.toString().padLeft(2, '0')}:${widget.selectedTime.minute.toString().padLeft(2, '0')}',
                                       orderSource: widget.selectedVia,
                                       isDineIn: widget.isDineIn,
                                       tableNumber: widget.tableController.text,

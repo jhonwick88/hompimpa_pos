@@ -22,11 +22,17 @@ import 'package:hompimpa_pos/features/cashier/presentation/cashier_controller.da
 class TabletOrderPage extends ConsumerStatefulWidget {
   final bool isQuickOrder;
   final String? existingOrderId;
+  final TextEditingController nameController;
+  final TextEditingController phoneController;
+  final TextEditingController tableController;
   
   const TabletOrderPage({
     Key? key,
     required this.isQuickOrder,
     this.existingOrderId,
+    required this.nameController,
+    required this.phoneController,
+    required this.tableController,
   }) : super(key: key);
 
   @override
@@ -34,126 +40,19 @@ class TabletOrderPage extends ConsumerStatefulWidget {
 }
 
 class _TabletOrderPageState extends ConsumerState<TabletOrderPage> {
-  final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
-  DateTime _selectedDate = DateTime.now();
-  TimeOfDay _selectedTime = TimeOfDay.now();
   OrderEntity? _existingOrder;
   
   @override
   void initState() {
     super.initState();
-    _initOrderType();
+    _loadExistingOrder();
   }
 
-  @override
-  void didUpdateWidget(TabletOrderPage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.existingOrderId != oldWidget.existingOrderId) {
-      _initOrderType();
-    }
-  }
-
-  TimeOfDay _parseTime(String timeStr) {
-    try {
-      // 1. Try standard HH:mm
-      if (timeStr.contains(':')) {
-        final parts = timeStr.split(':');
-        final hour = int.tryParse(parts[0].trim());
-        final minute = int.tryParse(parts[1].split(' ')[0].trim()); // Handle "10:30 PM"
-        
-        if (hour != null && minute != null) {
-          // Handle PM if present and simple split didn't catch it
-          if (timeStr.toLowerCase().contains('pm') && hour < 12) {
-             return TimeOfDay(hour: hour + 12, minute: minute);
-          }
-          return TimeOfDay(hour: hour, minute: minute);
-        }
-      }
-      
-      // 2. Try parsing "HH mm" or other formats if needed, or just default
-      // If we really need strict parsing, we can use DateFormat.jm() but need context/clean string
-      
-      return TimeOfDay.now();
-    } catch (e) {
-      print('Error parsing time "$timeStr": $e');
-      return TimeOfDay.now();
-    }
-  }
-
-  void _initOrderType() {
-    // 1. Always clear cart first
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      final cc.CartController controller = ref.read(cc.cartProvider.notifier);
-      controller.clearCart();
-      
-      // 2. Fetch if editing
-      if (widget.existingOrderId != null) {
-        final repository = ref.read(orderRepositoryProvider);
-        final order = await repository.getOrder(widget.existingOrderId!);
-        
-        if (mounted && order != null) {
-          _nameController.text = order.customerName;
-          _phoneController.text = order.customerPhone ?? '';
-          _selectedDate = order.orderDate;
-          _selectedTime = _parseTime(order.orderTime);
-          _existingOrder = order;
-          final cc.CartController controller = ref.read(cc.cartProvider.notifier);
-          controller.setCartItems(order.items);
-          setState(() {});
-        } else if (mounted) {
-             ScaffoldMessenger.of(context).showSnackBar(
-               const SnackBar(content: Text('Order not found')),
-             );
-             context.pop();
-        }
-      }
-    });
-
-    // 3. Setup form
-    if (widget.isQuickOrder) {
-      _nameController.text = "Offline - ${const Uuid().v4().substring(0,4)}";
-    } else if (widget.existingOrderId == null) {
-      _nameController.clear();
-    }
-    setState(() {});
-  }
-
-  void _switchToQuickOrder() {
-    if (!widget.isQuickOrder) {
-      context.go('/entry?quick=true');
-    }
-  }
-
-  void _switchToManualOrder() {
-    if (widget.isQuickOrder) {
-      context.go('/entry');
-    }
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime.now().subtract(const Duration(days: 1)),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
-  }
-
-  Future<void> _selectTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: _selectedTime,
-    );
-    if (picked != null && picked != _selectedTime) {
-      setState(() {
-        _selectedTime = picked;
-      });
+  Future<void> _loadExistingOrder() async {
+    if (widget.existingOrderId != null) {
+      final repository = ref.read(orderRepositoryProvider);
+      _existingOrder = await repository.getOrder(widget.existingOrderId!);
+      if (mounted) setState(() {});
     }
   }
 
@@ -179,59 +78,54 @@ class _TabletOrderPageState extends ConsumerState<TabletOrderPage> {
           title: Text(widget.isQuickOrder ? 'Quick Order' : 'New Order'),
           bottom: GradientStatusTabBar(
             items: const [
-              GradientStatusTabItem(
-                title: 'Semua',
-                icon: Icons.all_inclusive,
-                count: 0,
-                color: Colors.blue,
-              ),
-              GradientStatusTabItem(
-                title: 'Makanan',
-                icon: Icons.fastfood,
-                count: 0,
-                color: Colors.orange,
-              ),
-              GradientStatusTabItem(
-                title: 'Minuman',
-                icon: Icons.local_drink,
-                count: 0,
-                color: Colors.green,
-              ),
+              GradientStatusTabItem(title: 'Semua', icon: Icons.all_inclusive, count: 0, color: Colors.blue),
+              GradientStatusTabItem(title: 'Makanan', icon: Icons.fastfood, count: 0, color: Colors.orange),
+              GradientStatusTabItem(title: 'Minuman', icon: Icons.local_drink, count: 0, color: Colors.green),
             ],
           ),
         ),
         body: Row(
           children: [
+            // Left Side: Product Selection (70%)
             Expanded(
-              flex: 2,
-              child: productsAsync.when(
-                data: (products) {
-                  final activeProducts = products.where((p) => p.isActive).toList();
-                  return TabBarView(
-                    children: [
-                      _ProductGrid(products: activeProducts),
-                      _ProductGrid(products: activeProducts.where((p) => p.category == 'makanan').toList()),
-                      _ProductGrid(products: activeProducts.where((p) => p.category == 'minuman').toList()),
-                    ],
-                  );
-                },
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, st) => Center(child: Text('Error: $e')),
+              flex: 7,
+              child: Column(
+                children: [
+                  Expanded(
+                    child: productsAsync.when(
+                      data: (products) {
+                        final activeProducts = products.where((p) => p.isActive).toList();
+                        return TabBarView(
+                          children: [
+                            _ProductGrid(products: activeProducts),
+                            _ProductGrid(products: activeProducts.where((p) => p.category == 'makanan').toList()),
+                            _ProductGrid(products: activeProducts.where((p) => p.category == 'minuman').toList()),
+                          ],
+                        );
+                      },
+                      loading: () => const Center(child: CircularProgressIndicator()),
+                      error: (e, st) => Center(child: Text('Error: $e')),
+                    ),
+                  ),
+                ],
               ),
             ),
-            TabletCartPanel(
-              nameController: _nameController,
-              phoneController: _phoneController,
-              selectedDate: _selectedDate,
-              selectedTime: _selectedTime,
-              onSelectDate: () => _selectDate(context),
-              onSelectTime: () => _selectTime(context),
-              onManualOrder: _switchToManualOrder,
-              onQuickOrder: _switchToQuickOrder,
-              isQuickOrder: widget.isQuickOrder,
-              existingOrderId: widget.existingOrderId,
-              existingOrder: _existingOrder,
-              standardizePhoneNumber: _standardizePhoneNumber,
+            
+            // Vertical Divider
+            Container(width: 1, color: Colors.grey[200]),
+            
+            // Right Side: Cart Panel (30%)
+            Expanded(
+              flex: 3,
+              child: TabletCartPanel(
+                nameController: widget.nameController,
+                phoneController: widget.phoneController,
+                tableController: widget.tableController,
+                isQuickOrder: widget.isQuickOrder,
+                existingOrderId: widget.existingOrderId,
+                existingOrder: _existingOrder,
+                standardizePhoneNumber: _standardizePhoneNumber,
+              ),
             ),
           ],
         ),
@@ -246,6 +140,8 @@ class _ProductGrid extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final cashierState = ref.watch(cashierProvider);
+
     if (products.isEmpty) {
       return const Center(child: Text('Tidak ada produk di kategori ini'));
     }
@@ -354,7 +250,6 @@ class _ProductGrid extends ConsumerWidget {
                       child: InkWell(
                         onTap: () {
                           // Check Cashier State
-                          final cashierState = ref.read(cashierProvider);
                           if (!cashierState.isOpen) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(

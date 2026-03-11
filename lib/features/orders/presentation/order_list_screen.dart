@@ -3,16 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
-import '../../auth/presentation/auth_controller.dart';
-import '../../auth/data/auth_repository.dart';
-import '../../orders/data/order_repository.dart';
-import '../../orders/domain/order.dart';
-import '../../orders/domain/order_item.dart';
-import '../../../core/enums/user_role.dart';
-import 'widgets/nota_preview_dialog.dart';
-import '../../../core/widgets/gradient_app_bar.dart';
-import '../../../core/widgets/gradient_status_tab_bar.dart';
-import '../../../core/widgets/order_card_modern.dart';
+import 'package:hompimpa_pos/features/auth/presentation/auth_controller.dart';
+import 'package:hompimpa_pos/features/auth/data/auth_repository.dart';
+import 'package:hompimpa_pos/features/orders/data/order_repository.dart';
+import 'package:hompimpa_pos/features/orders/domain/order.dart';
+import 'package:hompimpa_pos/features/orders/domain/order_item.dart';
+import 'package:hompimpa_pos/core/enums/user_role.dart';
+import 'package:hompimpa_pos/features/orders/presentation/widgets/nota_preview_dialog.dart';
+import 'package:hompimpa_pos/core/widgets/gradient_app_bar.dart';
+import 'package:hompimpa_pos/core/widgets/gradient_status_tab_bar.dart';
+import 'package:hompimpa_pos/core/widgets/order_card_modern.dart';
 
 // Providers for filtering
 final orderStatusFilterProvider = StateProvider<OrderStatus?>((ref) => null);
@@ -228,24 +228,36 @@ class _OrderListTab extends ConsumerWidget {
     if (order.customerPhone == null || order.customerPhone!.isEmpty) return;
 
     final dateStr = DateFormat('dd/MM/yyyy').format(order.orderDate);
-    final itemsSummary = order.items.map((i) {
-      String itemText = "- *${i.productName} x${i.qty}*";
+    final itemsSummary = order.items.asMap().entries.map((entry) {
+      final i = entry.value;
+      final index = entry.key + 1;
+      
+      final isFood = i.productName.toLowerCase().contains('mie') || 
+                     i.productName.toLowerCase().contains('pangsit');
+      
+      String itemText = "$index. *${i.productName} x${i.qty}*";
+      
+      if (isFood && i.level != null) {
+        itemText += " (${i.level}, ${i.sambal ?? 'Campur'})";
+      }
+      
+      //itemText += "\n";
       if (i.toppings != null && i.toppings!.isNotEmpty) {
         final toppings = i.toppings!.map((t) => t.name).join(", ");
-        itemText += "\n  *+ $toppings*";
+        itemText += "   *+ $toppings*";
       }
       return itemText;
     }).join("\n");
     
     final message = "*Hi, Hompier !*\n"
         "Terima kasih telah memesan *Hompimpa Mie & Pangsit*.\n\n"
-        "Detail Pesanan :\n"
+        "*Detail Pesanan :*\n"
         "- Tanggal: $dateStr\n"
-        "- Jam: ${order.orderTime}\n"
-        "- Item Order:\n$itemsSummary\n\n"
-        "- Total Pembayaran: *Rp ${order.total.toStringAsFixed(0)}*\n\n"
+        "- Jam: ${order.orderTime}\n\n"
+        "*Item Pesanan :*\n$itemsSummary\n\n"
+        "*Total Pembayaran: Rp ${order.total.toStringAsFixed(0)}*\n\n"
         "*Sudah Bisa diambil*.\n\n"
-        "Silakan konfirmasi jika ada yang perlu dikoreksi. Terima Kasih dan sehat selalu :).";
+        "Silakan konfirmasi jika ada yang perlu dikoreksi. Terima Kasih 🙏 Dan sehat selalu 😊";
 
     final encodedMessage = Uri.encodeComponent(message);
     final uri = Uri.parse("https://wa.me/${order.customerPhone}?text=$encodedMessage");
@@ -460,6 +472,14 @@ class _OrderListTab extends ConsumerWidget {
           label: const Text('Print'),
           style: ElevatedButton.styleFrom(backgroundColor: Colors.blueGrey, foregroundColor: Colors.white),
         ),
+        if (order.customerPhone != null && order.customerPhone!.isNotEmpty) ...[
+          ElevatedButton.icon(
+            onPressed: () => _sendWhatsApp(order),
+            icon: Icon(Icons.message, size: 18),
+            label: Text('Check'),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+          ),
+        ],
       ],
       if (order.status != OrderStatus.selesai) ...[
         ElevatedButton.icon(
