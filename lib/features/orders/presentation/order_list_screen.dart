@@ -19,6 +19,7 @@ final orderStatusFilterProvider = StateProvider<OrderStatus?>((ref) => null);
 final orderSearchQueryProvider = StateProvider<String>((ref) => '');
 final orderDateFilterProvider = StateProvider<DateTime>((ref) => DateTime.now());
 final isSearchModeProvider = StateProvider<bool>((ref) => false);
+final orderSortAscendingProvider = StateProvider<bool>((ref) => false);
 
 final filteredOrdersProvider = StreamProvider<List<OrderEntity>>((ref) {
   final repository = ref.watch(orderRepositoryProvider);
@@ -129,7 +130,16 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
                   }
                 },
               ),
-             
+              Consumer(
+                builder: (context, ref, child) {
+                  final isAsc = ref.watch(orderSortAscendingProvider);
+                  return IconButton(
+                    icon: Icon(isAsc ? Icons.arrow_upward : Icons.arrow_downward),
+                    tooltip: 'Urutkan Waktu (${isAsc ? 'ASC' : 'DSC'})',
+                    onPressed: () => ref.read(orderSortAscendingProvider.notifier).state = !isAsc,
+                  );
+                },
+              ),
               IconButton(
                 icon: const Icon(Icons.calendar_today),
                 onPressed: () async {
@@ -226,7 +236,7 @@ class _OrderListTab extends ConsumerWidget {
 
   Future<void> _sendWhatsApp(OrderEntity order) async {
     if (order.customerPhone == null || order.customerPhone!.isEmpty) return;
-
+    final currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: '', decimalDigits: 0);
     final dateStr = DateFormat('dd/MM/yyyy').format(order.orderDate);
     final itemsSummary = order.items.asMap().entries.map((entry) {
       final i = entry.value;
@@ -235,10 +245,10 @@ class _OrderListTab extends ConsumerWidget {
       final isFood = i.productName.toLowerCase().contains('mie') || 
                      i.productName.toLowerCase().contains('pangsit');
       
-      String itemText = "$index. *${i.productName} x${i.qty}*";
+      String itemText = "$index. *${i.productName} x ${i.qty}*";
       
       if (isFood && i.level != null) {
-        itemText += " (${i.level}, ${i.sambal ?? 'Campur'})";
+        itemText += " (Lv. ${i.level}, ${i.sambal ?? 'Campur'})";
       }
       
       //itemText += "\n";
@@ -246,16 +256,17 @@ class _OrderListTab extends ConsumerWidget {
         final toppings = i.toppings!.map((t) => t.name).join(", ");
         itemText += "   *+ $toppings*";
       }
+      itemText += " ... Rp. ${currencyFormat.format(i.price * i.qty)}";
       return itemText;
     }).join("\n");
     
     final message = "*Hi, Hompier !*\n"
         "Terima kasih telah memesan *Hompimpa Mie & Pangsit*.\n\n"
-        "*Detail Pesanan :*\n"
+        "*Detail Waktu Pesanan :*\n"
         "- Tanggal: $dateStr\n"
-        "- Jam: ${order.orderTime}\n\n"
+        "- Jam: ${order.orderTime} WIB\n\n"
         "*Item Pesanan :*\n$itemsSummary\n\n"
-        "*Total Pembayaran: Rp ${order.total.toStringAsFixed(0)}*\n\n"
+        "*Total Pembayaran: Rp. ${currencyFormat.format(order.total)}*\n\n"
         "*Sudah Bisa diambil*.\n\n"
         "Silakan konfirmasi jika ada yang perlu dikoreksi. Terima Kasih 🙏 Dan sehat selalu 😊";
 
@@ -376,6 +387,7 @@ class _OrderListTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final allOrdersAsync = ref.watch(filteredOrdersProvider);
+    final isAsc = ref.watch(orderSortAscendingProvider);
 
     return allOrdersAsync.when(
       data: (orders) {
@@ -384,11 +396,15 @@ class _OrderListTab extends ConsumerWidget {
         // Assuming 'status' arg is one of the visible ones.
         final filtered = orders.where((o) => o.status == status).toList();
         
-        // Sort by time/creation
+        // Sort by time/orderTime
         filtered.sort((a, b) {
-            final dateA = a.createdAt ?? a.orderDate;
-            final dateB = b.createdAt ?? b.orderDate;
-            return dateA.compareTo(dateB);
+            int cmp = a.orderTime.compareTo(b.orderTime);
+            if (cmp == 0) {
+              final dateA = a.createdAt ?? a.orderDate;
+              final dateB = b.createdAt ?? b.orderDate;
+              cmp = dateA.compareTo(dateB);
+            }
+            return isAsc ? cmp : -cmp;
         });
 
         if (filtered.isEmpty) {
@@ -430,12 +446,6 @@ class _OrderListTab extends ConsumerWidget {
     runSpacing: 8,
     children: [
       if (order.status == OrderStatus.belum) ...[
-        ElevatedButton.icon(
-          onPressed: () => context.push('/entry/add/${order.id}'),
-          icon: const Icon(Icons.add_shopping_cart, size: 18),
-          label: const Text('Tambah'),
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
-        ),
         ElevatedButton(
           onPressed: () => _processOrder(context, ref, order),
           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
@@ -482,6 +492,12 @@ class _OrderListTab extends ConsumerWidget {
         ],
       ],
       if (order.status != OrderStatus.selesai) ...[
+          ElevatedButton.icon(
+          onPressed: () => context.push('/entry/add/${order.id}'),
+          icon: const Icon(Icons.add_shopping_cart, size: 18),
+          label: const Text('Tambah'),
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
+        ),
         ElevatedButton.icon(
           onPressed: () => _showVoidDialog(context, ref, order),
           icon: const Icon(Icons.delete_forever, size: 18),
