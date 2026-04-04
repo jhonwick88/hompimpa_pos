@@ -479,6 +479,46 @@ class _MobileCartView extends ConsumerWidget {
                             final standardizedPhone = phoneController.text.isNotEmpty ? standardizePhoneNumber(phoneController.text) : null;
                             final messenger = ScaffoldMessenger.of(context);
 
+                            bool shouldProceed = true;
+                            if (standardizedPhone != null && standardizedPhone.isNotEmpty) {
+                                final now = DateTime.now();
+                                final startOfDay = DateTime(now.year, now.month, now.day);
+                                final repo = ref.read(orderRepositoryProvider);
+                                final orders = await repo.getOrdersByTimeRange(startOfDay, now);
+                                
+                                bool hasActiveOrder = orders.any((o) => 
+                                    o.customerPhone == standardizedPhone && 
+                                    o.status != OrderStatus.selesai &&
+                                    o.id != existingOrderId);
+                                    
+                                if (hasActiveOrder) {
+                                    shouldProceed = await showDialog<bool>(
+                                        context: context,
+                                        builder: (alertContext) => AlertDialog(
+                                            title: const Text('Peringatan: Nomor WA Aktif'),
+                                            content: const Text('Nomor WA ini sudah memiliki pesanan aktif (belum selesai) hari ini.\n\nApakah Anda yakin ingin menyimpan pesanan ini dengan nomor yang sama?'),
+                                            actions: [
+                                                TextButton(
+                                                    onPressed: () => Navigator.pop(alertContext, false),
+                                                    child: const Text('TIDAK, PERIKSA ORDER', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                                                ),
+                                                ElevatedButton(
+                                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.orange[800], foregroundColor: Colors.white),
+                                                    onPressed: () => Navigator.pop(alertContext, true),
+                                                    child: const Text('YA, LANJUTKAN'),
+                                                ),
+                                            ],
+                                        ),
+                                    ) ?? false;
+                                }
+                            }
+                            
+                            if (!shouldProceed) {
+                                Navigator.pop(context); // Close cart sheet
+                                context.go('/orders');
+                                return;
+                            }
+
                             if (existingOrderId != null && existingOrder != null) {
                               try {
                                 final CartController controller = ref.read(cartProvider.notifier);

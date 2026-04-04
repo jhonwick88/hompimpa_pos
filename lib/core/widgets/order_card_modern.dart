@@ -111,12 +111,31 @@ class _OrderCardModernState extends State<OrderCardModern> {
                             ),
                           ),
                         const SizedBox(height: 4),
-                        Text(
-                          'Rp ${order.total.toStringAsFixed(0)} • ${order.orderTime}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade700,
-                          ),
+                        Row(
+                          children: [
+                            Text(
+                              'Rp ${order.total.toStringAsFixed(0)} • ${order.orderTime} • ',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: order.paymentMethod == 'QRIS' ? Colors.green : Colors.red,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                order.paymentMethod,
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

@@ -145,8 +145,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         shadowColor: omzetColor.withOpacity(0.5),
                         color: omzetColor,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        child: Padding(
-                          padding: const EdgeInsets.all(10.0),
+                        child: InkWell(
+                          onTap: () => context.push('/omzet-detail'),
+                          borderRadius: BorderRadius.circular(16),
+                          child: Padding(
+                            padding: const EdgeInsets.all(10.0),
                           child: Column(
                             children: [
                               Text('Omzet', style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.bold)),
@@ -160,6 +163,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             ],
                           ),
                         ),
+                       ),
                       ),
                     ),
                     const SizedBox(width: 8),

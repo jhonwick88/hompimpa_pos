@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hompimpa_pos/features/cashier/data/cashier_repository.dart';
 import 'package:hompimpa_pos/features/cashier/domain/shift.dart';
@@ -43,18 +44,17 @@ class CashierController extends Notifier<CashierState> {
   CashierRepository get _repository => ref.read(cashierRepositoryProvider);
   OrderRepository get _orderRepository => ref.read(orderRepositoryProvider);
 
+  StreamSubscription<ShiftEntity?>? _shiftSubscription;
+
   @override
   CashierState build() {
-    // Initial state
-    // We trigger load logic. Using Future.microtask to avoid build-phase side effects
-    Future.microtask(() => _loadActiveShift());
-    return CashierState(); 
+    _initShiftListener();
+    return CashierState(isLoading: true); 
   }
 
-  Future<void> _loadActiveShift() async {
-    state = state.copyWith(isLoading: true);
-    try {
-      final shift = await _repository.getCurrentActiveShift();
+  void _initShiftListener() {
+    _shiftSubscription?.cancel();
+    _shiftSubscription = _repository.watchCurrentActiveShift().listen((shift) {
       if (shift != null) {
         state = state.copyWith(
           isOpen: true,
@@ -62,13 +62,21 @@ class CashierController extends Notifier<CashierState> {
           cashBalance: shift.startCash, // This might need to be recalculated with cash outs/sales if persistent
           isLoading: false,
         );
-         // Optionally recalculate current balance here based on initial + sales - cashouts
       } else {
-        state = state.copyWith(isOpen: false, activeShift: null, isLoading: false);
+        state = state.copyWith(
+          isOpen: false, 
+          activeShift: null, 
+          cashBalance: 0,
+          isLoading: false
+        );
       }
-    } catch (e) {
+    }, onError: (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
-    }
+    });
+    
+    ref.onDispose(() {
+      _shiftSubscription?.cancel();
+    });
   }
 
   static String _determineShift() {
@@ -108,11 +116,11 @@ class CashierController extends Notifier<CashierState> {
 
     final shiftId = state.activeShift!.id;
     final startTime = state.activeShift!.startTime;
-    final endTime = DateTime.now();
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
 
-    // Use Time Range for Sales to be more robust (includes orders where shiftId might be missing but time is correct)
-    // and matches "Orders Hari Ini" expectation if shift started today.
-    final orders = await _orderRepository.getOrdersByTimeRange(startTime, endTime);
+    // Fetch all orders for today (incorporating all shifts: morning, afternoon, night)
+    final orders = await _orderRepository.getOrdersByTimeRange(startOfDay, now);
     final cashOuts = await _repository.getCashOutsForShift(shiftId);
 
     double totalCashSales = 0;

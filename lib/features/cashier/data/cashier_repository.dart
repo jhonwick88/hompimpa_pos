@@ -9,6 +9,7 @@ final cashierRepositoryProvider = Provider<CashierRepository>((ref) {
 
 abstract class CashierRepository {
   Future<ShiftEntity?> getCurrentActiveShift();
+  Stream<ShiftEntity?> watchCurrentActiveShift();
   Future<void> createShift(ShiftEntity shift);
   Future<void> closeShift(ShiftEntity shift);
   Future<void> addCashOut(CashOutEntity cashOut);
@@ -38,6 +39,22 @@ class FirestoreCashierRepository implements CashierRepository {
       print('Error getting active shift: $e');
       rethrow;
     }
+  }
+
+  @override
+  Stream<ShiftEntity?> watchCurrentActiveShift() {
+    return _firestore.collection('shifts')
+        .where('status', isEqualTo: 'OPEN')
+        .limit(1)
+        .snapshots()
+        .map((snapshot) {
+          if (snapshot.docs.isNotEmpty) {
+            final data = snapshot.docs.first.data();
+            data['id'] = snapshot.docs.first.id;
+            return ShiftEntity.fromJson(data);
+          }
+          return null;
+        });
   }
 
   @override

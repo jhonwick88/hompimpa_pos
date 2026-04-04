@@ -12,6 +12,7 @@ import 'package:hompimpa_pos/features/orders/presentation/order_page.dart';
 import 'package:hompimpa_pos/features/reports/presentation/report_screen.dart';
 import 'package:hompimpa_pos/features/orders/presentation/void_orders_screen.dart';
 import 'package:hompimpa_pos/features/auth/presentation/login_screen.dart';
+import 'package:hompimpa_pos/features/reports/presentation/omzet_detail_screen.dart';
 import 'package:hompimpa_pos/features/auth/data/auth_repository.dart';
 import 'package:hompimpa_pos/features/products/presentation/product_master_screen.dart';
 import 'package:hompimpa_pos/features/products/presentation/topping_master_screen.dart';
@@ -100,6 +101,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/reports',
         builder: (context, state) => const ReportsScreen(),
+      ),
+      GoRoute(
+        path: '/omzet-detail',
+        builder: (context, state) => const OmzetDetailScreen(),
       ),
       GoRoute(
         path: '/void-orders',

@@ -10,7 +10,7 @@ final todaysOrdersProvider = StreamProvider<List<OrderEntity>>((ref) {
   // Simply fetching all for today. 
   // Ideally repo should support date range filtering more precisely.
   // For MVP rely on client side filtering or repo's basic date support.
-  return repository.getOrdersStream(date: now, currentUser: authUser);
+  return repository.getOrdersStream(date: now, currentUser: authUser, status: OrderStatus.selesai);
 });
 
 final todaysSalesProvider = Provider<double>((ref) {
