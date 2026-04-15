@@ -65,6 +65,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateChangesProvider);
     final sales = ref.watch(todaysSalesProvider);
+    print(sales);
     final ordersAsync = ref.watch(todaysOrdersProvider);
 
     final productsAsync = ref.watch(productListProvider);

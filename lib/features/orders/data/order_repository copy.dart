@@ -33,102 +33,86 @@ class FirestoreOrderRepository implements OrderRepository {
 
   FirestoreOrderRepository(this._firestore);
 
- /// ✅ ambil active store sekali saja
-  Future<Set<String>> _getActiveStoreIds() async {
-    final snapshot = await _firestore.collection('stores').get();
-    return snapshot.docs
-        .where((doc) => doc.data()['isActive'] == true)
-        .map((doc) => doc.id)
-        .toSet();
-  }
-
   @override
   Stream<List<OrderEntity>> getOrdersStream({
-    DateTime? date,
-    OrderStatus? status,
+    DateTime? date, 
+    OrderStatus? status, 
     String? searchQuery,
     AppUser? currentUser,
-  }) async* {
-    // ✅ ambil store sekali (bukan di stream)
-    final activeStoreIds = await _getActiveStoreIds();
+  }) {
+    // 1. Fetch active stores first to handle isActive logic
+    // For simplicity, we'll fetch all stores and filter in memory.
+    // In a large system, we'd use a more reactive approach.
+    final storesStream = _firestore.collection('stores').snapshots();
 
-    Query query = _firestore
-        .collection('orders')
-        .orderBy('createdAt', descending: true)
-        .limit(50); // 🔥 WAJIB biar hemat
+    return _firestore.collection('orders').snapshots().asyncMap((orderSnapshot) async {
+      // Get all stores to check isActive
+      final storeDocs = await _firestore.collection('stores').get();
+      final activeStoreIds = storeDocs.docs
+          .where((doc) => doc.data()['isActive'] == true)
+          .map((doc) => doc.id)
+          .toSet();
 
-    // ✅ filter server-side kalau bisa
-    if (status != null) {
-      query = query.where('status', isEqualTo: status.name);
-    }
-
-    if (date != null) {
-      final start = DateTime(date.year, date.month, date.day);
-      final end = start.add(const Duration(days: 1));
-
-      query = query
-          .where('createdAt', isGreaterThanOrEqualTo: start)
-          .where('createdAt', isLessThan: end);
-}
-
-    yield* query.snapshots().map((snapshot) {
-      final result = <OrderEntity>[];
-
-      for (final doc in snapshot.docs) {
+      final baseOrders = <OrderEntity>[];
+      for (final doc in orderSnapshot.docs) {
         try {
           final data = doc.data() as Map<String, dynamic>;
-          var order = OrderEntity.fromJsonRobust({
-            ...data,
-            'id': doc.id,
-          });
-
-          /// ✅ ROLE FILTER
+          var order = OrderEntity.fromJsonRobust({...data, 'id': doc.id});
+          
+          // Role-based Isolation Logic
           if (currentUser != null && currentUser.role != UserRole.dev) {
+            // Filter items: must match user.storeId AND store must be active
             final filteredItems = order.items.where((item) {
-              final itemStoreId = item.storeId ?? order.storeId;
-              return itemStoreId == currentUser.storeId &&
-                  activeStoreIds.contains(itemStoreId);
+              final itemStoreId = item.storeId ?? order.storeId; // Fallback to order-level storeId
+              return itemStoreId == currentUser.storeId && activeStoreIds.contains(itemStoreId);
             }).toList();
 
-            if (filteredItems.isEmpty) continue;
+            if (filteredItems.isEmpty) continue; // Hide orders with no visible items
 
-            final newTotal = filteredItems.fold<double>(
-              0,
-              (sum, item) => sum + (item.price * item.qty),
-            );
-
-            order = order.copyWith(
-              items: filteredItems,
-              total: newTotal,
-            );
+            // Re-calculate total based on filtered items
+            final newTotal = filteredItems.fold<double>(0, (sum, item) => sum + (item.price * item.qty));
+            order = order.copyWith(items: filteredItems, total: newTotal);
+          } else if (currentUser != null && currentUser.role == UserRole.dev) {
+             // DEV sees everything, but we still want to label them? 
+             // No specific instruction for labeling, just "can see all".
           }
 
-          result.add(order);
+          baseOrders.add(order);
         } catch (e) {
-          print("DEBUG: parse error ${doc.id}: $e");
+          print("DEBUG: Failed to parse order ${doc.id}: $e");
         }
       }
 
-      /// ✅ FILTER CLIENT (yang gak bisa di server)
-      var filtered = result;
-
+      var filtered = List<OrderEntity>.from(baseOrders);
+      // Client-side filtering
       if (date != null) {
         filtered = filtered.where((o) {
-          final d = o.orderDate.toLocal();
-          return d.year == date.year &&
-              d.month == date.month &&
-              d.day == date.day;
+          final localDate = o.orderDate.toLocal();
+          return localDate.year == date.year &&
+                 localDate.month == date.month &&
+                 localDate.day == date.day;
         }).toList();
+      }
+
+      if (status != null) {
+        filtered = filtered.where((o) => o.status == status).toList();
       }
 
       if (searchQuery != null && searchQuery.isNotEmpty) {
         final q = searchQuery.toLowerCase();
-        filtered = filtered.where((o) =>
-            o.customerName.toLowerCase().contains(q) ||
-            (o.customerPhone != null &&
-                o.customerPhone!.contains(q)) ||
-            o.id.toLowerCase().contains(q)).toList();
+        filtered = filtered.where((o) => 
+          o.customerName.toLowerCase().contains(q) ||
+          (o.customerPhone != null && o.customerPhone!.contains(q)) ||
+          o.id.toLowerCase().contains(q)
+        ).toList();
       }
+
+      // Client-side sorting
+      filtered.sort((a, b) {
+        final dateA = a.createdAt ?? a.orderDate;
+        final dateB = b.createdAt ?? b.orderDate;
+        return dateA.compareTo(dateB);
+      });
 
       return filtered;
     });
