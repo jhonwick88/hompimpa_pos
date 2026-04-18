@@ -23,6 +23,9 @@ import 'package:hompimpa_pos/core/widgets/animated_splash_screen.dart';
 import 'package:hompimpa_pos/features/public_menu/presentation/public_menu_screen.dart';
 import 'package:hompimpa_pos/features/public_menu/presentation/public_cart_screen.dart';
 import 'package:hompimpa_pos/features/orders/presentation/review_orders_screen.dart';
+import 'package:hompimpa_pos/features/orders/presentation/order_logs_screen.dart';
+import 'package:hompimpa_pos/features/cashier/presentation/shifts_log_screen.dart';
+import 'package:hompimpa_pos/features/stock/presentation/stock_logs_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
@@ -129,6 +132,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/maintenance/orders',
+        builder: (context, state) => const OrderLogsScreen(),
+      ),
+      GoRoute(
+        path: '/maintenance/shifts',
+        builder: (context, state) => const ShiftsLogScreen(),
+      ),
+      GoRoute(
+        path: '/maintenance/stock-logs',
+        builder: (context, state) => const StockLogsScreen(),
       ),
     ],
   );

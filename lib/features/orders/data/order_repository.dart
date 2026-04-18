@@ -26,6 +26,9 @@ abstract class OrderRepository {
   Future<OrderEntity?> getOrder(String orderId);
   Future<List<OrderEntity>> getOrdersForShift(String shiftId);
   Future<List<OrderEntity>> getOrdersByTimeRange(DateTime start, DateTime end);
+  Future<QuerySnapshot> getOrdersPaginated({int limit = 10, QueryDocumentSnapshot? lastDocument});
+  Future<void> deleteAllOrders();
+  Future<List<OrderEntity>> getAllOrders();
 }
 
 class FirestoreOrderRepository implements OrderRepository {
@@ -69,7 +72,7 @@ class FirestoreOrderRepository implements OrderRepository {
       query = query
           .where('createdAt', isGreaterThanOrEqualTo: start)
           .where('createdAt', isLessThan: end);
-}
+    }
 
     yield* query.snapshots().map((snapshot) {
       final result = <OrderEntity>[];
@@ -294,5 +297,42 @@ class FirestoreOrderRepository implements OrderRepository {
       print('Error fetching orders by time range: $e');
       return [];
     }
+  }
+
+  @override
+  Future<QuerySnapshot> getOrdersPaginated({int limit = 10, QueryDocumentSnapshot? lastDocument}) async {
+    Query query = _firestore.collection('orders')
+        .orderBy('createdAt', descending: false)
+        .limit(limit);
+
+    if (lastDocument != null) {
+      query = query.startAfterDocument(lastDocument);
+    }
+
+    return await query.get();
+  }
+
+  @override
+  Future<void> deleteAllOrders() async {
+    final snapshot = await _firestore.collection('orders').get();
+    final batch = _firestore.batch();
+    for (final doc in snapshot.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
+  }
+
+  @override
+  Future<List<OrderEntity>> getAllOrders() async {
+    final snapshot = await _firestore.collection('orders')
+        .orderBy('createdAt', descending: true)
+        .get();
+        
+    return snapshot.docs.map((doc) {
+      return OrderEntity.fromJsonRobust({
+        ...doc.data(),
+        'id': doc.id,
+      });
+    }).toList();
   }
 }

@@ -11,7 +11,7 @@ _StockLog _$StockLogFromJson(Map<String, dynamic> json) => _StockLog(
   productId: json['productId'] as String,
   qtyChange: (json['qtyChange'] as num).toInt(),
   reason: json['reason'] as String,
-  createdAt: DateTime.parse(json['createdAt'] as String),
+  createdAt: const TimestampConverter().fromJson(json['createdAt']),
 );
 
 Map<String, dynamic> _$StockLogToJson(_StockLog instance) => <String, dynamic>{
@@ -19,5 +19,5 @@ Map<String, dynamic> _$StockLogToJson(_StockLog instance) => <String, dynamic>{
   'productId': instance.productId,
   'qtyChange': instance.qtyChange,
   'reason': instance.reason,
-  'createdAt': instance.createdAt.toIso8601String(),
+  'createdAt': const TimestampConverter().toJson(instance.createdAt),
 };

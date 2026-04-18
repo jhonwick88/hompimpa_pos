@@ -140,7 +140,10 @@ class _OrderCardModernState extends State<OrderCardModern> {
                       ],
                     ),
                   ),
-                  Container(
+                  //start column
+                  Column(
+                    children: [
+                      Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
@@ -155,12 +158,14 @@ class _OrderCardModernState extends State<OrderCardModern> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
                   Icon(
                     expanded
                         ? Icons.keyboard_arrow_up
                         : Icons.keyboard_arrow_down,
                   ),
+                    ],
+                  ),
+                  //end column
                 ],
               ),
             ),

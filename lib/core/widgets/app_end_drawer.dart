@@ -254,6 +254,36 @@ class AppEndDrawer extends ConsumerWidget {
                       ),
                     ],
 
+                    // ===== MAINTENANCE (DEV ONLY) =====
+                    if (user?.role == UserRole.dev) ...[
+                      const SizedBox(height: 16),
+                      const _SectionTitle('Maintenance'),
+                      _DrawerButton(
+                        icon: Icons.receipt_long_outlined,
+                        label: 'Log Order',
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push('/maintenance/orders');
+                        },
+                      ),
+                      _DrawerButton(
+                        icon: Icons.history_outlined,
+                        label: 'Shifts Log',
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push('/maintenance/shifts');
+                        },
+                      ),
+                      _DrawerButton(
+                        icon: Icons.inventory_outlined,
+                        label: 'Stock Logs',
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push('/maintenance/stock-logs');
+                        },
+                      ),
+                    ],
+
                     // ===== AKUN =====
                     const SizedBox(height: 16),
                     const _SectionTitle('Akun'),

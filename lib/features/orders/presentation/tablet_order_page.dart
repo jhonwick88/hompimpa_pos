@@ -14,6 +14,7 @@ import 'package:hompimpa_pos/features/orders/domain/order.dart';
 import 'package:hompimpa_pos/core/widgets/gradient_app_bar.dart';
 import 'package:hompimpa_pos/core/widgets/gradient_status_tab_bar.dart';
 import 'package:hompimpa_pos/features/cashier/presentation/cashier_controller.dart';
+import 'package:hompimpa_pos/core/widgets/app_image.dart';
 
 /// Tablet-specific order entry page (>= 600px)
 /// - Split layout: product grid + side cart panel
@@ -173,30 +174,15 @@ class _ProductGrid extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Expanded(
-                        child: product.imageUrl != null
-                            ? Image.asset(
-                                product.imageUrl!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Container(
-                                    color: isFood ? Colors.orange.shade100 : Colors.blue.shade100,
-                                    child: Center(
-                                      child: Icon(Icons.broken_image,
-                                          color: isFood ? Colors.orange : Colors.blue),
-                                    ),
-                                  );
-                                },
-                              )
-                            : Container(
-                                color: isFood ? Colors.orange.shade100 : Colors.blue.shade100,
-                                child: Center(
-                                  child: Icon(
-                                    isFood ? Icons.fastfood : Icons.local_drink,
-                                    size: 40,
-                                    color: isFood ? Colors.orange : Colors.blue,
-                                  ),
-                                ),
-                              ),
+                       child: AppImage(
+                          url: product.imageUrl,
+                          errorWidget: const Center(
+                            child: Opacity(
+                              opacity: 0.1,
+                              child: Icon(Icons.grain, size: 64),
+                            ),
+                          ),
+                        ),
                       ),
                       Padding(
                         padding: const EdgeInsets.all(8.0),

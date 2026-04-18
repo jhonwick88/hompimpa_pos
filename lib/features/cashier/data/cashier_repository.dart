@@ -14,6 +14,10 @@ abstract class CashierRepository {
   Future<void> closeShift(ShiftEntity shift);
   Future<void> addCashOut(CashOutEntity cashOut);
   Future<List<CashOutEntity>> getCashOutsForShift(String shiftId);
+  Future<QuerySnapshot> getShiftsPaginated({int limit = 10, QueryDocumentSnapshot? lastDocument});
+  Future<void> deleteShift(String id);
+  Future<void> bulkDeleteShifts(List<String> ids);
+  Future<void> deleteAllShifts();
 }
 
 class FirestoreCashierRepository implements CashierRepository {
@@ -88,5 +92,42 @@ class FirestoreCashierRepository implements CashierRepository {
     results.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     
     return results;
+  }
+
+  @override
+  Future<QuerySnapshot> getShiftsPaginated({int limit = 10, QueryDocumentSnapshot? lastDocument}) async {
+    Query query = _firestore.collection('shifts')
+        .orderBy('startTime', descending: false)
+        .limit(limit);
+
+    if (lastDocument != null) {
+      query = query.startAfterDocument(lastDocument);
+    }
+
+    return await query.get();
+  }
+
+  @override
+  Future<void> deleteShift(String id) async {
+    await _firestore.collection('shifts').doc(id).delete();
+  }
+
+  @override
+  Future<void> bulkDeleteShifts(List<String> ids) async {
+    final batch = _firestore.batch();
+    for (final id in ids) {
+      batch.delete(_firestore.collection('shifts').doc(id));
+    }
+    await batch.commit();
+  }
+
+  @override
+  Future<void> deleteAllShifts() async {
+    final snapshot = await _firestore.collection('shifts').get();
+    final batch = _firestore.batch();
+    for (final doc in snapshot.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
   }
 }

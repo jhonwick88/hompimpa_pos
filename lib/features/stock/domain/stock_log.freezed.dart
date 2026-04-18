@@ -15,8 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$StockLog {
 
- String get id; String get productId; int get qtyChange; String get reason;// Order ID or "Manual Adjustment"
- DateTime get createdAt;
+ String get id; String get productId; int get qtyChange; String get reason;@TimestampConverter() DateTime get createdAt;
 /// Create a copy of StockLog
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -49,7 +48,7 @@ abstract mixin class $StockLogCopyWith<$Res>  {
   factory $StockLogCopyWith(StockLog value, $Res Function(StockLog) _then) = _$StockLogCopyWithImpl;
 @useResult
 $Res call({
- String id, String productId, int qtyChange, String reason, DateTime createdAt
+ String id, String productId, int qtyChange, String reason,@TimestampConverter() DateTime createdAt
 });
 
 
@@ -158,7 +157,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String productId,  int qtyChange,  String reason,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String productId,  int qtyChange,  String reason, @TimestampConverter()  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StockLog() when $default != null:
 return $default(_that.id,_that.productId,_that.qtyChange,_that.reason,_that.createdAt);case _:
@@ -179,7 +178,7 @@ return $default(_that.id,_that.productId,_that.qtyChange,_that.reason,_that.crea
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String productId,  int qtyChange,  String reason,  DateTime createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String productId,  int qtyChange,  String reason, @TimestampConverter()  DateTime createdAt)  $default,) {final _that = this;
 switch (_that) {
 case _StockLog():
 return $default(_that.id,_that.productId,_that.qtyChange,_that.reason,_that.createdAt);case _:
@@ -199,7 +198,7 @@ return $default(_that.id,_that.productId,_that.qtyChange,_that.reason,_that.crea
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String productId,  int qtyChange,  String reason,  DateTime createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String productId,  int qtyChange,  String reason, @TimestampConverter()  DateTime createdAt)?  $default,) {final _that = this;
 switch (_that) {
 case _StockLog() when $default != null:
 return $default(_that.id,_that.productId,_that.qtyChange,_that.reason,_that.createdAt);case _:
@@ -214,15 +213,14 @@ return $default(_that.id,_that.productId,_that.qtyChange,_that.reason,_that.crea
 @JsonSerializable()
 
 class _StockLog implements StockLog {
-  const _StockLog({required this.id, required this.productId, required this.qtyChange, required this.reason, required this.createdAt});
+  const _StockLog({required this.id, required this.productId, required this.qtyChange, required this.reason, @TimestampConverter() required this.createdAt});
   factory _StockLog.fromJson(Map<String, dynamic> json) => _$StockLogFromJson(json);
 
 @override final  String id;
 @override final  String productId;
 @override final  int qtyChange;
 @override final  String reason;
-// Order ID or "Manual Adjustment"
-@override final  DateTime createdAt;
+@override@TimestampConverter() final  DateTime createdAt;
 
 /// Create a copy of StockLog
 /// with the given fields replaced by the non-null parameter values.
@@ -257,7 +255,7 @@ abstract mixin class _$StockLogCopyWith<$Res> implements $StockLogCopyWith<$Res>
   factory _$StockLogCopyWith(_StockLog value, $Res Function(_StockLog) _then) = __$StockLogCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String productId, int qtyChange, String reason, DateTime createdAt
+ String id, String productId, int qtyChange, String reason,@TimestampConverter() DateTime createdAt
 });
 
 

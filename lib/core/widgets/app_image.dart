@@ -65,15 +65,28 @@ class AppImage extends StatelessWidget {
   }
 
   Widget _buildError() {
-    return errorWidget ??
-        Center(
-          child: Opacity(
-            opacity: 0.1,
-            child: Icon(
-              Icons.fastfood,
-              size: (width != null && width! < 50) ? 20 : 48,
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color(0xFF8B0000), // merah tua
+            Colors.red,        // merah
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: errorWidget ??
+          Center(
+            child: Opacity(
+              opacity: 0.5,
+              child: Icon(
+                Icons.fastfood,
+                color: Colors.white,
+                size: (width != null && width! < 50) ? 20 : 48,
+              ),
             ),
           ),
-        );
+    );
   }
 }

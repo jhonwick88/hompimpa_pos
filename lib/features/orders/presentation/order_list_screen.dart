@@ -501,7 +501,7 @@ class _OrderListTab extends ConsumerWidget {
         ElevatedButton.icon(
           onPressed: () => _showVoidDialog(context, ref, order),
           icon: const Icon(Icons.delete_forever, size: 18),
-          label: const Text('Void Order'),
+          label: const Text('Void'),
           style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
         ),
       ],
