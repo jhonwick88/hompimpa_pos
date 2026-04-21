@@ -13,6 +13,10 @@ import 'package:hompimpa_pos/features/settings/domain/nota_settings.dart';
 
 abstract class PrintService {
   Future<void> printOrder(OrderEntity order, NotaSettings settings);
+  Future<List<BluetoothDevice>> getBluetoothDevices();
+  Future<bool> isConnected();
+  Future<bool> isBluetoothEnabled();
+  Future<bool> connectToDevice(BluetoothDevice device);
 }
 
 final printServiceProvider = Provider<PrintService>((ref) {
@@ -32,7 +36,7 @@ class WebPrintService implements PrintService {
 
     doc.addPage(
       pw.Page(
-        pageFormat: PdfPageFormat.roll57, // 58mm width approx
+        pageFormat: PdfPageFormat.roll80,
         build: (pw.Context context) {
           return _buildPdfContent(order, settings);
         },
@@ -57,36 +61,36 @@ class WebPrintService implements PrintService {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         // Header
-        pw.Center(child: pw.Text(settings.storeName, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10))),
+        pw.Center(child: pw.Text(settings.storeName, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14))),
         if (settings.tagline.isNotEmpty)
-          pw.Center(child: pw.Text(settings.tagline, style: const pw.TextStyle(fontSize: 8))),
+          pw.Center(child: pw.Text(settings.tagline, style: const pw.TextStyle(fontSize: 10))),
         pw.SizedBox(height: 4),
         if (settings.address1.isNotEmpty)
-          pw.Center(child: pw.Text(settings.address1, style: const pw.TextStyle(fontSize: 8))),
+          pw.Center(child: pw.Text(settings.address1, style: const pw.TextStyle(fontSize: 10))),
         if (settings.address2.isNotEmpty)
-          pw.Center(child: pw.Text(settings.address2, style: const pw.TextStyle(fontSize: 8))),
+          pw.Center(child: pw.Text(settings.address2, style: const pw.TextStyle(fontSize: 10))),
         if (settings.phone.isNotEmpty)
-          pw.Center(child: pw.Text('WA : ${settings.phone}', style: const pw.TextStyle(fontSize: 8))),
-        pw.Divider(thickness: 0.5),
+          pw.Center(child: pw.Text('WA : ${settings.phone}', style: const pw.TextStyle(fontSize: 10))),
+        pw.Divider(thickness: 1.0),
         
         // Info
-        pw.Text('No Order: ${order.id.substring(0, 8)}', style: const pw.TextStyle(fontSize: 8)),
-        pw.Text('Tgl: ${dateFormat.format(order.orderDate.toLocal())}', style: const pw.TextStyle(fontSize: 8)),
-        pw.Text('Kasir: ${order.executorName ?? "-"}', style: const pw.TextStyle(fontSize: 8)),
-        pw.Text('Bayar: ${order.paymentMethod}', style: const pw.TextStyle(fontSize: 8)),
-        pw.Divider(thickness: 0.5),
+        pw.Text('No Order: ${order.id.substring(0, 8)}', style: const pw.TextStyle(fontSize: 10)),
+        pw.Text('Tgl: ${dateFormat.format(order.orderDate.toLocal())}', style: const pw.TextStyle(fontSize: 10)),
+        pw.Text('Kasir: ${order.executorName ?? "-"}', style: const pw.TextStyle(fontSize: 10)),
+        pw.Text('Bayar: ${order.paymentMethod}', style: const pw.TextStyle(fontSize: 10)),
+        pw.Divider(thickness: 1.0),
 
         // Items
         ...order.items.map((item) {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text(item.level != null ? '${item.productName} - Lvl ${item.level} (${item.sambal})' : item.productName, style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+              pw.Text(item.level != null ? '${item.productName} - Lvl ${item.level} (${item.sambal})' : item.productName, style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text('${item.qty} x ${currencyFormat.format(item.price)}', style: const pw.TextStyle(fontSize: 8)),
-                  pw.Text(currencyFormat.format(item.qty * item.price), style: const pw.TextStyle(fontSize: 8)),
+                  pw.Text('${item.qty} x ${currencyFormat.format(item.price)}', style: pw.TextStyle(fontSize: 10, decoration: item.productName.contains('(Gratis)') ? pw.TextDecoration.lineThrough : null)),
+                  pw.Text(currencyFormat.format(item.qty * item.price), style: pw.TextStyle(fontSize: 10, decoration: item.productName.contains('(Gratis)') ? pw.TextDecoration.lineThrough : null)),
                 ],
               ),
               if (item.toppings != null && item.toppings!.isNotEmpty)
@@ -95,8 +99,8 @@ class WebPrintService implements PrintService {
                   child: pw.Row(
                     mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                     children: [
-                      pw.Text('+ ${t.name}', style: const pw.TextStyle(fontSize: 7)),
-                      pw.Text(currencyFormat.format(t.price), style: const pw.TextStyle(fontSize: 7)),
+                      pw.Text('+ ${t.name}', style: const pw.TextStyle(fontSize: 9)),
+                      pw.Text(currencyFormat.format(t.price), style: pw.TextStyle(fontSize: 9, decoration: t.name.contains('(Gratis)') ? pw.TextDecoration.lineThrough : null)),
                     ],
                   ),
                 )),
@@ -105,14 +109,14 @@ class WebPrintService implements PrintService {
           );
         }).toList(),
         
-        pw.Divider(thickness: 0.5),
+        pw.Divider(thickness: 1.0),
 
         // Summary
         pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
-            pw.Text('Total', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
-            pw.Text('Rp ${currencyFormat.format(order.total)}', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
+            pw.Text('Total', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
+            pw.Text('Rp ${currencyFormat.format(order.total)}', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
           ],
         ),
         
@@ -121,80 +125,89 @@ class WebPrintService implements PrintService {
            pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
-              pw.Text('Bayar', style: const pw.TextStyle(fontSize: 8)),
-              pw.Text('Rp ${currencyFormat.format(order.paidAmount)}', style: const pw.TextStyle(fontSize: 8)),
+              pw.Text('Bayar', style: const pw.TextStyle(fontSize: 10)),
+              pw.Text('Rp ${currencyFormat.format(order.paidAmount)}', style: const pw.TextStyle(fontSize: 10)),
             ],
           ),
           pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
-              pw.Text('Kembali', style: const pw.TextStyle(fontSize: 8)),
-              pw.Text('Rp ${currencyFormat.format(order.changeAmount ?? 0)}', style: const pw.TextStyle(fontSize: 8)),
+              pw.Text('Kembali', style: const pw.TextStyle(fontSize: 10)),
+              pw.Text('Rp ${currencyFormat.format(order.changeAmount ?? 0)}', style: const pw.TextStyle(fontSize: 10)),
             ],
           ),
         ],
 
         pw.SizedBox(height: 8),
-        pw.Divider(thickness: 0.5),
+        pw.Divider(thickness: 1.0),
         if (settings.footerMessage.isNotEmpty)
-          pw.Center(child: pw.Text(settings.footerMessage, style: const pw.TextStyle(fontSize: 8), textAlign: pw.TextAlign.center)),
+          pw.Center(child: pw.Text(settings.footerMessage, style: const pw.TextStyle(fontSize: 10), textAlign: pw.TextAlign.center)),
       ],
     );
   }
+
+  @override
+  Future<List<BluetoothDevice>> getBluetoothDevices() async => [];
+
+  @override
+  Future<bool> isConnected() async => true; // Web printing is always ready
+
+  @override
+  Future<bool> isBluetoothEnabled() async => true;
+
+  @override
+  Future<bool> connectToDevice(BluetoothDevice device) async => true;
 }
 
 class AndroidPrintService implements PrintService {
   BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
 
   @override
-  Future<void> printOrder(OrderEntity order, NotaSettings settings) async {
-    // 1. Check Permissions
+  Future<List<BluetoothDevice>> getBluetoothDevices() async {
     if (await Permission.bluetoothConnect.request().isGranted &&
         await Permission.bluetoothScan.request().isGranted && 
         await Permission.location.request().isGranted) {
-          
-      // 2. Check Connection
-       bool? isConnected = await bluetooth.isConnected;
-       if (isConnected != true) {
-         // Verify if there are devices. 
-         // Realistically we need a UI to select printer if not connected.
-         // For now, let's assume auto-connect or error if not paired/connected?
-         // As per requirement: "connectPrinter()" 
-         // Simpler approach: fail if not connected, relying on external settings connection or implementing rudimentary picker if needed.
-         // However, prompt implies "Android -> Connect via Bluetooth" which might need a picker.
-         // For specific scope "Click Print -> Print", usually implies printing to *connected* printer.
-         
-         List<BluetoothDevice> devices = [];
-         try {
-           devices = await bluetooth.getBondedDevices();
-         } catch (e) {
-           throw Exception('Bluetooth error: $e');
-         }
-
-         if (devices.isEmpty) {
-           throw Exception('Tidak ada printer paired. Silakan pasangkan printer di pengaturan Bluetooth.');
-         }
-         
-         // Try connect to first available (naive approach for MVP as per prompt implicity)
-         // Or throw error to let UI handle it?
-         // Better: Attempt connect to first device if not connected.
-         try {
-           await bluetooth.connect(devices.first);
-         } catch (e) {
-           throw Exception('Gagal terkoneksi ke printer: ${devices.first.name}');
-         }
-       }
-
-       // 3. Print
-       if (await bluetooth.isConnected == true) {
-          _printReceipt(order, settings);
-       } else {
-          throw Exception('Printer tidak terhubung.');
-       }
-
-    } else {
-      throw Exception('Izin Bluetooth/Lokasi tidak diberikan.');
+      return await bluetooth.getBondedDevices();
     }
+    return [];
+  }
+
+  @override
+  Future<bool> isConnected() async {
+    return await bluetooth.isConnected ?? false;
+  }
+
+  @override
+  Future<bool> isBluetoothEnabled() async {
+    return await bluetooth.isOn ?? false;
+  }
+
+  @override
+  Future<bool> connectToDevice(BluetoothDevice device) async {
+    try {
+      await bluetooth.connect(device);
+      return true;
+    } catch (e) {
+      debugPrint('Error connecting to Bluetooth: $e');
+      return false;
+    }
+  }
+  String formatLeftRight(String left, String right, {int width = 46}) {
+    if (left.length + right.length >= width) {
+      // kalau kepanjangan, potong kiri
+      left = left.substring(0, width - right.length - 1);
+    }
+
+    int space = width - (left.length + right.length);
+    return left + (' ' * space) + right;
+  }
+
+  @override
+  Future<void> printOrder(OrderEntity order, NotaSettings settings) async {
+    if (await bluetooth.isConnected != true) {
+      throw Exception('Printer tidak terhubung. Silakan pilih printer terlebih dahulu.');
+    }
+    _printReceipt(order, settings);
   }
 
   void _printReceipt(OrderEntity order, NotaSettings settings) async {
@@ -216,40 +229,50 @@ class AndroidPrintService implements PrintService {
       bluetooth.printCustom(settings.address2, 0, 1);
     if (settings.phone.isNotEmpty)
       bluetooth.printCustom("WA : ${settings.phone}", 0, 1);
-    bluetooth.printCustom("--------------------------------", 0, 1);
+    bluetooth.printCustom("------------------------------------------------", 0, 1);
 
     // Info
-    bluetooth.printLeftRight("No Order:", order.id.substring(0, 8), 0);
-    bluetooth.printLeftRight("Tgl:", dateFormat.format(order.orderDate.toLocal()), 0);
-    bluetooth.printLeftRight("Kasir:", order.executorName ?? "-", 0);
-    bluetooth.printLeftRight("Bayar:", order.paymentMethod, 0);
-    bluetooth.printCustom("--------------------------------", 0, 1);
+    bluetooth.printCustom(formatLeftRight("No Order:", order.id.substring(0, 8)), 0, 0);
+    bluetooth.printCustom(formatLeftRight("Tgl:", dateFormat.format(order.orderDate.toLocal())), 0, 0);
+    bluetooth.printCustom(formatLeftRight("Kasir:", order.executorName ?? "-"), 0, 0);
+    bluetooth.printCustom(formatLeftRight("Bayar:", order.paymentMethod), 0, 0);
+    bluetooth.printCustom("------------------------------------------------", 0, 1);
 
     // Items
     for (var item in order.items) {
       bluetooth.printCustom(item.productName, 0, 0); // Left align
       String qtyPrice = "${item.qty} x ${currencyFormat.format(item.price)}";
       String subtotal = currencyFormat.format(item.qty * item.price);
-      bluetooth.printLeftRight(qtyPrice, subtotal, 0);
+      
+      // Strikethrough simulation for free items
+      if (item.productName.contains('(Gratis)')) {
+        subtotal = "~~$subtotal~~";
+      }
+      
+      bluetooth.printCustom(formatLeftRight(qtyPrice, subtotal), 0, 0);
 
       if (item.toppings != null) {
         for (var t in item.toppings!) {
-           bluetooth.printLeftRight(" + ${t.name}", currencyFormat.format(t.price), 0);
+           String toppingPrice = currencyFormat.format(t.price);
+           if (t.name.contains('(Gratis)')) {
+             toppingPrice = "~~$toppingPrice~~";
+           }
+           bluetooth.printCustom(formatLeftRight(" + ${t.name}", toppingPrice), 0, 0);
         }
       }
     }
-    bluetooth.printCustom("--------------------------------", 0, 1);
+    bluetooth.printCustom("------------------------------------------------", 0, 1);
 
     // Summary
-    bluetooth.printLeftRight("TOTAL", "Rp ${currencyFormat.format(order.total)}", 1);
+    bluetooth.printCustom(formatLeftRight("TOTAL", "Rp ${currencyFormat.format(order.total)}"), 1, 0);
     
     if (order.paidAmount != null && order.paidAmount! > 0) {
-      bluetooth.printLeftRight("Bayar", "Rp ${currencyFormat.format(order.paidAmount)}", 0);
-      bluetooth.printLeftRight("Kembali", "Rp ${currencyFormat.format(order.changeAmount ?? 0)}", 0);
+      bluetooth.printCustom(formatLeftRight("Bayar", "Rp ${currencyFormat.format(order.paidAmount)}"), 0, 0);
+      bluetooth.printCustom(formatLeftRight("Kembali", "Rp ${currencyFormat.format(order.changeAmount ?? 0)}"), 0, 0);
     }
     
     bluetooth.printNewLine();
-    bluetooth.printCustom("--------------------------------", 0, 1);
+    bluetooth.printCustom("------------------------------------------------", 0, 1);
     if (settings.footerMessage.isNotEmpty)
       bluetooth.printCustom(settings.footerMessage, 0, 1);
     bluetooth.printNewLine();

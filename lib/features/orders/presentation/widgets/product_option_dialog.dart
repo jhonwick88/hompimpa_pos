@@ -341,7 +341,7 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
                    // Let's find 'pangsit' in `allToppings`.
                    final pangsitParams = allToppings.firstWhere((t) => t.id == 'pangsit', orElse: () => const Topping(id: 'pangsit', name: 'Pangsit', price: 1500, stock: 10000));
                                       // Override price for the Order Record
-                    finalToppings.add(pangsitParams.copyWith(price: 1500, name: 'Pangsit (Default)'));
+                    finalToppings.add(pangsitParams.copyWith(price: 1500, name: 'Pangsit (Free)'));
                  }
                 
                 // Add Extra Toppings

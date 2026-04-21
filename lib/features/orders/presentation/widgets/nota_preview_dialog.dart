@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:hompimpa_pos/core/services/print_service.dart';
 import 'package:hompimpa_pos/features/orders/domain/order.dart';
 import 'package:hompimpa_pos/features/settings/data/settings_repository.dart';
+import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 
 class NotaPreviewDialog extends ConsumerStatefulWidget {
   final OrderEntity order;
@@ -24,7 +25,54 @@ class _NotaPreviewDialogState extends ConsumerState<NotaPreviewDialog> {
 
     try {
       final printService = ref.read(printServiceProvider);
-      // Wait for settings if they are still loading, or get them from repository directly
+      
+      // Step 0: Check if Bluetooth is ON
+      bool isPowerOn = await printService.isBluetoothEnabled();
+      if (!isPowerOn) {
+        if (mounted) {
+          await showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Bluetooth Mati', style: TextStyle(fontWeight: FontWeight.bold)),
+              content: const Text('Harap nyalakan Bluetooth Anda terlebih dahulu untuk mencetak nota.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('OK', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+          );
+        }
+        setState(() => _isPrinting = false);
+        return;
+      }
+
+      // Step 1: Check Connection
+      bool isConnected = await printService.isConnected();
+      
+      if (!isConnected) {
+        // Step 2: Get Devices
+        final devices = await printService.getBluetoothDevices();
+        if (devices.isEmpty) {
+          throw Exception('Tidak ada printer Bluetooth yang terpasang (paired).');
+        }
+
+        // Step 3: Show Picker
+        final selectedDevice = await _showDevicePicker(devices);
+        if (selectedDevice == null) {
+          if (mounted) setState(() => _isPrinting = false);
+          return; // User cancelled
+        }
+
+        // Step 4: Connect
+        final success = await printService.connectToDevice(selectedDevice);
+        if (!success) {
+          throw Exception('Gagal menghubungkan ke printer ${selectedDevice.name}.');
+        }
+      }
+
+      // Step 5: Get Settings & Print
       final settings = await ref.read(settingsRepositoryProvider).getNotaSettings();
       await printService.printOrder(widget.order, settings);
       
@@ -47,6 +95,39 @@ class _NotaPreviewDialogState extends ConsumerState<NotaPreviewDialog> {
         });
       }
     }
+  }
+
+  Future<BluetoothDevice?> _showDevicePicker(List<BluetoothDevice> devices) async {
+    return showDialog<BluetoothDevice>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Pilih Printer Bluetooth', style: TextStyle(fontWeight: FontWeight.bold)),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: devices.length,
+              itemBuilder: (BuildContext context, int index) {
+                final device = devices[index];
+                return ListTile(
+                  leading: const Icon(Icons.print, color: Colors.blue),
+                  title: Text(device.name ?? 'Unknown Device'),
+                  subtitle: Text(device.address ?? ''),
+                  onTap: () => Navigator.pop(context, device),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('BATAL', style: TextStyle(color: Colors.grey)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
