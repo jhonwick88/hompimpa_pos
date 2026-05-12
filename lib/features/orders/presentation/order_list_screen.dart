@@ -384,10 +384,42 @@ class _OrderListTab extends ConsumerWidget {
     }
   }
 
+  Future<void> _showRestoreBelumConfirmation(BuildContext context, WidgetRef ref, OrderEntity order) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Konfirmasi Restore Status'),
+        content: Text('Kembalikan pesanan ${order.customerName} ke status "Belum" diproses?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('BATAL'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            child: const Text('YA, RESTORE'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final messenger = ScaffoldMessenger.of(context);
+        await ref.read(orderRepositoryProvider).updateOrderStatus(order.id, OrderStatus.belum, order.items);
+        messenger.showSnackBar(const SnackBar(content: Text('Status pesanan berhasil direstore ke Belum')));
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal merestore status: $e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final allOrdersAsync = ref.watch(filteredOrdersProvider);
     final isAsc = ref.watch(orderSortAscendingProvider);
+    final user = ref.watch(authStateChangesProvider).value;
 
     return allOrdersAsync.when(
       data: (orders) {
@@ -440,6 +472,9 @@ class _OrderListTab extends ConsumerWidget {
   statusColor: _getStatusColor(order.status),
   statusIcon: _getStatusIcon(order.status),
   onEditItem: (order, idx) => _editOrderItem(context, ref, order, idx),
+  onStatusTap: (order.status == OrderStatus.proses && user != null && (user.role == UserRole.admin || user.role == UserRole.dev)) 
+      ? () => _showRestoreBelumConfirmation(context, ref, order) 
+      : null,
   actionSection: Wrap(
     alignment: WrapAlignment.start,
     spacing: 8,

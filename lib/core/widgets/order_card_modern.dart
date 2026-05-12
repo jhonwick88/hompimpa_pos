@@ -8,6 +8,7 @@ class OrderCardModern extends StatefulWidget {
   final IconData statusIcon;
   final Function(dynamic order, int itemIndex)? onEditItem;
   final Widget actionSection;
+  final VoidCallback? onStatusTap;
 
   const OrderCardModern({
     super.key,
@@ -17,6 +18,7 @@ class OrderCardModern extends StatefulWidget {
     required this.statusIcon,
     required this.actionSection,
     this.onEditItem,
+    this.onStatusTap,
   });
 
   @override
@@ -63,9 +65,13 @@ class _OrderCardModernState extends State<OrderCardModern> {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    backgroundColor: widget.statusColor.withOpacity(0.15),
-                    child: Icon(widget.statusIcon, color: widget.statusColor),
+                  InkWell(
+                    onTap: widget.onStatusTap,
+                    borderRadius: BorderRadius.circular(20),
+                    child: CircleAvatar(
+                      backgroundColor: widget.statusColor.withOpacity(0.15),
+                      child: Icon(widget.statusIcon, color: widget.statusColor),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
