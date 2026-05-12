@@ -75,6 +75,9 @@ class ProductMasterScreen extends ConsumerWidget {
     final stockController = TextEditingController(text: product?.stock.toString() ?? '');
     final imageUrlController = TextEditingController(text: product?.imageUrl ?? 'assets/images/logo.png');
     String category = product?.category ?? 'makanan';
+    bool hasSambal = product?.hasSambal ?? false;
+    bool hasLevel = product?.hasLevel ?? false;
+    bool hasTopping = product?.hasTopping ?? false;
     String? selectedStoreId = product?.storeId;
     final storesAsync = ref.read(activeStoresProvider);
 
@@ -95,9 +98,36 @@ class ProductMasterScreen extends ConsumerWidget {
                     DropdownMenuItem(value: 'minuman', child: Text('Minuman')),
                     DropdownMenuItem(value: 'snack', child: Text('Snack')),
                   ],
-                  onChanged: (v) => setState(() => category = v!),
+                  onChanged: (v) {
+                    setState(() {
+                      category = v!;
+                      if (category != 'makanan') {
+                        hasSambal = false;
+                        hasLevel = false;
+                        hasTopping = false;
+                      }
+                    });
+                  },
                   decoration: const InputDecoration(labelText: 'Kategori'),
                 ),
+                if (category == 'makanan') ...[
+                  const SizedBox(height: 12),
+                  SwitchListTile(
+                    title: const Text('Enable Sambal'),
+                    value: hasSambal,
+                    onChanged: (v) => setState(() => hasSambal = v),
+                  ),
+                  SwitchListTile(
+                    title: const Text('Enable Level'),
+                    value: hasLevel,
+                    onChanged: (v) => setState(() => hasLevel = v),
+                  ),
+                  SwitchListTile(
+                    title: const Text('Enable Topping'),
+                    value: hasTopping,
+                    onChanged: (v) => setState(() => hasTopping = v),
+                  ),
+                ],
                 TextField(controller: priceController, decoration: const InputDecoration(labelText: 'Harga'), keyboardType: TextInputType.number),
                 TextField(controller: stockController, decoration: const InputDecoration(labelText: 'Stok'), keyboardType: TextInputType.number),
                 TextField(controller: imageUrlController, decoration: const InputDecoration(labelText: 'Image URL')),
@@ -131,6 +161,9 @@ class ProductMasterScreen extends ConsumerWidget {
                   imageUrl: imageUrlController.text.isNotEmpty ? imageUrlController.text : null,
                   isActive: product?.isActive ?? true,
                   storeId: selectedStoreId,
+                  hasSambal: hasSambal,
+                  hasLevel: hasLevel,
+                  hasTopping: hasTopping,
                 );
 
                 if (product == null) {

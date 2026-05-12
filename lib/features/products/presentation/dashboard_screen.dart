@@ -792,6 +792,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final stockController = TextEditingController();
     final imageUrlController = TextEditingController(text: 'assets/images/logo.png'); // Default per request
     String category = 'makanan'; // Default
+    bool hasSambal = false;
+    bool hasLevel = false;
+    bool hasTopping = false;
 
     showDialog(
       context: context,
@@ -816,9 +819,36 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         DropdownMenuItem(value: 'minuman', child: Text('Minuman')),
                         DropdownMenuItem(value: 'snack', child: Text('Snack')),
                       ],
-                      onChanged: (v) => setState(() => category = v!),
+                      onChanged: (v) {
+                        setState(() {
+                          category = v!;
+                          if (category != 'makanan') {
+                            hasSambal = false;
+                            hasLevel = false;
+                            hasTopping = false;
+                          }
+                        });
+                      },
                       decoration: const InputDecoration(labelText: 'Kategori'),
                     ),
+                    if (category == 'makanan') ...[
+                      const SizedBox(height: 12),
+                      SwitchListTile(
+                        title: const Text('Enable Sambal'),
+                        value: hasSambal,
+                        onChanged: (v) => setState(() => hasSambal = v),
+                      ),
+                      SwitchListTile(
+                        title: const Text('Enable Level'),
+                        value: hasLevel,
+                        onChanged: (v) => setState(() => hasLevel = v),
+                      ),
+                      SwitchListTile(
+                        title: const Text('Enable Topping'),
+                        value: hasTopping,
+                        onChanged: (v) => setState(() => hasTopping = v),
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     TextField(
                       controller: priceController,
@@ -867,6 +897,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         stock: stock,
                         imageUrl: imageUrl.isNotEmpty ? imageUrl : null,
                         isActive: true,
+                        hasSambal: hasSambal,
+                        hasLevel: hasLevel,
+                        hasTopping: hasTopping,
                       );
 
                       await ref.read(productRepositoryProvider).addProduct(newProduct);

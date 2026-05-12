@@ -29,6 +29,7 @@ abstract class OrderRepository {
   Future<QuerySnapshot> getOrdersPaginated({int limit = 10, QueryDocumentSnapshot? lastDocument});
   Future<void> deleteAllOrders();
   Future<List<OrderEntity>> getAllOrders();
+  Future<List<OrderEntity>> getAnalyticsOrders(DateTime start, DateTime end, {AppUser? currentUser});
 }
 
 class FirestoreOrderRepository implements OrderRepository {
@@ -334,5 +335,57 @@ class FirestoreOrderRepository implements OrderRepository {
         'id': doc.id,
       });
     }).toList();
+  }
+
+  @override
+  Future<List<OrderEntity>> getAnalyticsOrders(DateTime start, DateTime end, {AppUser? currentUser}) async {
+    final activeStoreIds = await _getActiveStoreIds();
+    final startDay = DateTime(start.year, start.month, start.day);
+    final endDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
+
+    final snapshot = await _firestore.collection('orders')
+        .where('createdAt', isGreaterThanOrEqualTo: startDay)
+        .where('createdAt', isLessThanOrEqualTo: endDay)
+        .get();
+
+    final result = <OrderEntity>[];
+
+    for (final doc in snapshot.docs) {
+      try {
+        final data = doc.data() as Map<String, dynamic>;
+        var order = OrderEntity.fromJsonRobust({
+          ...data,
+          'id': doc.id,
+        });
+
+        if (order.status != OrderStatus.selesai) continue;
+
+        if (currentUser != null && currentUser.role != UserRole.dev) {
+          final filteredItems = order.items.where((item) {
+            final itemStoreId = item.storeId ?? order.storeId;
+            return itemStoreId == currentUser.storeId &&
+                activeStoreIds.contains(itemStoreId);
+          }).toList();
+
+          if (filteredItems.isEmpty) continue;
+
+          final newTotal = filteredItems.fold<double>(
+            0,
+            (sum, item) => sum + (item.price * item.qty),
+          );
+
+          order = order.copyWith(
+            items: filteredItems,
+            total: newTotal,
+          );
+        }
+
+        result.add(order);
+      } catch (e) {
+        print("DEBUG: parse error analytics ${doc.id}: $e");
+      }
+    }
+
+    return result;
   }
 }

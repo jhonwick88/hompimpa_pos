@@ -62,7 +62,7 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
     });
 
     // Spicy Level Charge
-    if (isMie || widget.product.category.toLowerCase().contains('pangsit') || widget.product.name.toLowerCase().contains('pangsit')) {
+    if (widget.product.hasLevel) {
        if (_level >= 6) {
          unitPrice += sambalSettings.level6to7Price;
        } else if (_level >= 4) {
@@ -91,7 +91,6 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
         // Watch sambal settings to ensure rebuild when they change
         ref.watch(sambalSettingsProvider);
         final isMie = widget.product.category.toLowerCase().contains('mie') || widget.product.name.toLowerCase().contains('mie');
-        final isLevelable = isMie || widget.product.category.toLowerCase().contains('pangsit') || widget.product.name.toLowerCase().contains('pangsit');
         final screenWidth = MediaQuery.of(context).size.width;
         final isSmallScreen = screenWidth < 600;
 
@@ -129,7 +128,7 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
               ),
               const Divider(),
               
-              if (isLevelable) ...[
+              if (widget.product.hasSambal) ...[
                 // Sambal
                 const Text('Opsi Sambal', style: TextStyle(fontWeight: FontWeight.bold)),
                 Row(
@@ -149,7 +148,9 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
                   ],
                 ),
                 const Divider(),
-                
+              ],
+              
+              if (widget.product.hasLevel) ...[
                 // Level
                 Text('Level Pedas: ${_level.toInt()}', style: const TextStyle(fontWeight: FontWeight.bold)),
                 SliderTheme(
@@ -182,7 +183,7 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
                 ),
               ),
               const SizedBox(height: 16),
-              if (!isLevelable || isSmallScreen) _buildTotalSection(allToppings),
+              if (!(widget.product.hasTopping || isMie) || isSmallScreen) _buildTotalSection(allToppings),
             ],
           );
         }
@@ -211,8 +212,10 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
                   trailing: const Icon(Icons.check_circle, color: Colors.green),
                 ),
               ),
-              // Extra Toppings
-              ...activeToppings.map((topping) {
+              
+              if (widget.product.hasTopping)
+                // Extra Toppings
+                ...activeToppings.map((topping) {
                 final currentQty = _selectedToppings[topping.id] ?? 0;
                 return Container(
                   margin: const EdgeInsets.only(bottom: 8),
@@ -271,11 +274,11 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
           title: Text('Customization: ${widget.product.name}'),
           content: ConstrainedBox(
             constraints: BoxConstraints(
-              maxWidth: (isLevelable && !isSmallScreen) ? 800 : (isSmallScreen ? screenWidth : 450),
+              maxWidth: ((widget.product.hasTopping || isMie) && !isSmallScreen) ? 800 : (isSmallScreen ? screenWidth : 450),
               maxHeight: MediaQuery.of(context).size.height * 0.8,
             ),
             child: SingleChildScrollView(
-              child: isLevelable 
+              child: (widget.product.hasTopping || isMie) 
                 ? (isSmallScreen 
                     ? Column(
                         mainAxisSize: MainAxisSize.min,
@@ -365,8 +368,8 @@ class _ProductOptionDialogState extends ConsumerState<ProductOptionDialog> {
                   ref.read(cartProvider.notifier).addItem(
                     widget.product,
                     _qty,
-                    level: _level.toInt().toString(),
-                    sambal: _sambal,
+                    level: widget.product.hasLevel ? _level.toInt().toString() : null,
+                    sambal: widget.product.hasSambal ? _sambal : null,
                     note: _noteController.text.isNotEmpty ? _noteController.text : null,
                     toppings: finalToppings.isNotEmpty ? finalToppings : null,
                   );
