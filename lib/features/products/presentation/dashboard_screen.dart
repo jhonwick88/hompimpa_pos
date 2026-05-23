@@ -147,7 +147,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         color: omzetColor,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         child: InkWell(
-                          onTap: () => context.push('/omzet-detail'),
+                          onTap: authState.value?.role == UserRole.dev
+                              ? () => context.push('/omzet-detail')
+                              : null,
                           borderRadius: BorderRadius.circular(16),
                           child: Padding(
                             padding: const EdgeInsets.all(10.0),

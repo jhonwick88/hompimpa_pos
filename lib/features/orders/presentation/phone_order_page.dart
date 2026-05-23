@@ -487,38 +487,35 @@ class _MobileCartView extends ConsumerWidget {
                                 final repo = ref.read(orderRepositoryProvider);
                                 final orders = await repo.getOrdersByTimeRange(startOfDay, now);
                                 
-                                bool hasActiveOrder = orders.any((o) => 
-                                    o.customerPhone == standardizedPhone && 
-                                    o.status != OrderStatus.selesai &&
-                                    o.id != existingOrderId);
-                                    
-                                if (hasActiveOrder) {
-                                    shouldProceed = await showDialog<bool>(
-                                        context: context,
-                                        builder: (alertContext) => AlertDialog(
-                                            title: const Text('Peringatan: Nomor WA Aktif'),
-                                            content: const Text('Nomor WA ini sudah memiliki pesanan aktif (belum selesai) hari ini.\n\nApakah Anda yakin ingin menyimpan pesanan ini dengan nomor yang sama?'),
-                                            actions: [
-                                                TextButton(
-                                                    onPressed: () => Navigator.pop(alertContext, false),
-                                                    child: const Text('TIDAK, PERIKSA ORDER', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                                                ),
-                                                ElevatedButton(
-                                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.orange[800], foregroundColor: Colors.white),
-                                                    onPressed: () => Navigator.pop(alertContext, true),
-                                                    child: const Text('YA, LANJUTKAN'),
-                                                ),
-                                            ],
-                                        ),
-                                    ) ?? false;
-                                }
-                            }
-                            
-                            if (!shouldProceed) {
-                                Navigator.pop(context); // Close cart sheet
-                                context.go('/orders');
-                                return;
-                            }
+                                 bool hasOrderToday = orders.any((o) => 
+                                     o.customerPhone == standardizedPhone && 
+                                     o.id != existingOrderId);
+                                     
+                                 if (hasOrderToday) {
+                                     shouldProceed = await showDialog<bool>(
+                                         context: context,
+                                         builder: (alertContext) => AlertDialog(
+                                             title: const Text('Konfirmasi: Nomor Telp Sudah Ada'),
+                                             content: const Text('Nomor ini sudah memiliki pesanan hari ini.\n\nApakah Anda ingin menambah pesanan baru dengan nomor yang sama?'),
+                                             actions: [
+                                                 TextButton(
+                                                     onPressed: () => Navigator.pop(alertContext, false),
+                                                     child: const Text('BATAL', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                                                 ),
+                                                 ElevatedButton(
+                                                     style: ElevatedButton.styleFrom(backgroundColor: Colors.orange[800], foregroundColor: Colors.white),
+                                                     onPressed: () => Navigator.pop(alertContext, true),
+                                                     child: const Text('YA, LANJUTKAN'),
+                                                 ),
+                                             ],
+                                         ),
+                                     ) ?? false;
+                                 }
+                             }
+                             
+                             if (!shouldProceed) {
+                                 return;
+                             }
 
                             if (existingOrderId != null && existingOrder != null) {
                               try {
