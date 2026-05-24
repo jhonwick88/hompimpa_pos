@@ -21,6 +21,7 @@ import 'package:hompimpa_pos/features/products/domain/topping.dart';
 import 'package:hompimpa_pos/core/widgets/gradient_app_bar.dart';
 import 'package:hompimpa_pos/core/widgets/app_image.dart';
 import 'package:hompimpa_pos/core/extensions/string_extension.dart';
+import 'package:hompimpa_pos/features/settings/data/store_repository.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -136,116 +137,201 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Branch filter dropdown for Dev and Admin
+              if (authState.value != null && 
+                  (authState.value!.role == UserRole.dev || authState.value!.role == UserRole.admin)) ...[
+                ref.watch(activeStoresProvider).when(
+                  data: (stores) {
+                    final currentFilter = ref.watch(selectedStoreFilterProvider);
+                    return Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String?>(
+                            value: currentFilter,
+                            hint: const Text('Semua Cabang (Global)', style: TextStyle(fontWeight: FontWeight.bold)),
+                            isExpanded: true,
+                            items: [
+                              const DropdownMenuItem<String?>(
+                                value: null,
+                                child: Text('Semua Cabang (Global)', style: TextStyle(fontWeight: FontWeight.bold)),
+                              ),
+                              ...stores.map((s) => DropdownMenuItem<String?>(
+                                value: s.id,
+                                child: Text(s.name),
+                              )),
+                            ],
+                            onChanged: (val) {
+                              ref.read(selectedStoreFilterProvider.notifier).state = val;
+                            },
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  loading: () => const LinearProgressIndicator(),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
+                const SizedBox(height: 12),
+              ],
               // Summary Cards
               
                 Row(
                   children: [
                     Expanded(
                       child: Card(
-                        elevation: 8,
-                        shadowColor: omzetColor.withOpacity(0.5),
-                        color: omzetColor,
+                        elevation: 6,
+                        shadowColor: Colors.indigo.withOpacity(0.3),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        child: InkWell(
-                          onTap: authState.value?.role == UserRole.dev
-                              ? () => context.push('/omzet-detail')
-                              : null,
-                          borderRadius: BorderRadius.circular(16),
-                          child: Padding(
-                            padding: const EdgeInsets.all(10.0),
-                          child: Column(
-                            children: [
-                              Text('Omzet', style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.bold)),
-                              const SizedBox(height: 4),
-                                sales == 0 
-                                  ? const Skeleton(width: 100, height: 24)
-                                  : Text(
-                                      NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(sales),
-                                      style: const TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
-                                    ),
-                            ],
+                        clipBehavior: Clip.antiAlias,
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0xFF3F51B5), Color(0xFF5C6BC0)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
                           ),
-                        ),
-                       ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Card(
-                        elevation: 8,
-                        shadowColor: orderColor.withOpacity(0.5),
-                        color: orderColor,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        child: InkWell(
-                          onTap: () => context.push('/orders'),
-                          borderRadius: BorderRadius.circular(16),
-                          child: Padding(
-                            padding: const EdgeInsets.all(10.0),
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text('Order', style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.bold)),
-                                    Icon(Icons.chevron_right, size: 16, color: Colors.white.withOpacity(0.9)),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                ordersAsync.when(
-                                  data: (data) => Text(
-                                    '${data.length}',
-                                    style: const TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold),
+                          child: InkWell(
+                            onTap: authState.value?.role == UserRole.dev
+                                ? () => context.push('/omzet-detail')
+                                : null,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 14.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Omzet',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.white.withOpacity(0.9),
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      Icon(
+                                        Icons.monetization_on_outlined,
+                                        size: 20,
+                                        color: Colors.white.withOpacity(0.8),
+                                      ),
+                                    ],
                                   ),
-                                  loading: () => const Skeleton(width: 40, height: 28),
-                                  error: (_, __) => const Text('Error', style: TextStyle(color: Colors.white)),
-                                ),
-                              ],
+                                  const SizedBox(height: 12),
+                                  sales == 0 
+                                    ? const Skeleton(width: 100, height: 24)
+                                    : Text(
+                                        NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(sales),
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                    // Expanded(
-                    //   child: _buildActionButton(
-                    //     context: context,
-                    //     onTap: () => context.push('/void-orders'),
-                    //     label: 'VOID',
-                    //     color: Colors.red[700]!,
-                    //     ordersAsync: ordersAsync,
-                    //     isVoid: true,
-                    //   ),
-                    // ),
-                  ],
-                ),
-                if (authState.value?.role == UserRole.dev) ...[
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    // Product Button
-                    Expanded(
-                      child: _buildActionButton(
-                        context: context,
-                        onTap: () => _showAddProductDialog(context, ref),
-                        icon: Icons.add_box,
-                        label: 'PRODUK',
-                        color: Colors.green[700]!,
-                      ),
-                    ),
                     const SizedBox(width: 8),
-                    // Topping Button
                     Expanded(
-                      child: _buildActionButton(
-                        context: context,
-                        onTap: () => _showAddToppingDialog(context, ref),
-                        icon: Icons.add_circle_outline,
-                        label: 'TOPPING',
-                        color: Colors.orange[700]!,
+                      child: Card(
+                        elevation: 6,
+                        shadowColor: Colors.teal.withOpacity(0.3),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        clipBehavior: Clip.antiAlias,
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0xFF00796B), Color(0xFF009688)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                          child: InkWell(
+                            onTap: () => context.push('/orders'),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 14.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Order',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.white.withOpacity(0.9),
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      Icon(
+                                        Icons.receipt_long_outlined,
+                                        size: 20,
+                                        color: Colors.white.withOpacity(0.8),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  ordersAsync.when(
+                                    data: (data) => Text(
+                                      '${data.length}',
+                                      style: const TextStyle(
+                                        fontSize: 22,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    loading: () => const Skeleton(width: 40, height: 24),
+                                    error: (_, __) => const Text('Error', style: TextStyle(color: Colors.white)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
-              ],
+                const SizedBox(height: 16),
+                if (authState.value?.role == UserRole.dev) ...[
+                  Row(
+                    children: [
+                      // Product Button
+                      Expanded(
+                        child: _buildActionButton(
+                          context: context,
+                          onTap: () => _showAddProductDialog(context, ref),
+                          icon: Icons.add_box,
+                          label: 'PRODUK',
+                          color: Colors.green[700]!,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Topping Button
+                      Expanded(
+                        child: _buildActionButton(
+                          context: context,
+                          onTap: () => _showAddToppingDialog(context, ref),
+                          icon: Icons.add_circle_outline,
+                          label: 'TOPPING',
+                          color: Colors.orange[700]!,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
               Text(
                 'Stok Produk',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
