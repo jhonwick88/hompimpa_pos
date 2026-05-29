@@ -20,6 +20,7 @@ import 'package:hompimpa_pos/features/auth/presentation/user_master_screen.dart'
 import 'package:hompimpa_pos/features/auth/presentation/profile_screen.dart';
 import 'package:hompimpa_pos/features/settings/presentation/settings_screen.dart';
 import 'package:hompimpa_pos/features/settings/presentation/store_management_screen.dart';
+import 'package:hompimpa_pos/features/settings/presentation/developer_contact_screen.dart';
 import 'package:hompimpa_pos/core/widgets/animated_splash_screen.dart';
 import 'package:hompimpa_pos/features/public_menu/presentation/public_menu_screen.dart';
 import 'package:hompimpa_pos/features/public_menu/presentation/public_cart_screen.dart';
@@ -137,6 +138,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/developer-contact',
+        builder: (context, state) => const DeveloperContactScreen(),
       ),
       GoRoute(
         path: '/maintenance/orders',

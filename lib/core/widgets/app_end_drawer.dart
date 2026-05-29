@@ -298,6 +298,15 @@ class AppEndDrawer extends ConsumerWidget {
                     ),
 
                     _DrawerButton(
+                      icon: Icons.support_agent_rounded,
+                      label: 'Hubungi Developer',
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.push('/developer-contact');
+                      },
+                    ),
+
+                    _DrawerButton(
                       icon: Icons.logout,
                       label: 'Logout',
                       color: const Color(0xFFB71C1C),
