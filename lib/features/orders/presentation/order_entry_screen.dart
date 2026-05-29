@@ -182,7 +182,7 @@ class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
     final isTablet = Responsive.isTablet(context);
 
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: Text(widget.isQuickOrder ? 'Quick Order' : 'New Order'),
@@ -214,6 +214,12 @@ class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
                 count: 0,
                 color: Colors.green,
               ),
+              GradientStatusTabItem(
+                title: 'Snack',
+                icon: Icons.cookie_outlined,
+                count: 0,
+                color: Colors.purple,
+              ),
             ],
           ),
         ),
@@ -226,6 +232,7 @@ class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
                   _ProductGrid(products: activeProducts),
                   _ProductGrid(products: activeProducts.where((p) => p.category == 'makanan').toList()),
                   _ProductGrid(products: activeProducts.where((p) => p.category == 'minuman').toList()),
+                  _ProductGrid(products: activeProducts.where((p) => p.category == 'snack').toList()),
                 ],
               );
             },
@@ -244,6 +251,7 @@ class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
                         _ProductGrid(products: activeProducts),
                         _ProductGrid(products: activeProducts.where((p) => p.category == 'makanan').toList()),
                         _ProductGrid(products: activeProducts.where((p) => p.category == 'minuman').toList()),
+                        _ProductGrid(products: activeProducts.where((p) => p.category == 'snack').toList()),
                       ],
                     );
                   },

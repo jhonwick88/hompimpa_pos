@@ -73,7 +73,7 @@ class _TabletOrderPageState extends ConsumerState<TabletOrderPage> {
     final productsAsync = ref.watch(productListProvider);
 
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: GradientAppBar(
           title: Text(widget.isQuickOrder ? 'Quick Order' : 'New Order'),
@@ -82,6 +82,7 @@ class _TabletOrderPageState extends ConsumerState<TabletOrderPage> {
               GradientStatusTabItem(title: 'Semua', icon: Icons.all_inclusive, count: 0, color: Colors.blue),
               GradientStatusTabItem(title: 'Makanan', icon: Icons.fastfood, count: 0, color: Colors.orange),
               GradientStatusTabItem(title: 'Minuman', icon: Icons.local_drink, count: 0, color: Colors.green),
+              GradientStatusTabItem(title: 'Snack', icon: Icons.cookie_outlined, count: 0, color: Colors.purple),
             ],
           ),
         ),
@@ -101,6 +102,7 @@ class _TabletOrderPageState extends ConsumerState<TabletOrderPage> {
                             _ProductGrid(products: activeProducts),
                             _ProductGrid(products: activeProducts.where((p) => p.category == 'makanan').toList()),
                             _ProductGrid(products: activeProducts.where((p) => p.category == 'minuman').toList()),
+                            _ProductGrid(products: activeProducts.where((p) => p.category == 'snack').toList()),
                           ],
                         );
                       },

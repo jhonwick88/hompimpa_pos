@@ -10,6 +10,10 @@ final activeStoresProvider = StreamProvider.autoDispose<List<Store>>((ref) {
   return ref.watch(storeRepositoryProvider).watchActiveStores();
 });
 
+final storesProvider = StreamProvider.autoDispose<List<Store>>((ref) {
+  return ref.watch(storeRepositoryProvider).watchAllStores();
+});
+
 class StoreRepository {
   final FirebaseFirestore _firestore;
   static const String _collection = 'stores';
@@ -20,6 +24,14 @@ class StoreRepository {
     return _firestore.collection(_collection)
         .where('isActive', isEqualTo: true)
         .limit(50)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) => Store.fromJson({...doc.data(), 'id': doc.id})).toList();
+    });
+  }
+
+  Stream<List<Store>> watchAllStores() {
+    return _firestore.collection(_collection)
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) => Store.fromJson({...doc.data(), 'id': doc.id})).toList();
