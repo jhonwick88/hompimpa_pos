@@ -8,6 +8,8 @@ class GradientAppBar extends StatelessWidget
   final List<Widget>? actions;
   final bool centerTitle;
   final PreferredSizeWidget? bottom;
+  final Widget? leading;
+  final bool automaticallyImplyLeading;
 
   const GradientAppBar({
     super.key,
@@ -15,6 +17,8 @@ class GradientAppBar extends StatelessWidget
     this.actions,
     this.centerTitle = false,
     this.bottom,
+    this.leading,
+    this.automaticallyImplyLeading = true,
   });
 
   @override
@@ -29,6 +33,8 @@ class GradientAppBar extends StatelessWidget
       actions: actions,
       centerTitle: centerTitle,
       bottom: bottom,
+      leading: leading,
+      automaticallyImplyLeading: automaticallyImplyLeading,
       elevation: 0,
       backgroundColor: Colors.transparent,
       flexibleSpace: Container(
