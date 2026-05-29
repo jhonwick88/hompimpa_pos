@@ -126,6 +126,7 @@ class _OrderCardModernState extends State<OrderCardModern> {
                                     ).format(order.total),
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
+                                      fontSize: 14
                                     ),
                                   ),
                                   TextSpan(
