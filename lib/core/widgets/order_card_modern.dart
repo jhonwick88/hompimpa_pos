@@ -92,17 +92,8 @@ class _OrderCardModernState extends State<OrderCardModern> {
                         ),
                         Row(
                           children:[
-                        if (order.executorName != null)
-                          Text(
-                            'Koki: ${order.executorName?.split(' ').first ?? ''}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade600,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
                           if(order.customerPhone != null && order.customerPhone!.isNotEmpty)...[
-                          const SizedBox(width: 8),
+                          
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
@@ -140,6 +131,15 @@ class _OrderCardModernState extends State<OrderCardModern> {
                                   TextSpan(
                                     text: ' • ${order.orderTime} • ',
                                   ),
+                                  if (order.executorName != null)
+                                      TextSpan(
+                                      text:'${order.executorName?.split(' ').first ?? ''}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
                                 ],
                               ),
                               style: TextStyle(
@@ -147,6 +147,7 @@ class _OrderCardModernState extends State<OrderCardModern> {
                                 color: Colors.grey.shade700,
                               ),
                             ),
+                            const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(

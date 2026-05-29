@@ -51,29 +51,10 @@ class OrderListScreen extends ConsumerStatefulWidget {
 }
 
 class _OrderListScreenState extends ConsumerState<OrderListScreen> {
-  DateTime? currentBackPressTime;
 
   Future<bool> _onWillPop() async {
-    final user = ref.read(authStateChangesProvider).value;
-
-    if (user != null && (user.role == UserRole.admin || user.role == UserRole.dev)) {
-      context.go('/');
-      return Future.value(false);
-    }
-
-    DateTime now = DateTime.now();
-    if (currentBackPressTime == null || 
-        now.difference(currentBackPressTime!) > const Duration(seconds: 2)) {
-      currentBackPressTime = now;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Tekan sekali lagi untuk keluar'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-      return Future.value(false);
-    }
-    return Future.value(true);
+    context.go('/');
+    return Future.value(false);
   }
 
   @override
@@ -99,6 +80,10 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
         child: Scaffold(
          // endDrawer: const AppEndDrawer(),
           appBar: GradientAppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => context.go('/'),
+            ),
             title: isSearchMode 
               ? TextField(
                   autofocus: true,
