@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:hompimpa_pos/features/orders/domain/order.dart';
 
 class OrderCardModern extends StatefulWidget {
@@ -85,7 +86,22 @@ class _OrderCardModernState extends State<OrderCardModern> {
                           style: const TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 16),
                         ),
-                        if(order.customerPhone != null && order.customerPhone!.isNotEmpty)...[
+                       
+                        
+                          ],
+                        ),
+                        Row(
+                          children:[
+                        if (order.executorName != null)
+                          Text(
+                            'Koki: ${order.executorName?.split(' ').first ?? ''}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          if(order.customerPhone != null && order.customerPhone!.isNotEmpty)...[
                           const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -103,24 +119,29 @@ class _OrderCardModernState extends State<OrderCardModern> {
                           ),
                         ),
                         ]
-                        
                           ],
                         ),
-                        
-                        if (order.executorName != null)
-                          Text(
-                            'Eksekutor: ${order.executorName}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade600,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            Text(
-                              'Rp ${order.total.toStringAsFixed(0)} • ${order.orderTime} • ',
+                            Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: NumberFormat.currency(
+                                      locale: 'id_ID',
+                                      symbol: 'Rp ',
+                                      decimalDigits: 0,
+                                    ).format(order.total),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: ' • ${order.orderTime} • ',
+                                  ),
+                                ],
+                              ),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey.shade700,
