@@ -17,6 +17,7 @@ import 'package:hompimpa_pos/features/auth/data/auth_repository.dart';
 import 'package:hompimpa_pos/features/products/presentation/product_master_screen.dart';
 import 'package:hompimpa_pos/features/products/presentation/topping_master_screen.dart';
 import 'package:hompimpa_pos/features/auth/presentation/user_master_screen.dart';
+import 'package:hompimpa_pos/features/auth/presentation/profile_screen.dart';
 import 'package:hompimpa_pos/features/settings/presentation/settings_screen.dart';
 import 'package:hompimpa_pos/features/settings/presentation/store_management_screen.dart';
 import 'package:hompimpa_pos/core/widgets/animated_splash_screen.dart';
@@ -132,6 +133,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
         path: '/maintenance/orders',

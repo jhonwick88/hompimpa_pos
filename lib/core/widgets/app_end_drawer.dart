@@ -293,10 +293,7 @@ class AppEndDrawer extends ConsumerWidget {
                       label: 'Profil',
                       onTap: () {
                         Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Profile feature coming soon')),
-                        );
+                        context.push('/profile');
                       },
                     ),
 
