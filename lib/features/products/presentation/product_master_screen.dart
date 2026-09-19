@@ -165,7 +165,7 @@ class ProductMasterScreen extends ConsumerWidget {
     final nameController = TextEditingController(text: product?.name ?? '');
     final priceController = TextEditingController(text: product?.price.toString() ?? '');
     final stockController = TextEditingController(text: product?.stock.toString() ?? '');
-    final imageUrlController = TextEditingController(text: product?.imageUrl ?? 'assets/images/logo.png');
+    final imageUrlController = TextEditingController(text: product?.imageUrl ?? '');
     String category = product?.category ?? 'makanan';
     bool hasSambal = product?.hasSambal ?? false;
     bool hasLevel = product?.hasLevel ?? false;

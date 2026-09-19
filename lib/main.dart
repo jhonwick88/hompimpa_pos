@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'firebase_options.dart';
 import 'core/router.dart';
 import 'core/widgets/animated_splash_screen.dart';
@@ -14,9 +15,10 @@ void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   print('APP_START: WidgetsBinding initialized');
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-  
+
   try {
-     // Web Safety: initialization using explicit options for Web
+    await initializeDateFormatting('id_ID', null);
+    // Web Safety: initialization using explicit options for Web
      await Firebase.initializeApp(
        options: kIsWeb 
          ? DefaultFirebaseOptions.web 

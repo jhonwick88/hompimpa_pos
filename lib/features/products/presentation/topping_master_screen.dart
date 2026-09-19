@@ -67,7 +67,7 @@ class ToppingMasterScreen extends ConsumerWidget {
     final nameController = TextEditingController(text: topping?.name ?? '');
     final priceController = TextEditingController(text: topping?.price.toString() ?? '');
     final stockController = TextEditingController(text: topping?.stock.toString() ?? '');
-    final imageUrlController = TextEditingController(text: topping?.imageUrl ?? 'assets/images/logo.png');
+    final imageUrlController = TextEditingController(text: topping?.imageUrl ?? '');
 
     showDialog(
       context: context,
