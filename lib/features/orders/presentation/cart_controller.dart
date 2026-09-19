@@ -134,10 +134,14 @@ class CartController extends Notifier<CartState> {
     bool isDineIn = false,
     String tableNumber = '0',
     String paymentMethod = 'Cash',
+    double deliveryFee = 0.0,
+    String? deliveryAddress,
   }) async {
     if (state.items.isEmpty) return;
     
-    final total = state.items.fold<double>(0.0, (sum, item) => sum + (item.price * item.qty));
+    final itemsTotal = state.items.fold<double>(0.0, (sum, item) => sum + (item.price * item.qty));
+    final finalDeliveryFee = orderSource == 'DO' ? deliveryFee : 0.0;
+    final total = itemsTotal + finalDeliveryFee;
     final now = DateTime.now();
 
     String finalCustomerName = customerName;
@@ -165,6 +169,8 @@ class CartController extends Notifier<CartState> {
       isDineIn: isDineIn,
       tableNumber: tableNumber,
       paymentMethod: paymentMethod,
+      deliveryFee: finalDeliveryFee,
+      deliveryAddress: orderSource == 'DO' ? deliveryAddress : null,
       storeId: user?.storeId,
     );
 
@@ -198,10 +204,15 @@ class CartController extends Notifier<CartState> {
     bool? isDineIn,
     String? tableNumber,
     String? paymentMethod,
+    double? deliveryFee,
+    String? deliveryAddress,
   }) async {
     if (state.items.isEmpty) return;
 
-    final total = state.items.fold<double>(0.0, (sum, item) => sum + (item.price * item.qty));
+    final finalOrderSource = orderSource ?? existingOrder.orderSource;
+    final itemsTotal = state.items.fold<double>(0.0, (sum, item) => sum + (item.price * item.qty));
+    final finalDeliveryFee = finalOrderSource == 'DO' ? (deliveryFee ?? existingOrder.deliveryFee) : 0.0;
+    final total = itemsTotal + finalDeliveryFee;
     final now = DateTime.now();
 
     final updatedOrder = existingOrder.copyWith(
@@ -212,10 +223,12 @@ class CartController extends Notifier<CartState> {
       orderTime: pickupTime,
       items: state.items,
       updatedAt: now,
-      orderSource: orderSource ?? existingOrder.orderSource,
+      orderSource: finalOrderSource,
       isDineIn: isDineIn ?? existingOrder.isDineIn,
       tableNumber: tableNumber ?? existingOrder.tableNumber,
       paymentMethod: paymentMethod ?? existingOrder.paymentMethod,
+      deliveryFee: finalDeliveryFee,
+      deliveryAddress: finalOrderSource == 'DO' ? (deliveryAddress ?? existingOrder.deliveryAddress) : null,
     );
 
     await repository.updateOrder(updatedOrder);

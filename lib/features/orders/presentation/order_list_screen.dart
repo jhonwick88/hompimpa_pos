@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hompimpa_pos/features/auth/presentation/auth_controller.dart';
 import 'package:hompimpa_pos/features/auth/data/auth_repository.dart';
 import 'package:hompimpa_pos/features/orders/data/order_repository.dart';
 import 'package:hompimpa_pos/features/orders/domain/order.dart';
@@ -51,12 +50,6 @@ class OrderListScreen extends ConsumerStatefulWidget {
 }
 
 class _OrderListScreenState extends ConsumerState<OrderListScreen> {
-
-  Future<bool> _onWillPop() async {
-    context.go('/');
-    return Future.value(false);
-  }
-
   @override
   Widget build(BuildContext context) {
     final isSearchMode = ref.watch(isSearchModeProvider);
@@ -73,8 +66,12 @@ class _OrderListScreenState extends ConsumerState<OrderListScreen> {
       error: (_, __) => {OrderStatus.belum: 0, OrderStatus.proses: 0, OrderStatus.selesai: 0},
     );
 
-    return WillPopScope(
-      onWillPop: _onWillPop,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        context.go('/');
+      },
       child: DefaultTabController(
         length: 3,
         child: Scaffold(
@@ -245,14 +242,29 @@ class _OrderListTab extends ConsumerWidget {
       return itemText;
     }).join("\n");
     
+    final isDO = order.orderSource == 'DO' || order.deliveryFee > 0 || (order.deliveryAddress != null && order.deliveryAddress!.isNotEmpty);
+    String deliveryDetails = '';
+    if (isDO) {
+      deliveryDetails = "- Jenis Pesanan: Delivery (DO)\n";
+      if (order.deliveryAddress != null && order.deliveryAddress!.isNotEmpty) {
+        deliveryDetails += "- Alamat Kirim: ${order.deliveryAddress}\n";
+      }
+      if (order.deliveryFee > 0) {
+        deliveryDetails += "- Ongkir: Rp. ${currencyFormat.format(order.deliveryFee)}\n";
+      }
+    }
+
+    final readyStatusText = isDO ? "*Pesanan Siap Dikirim / Sedang Dalam Pengiriman*." : "*Sudah Bisa diambil*.";
+
     final message = "*Hi, Hompier !*\n"
         "Terima kasih telah memesan *Hompimpa Mie & Pangsit*.\n\n"
         "*Detail Waktu Pesanan :*\n"
         "- Tanggal: $dateStr\n"
-        "- Jam: ${order.orderTime} WIB\n\n"
+        "- Jam: ${order.orderTime} WIB\n"
+        "${deliveryDetails.isNotEmpty ? '$deliveryDetails\n' : '\n'}"
         "*Item Pesanan :*\n$itemsSummary\n\n"
         "*Total Pembayaran: Rp. ${currencyFormat.format(order.total)}*\n\n"
-        "*Sudah Bisa diambil*.\n\n"
+        "$readyStatusText\n\n"
         "Silakan konfirmasi jika ada yang perlu dikoreksi. Terima Kasih 🙏 Dan sehat selalu 😊";
 
     final encodedMessage = Uri.encodeComponent(message);

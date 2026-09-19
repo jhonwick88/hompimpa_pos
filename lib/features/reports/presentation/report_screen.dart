@@ -345,24 +345,29 @@ class _ProductBarChart extends StatelessWidget {
       ..sort((a, b) => b.totalQty.compareTo(a.totalQty));
     final displaySales = sortedSales.length > 10 ? sortedSales.sublist(0, 10) : sortedSales;
 
+    final maxQty = displaySales.fold<double>(0, (max, item) => item.totalQty > max ? item.totalQty.toDouble() : max);
+
     return BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
-        maxY: displaySales.fold<double>(0, (max, item) => item.totalQty > max ? item.totalQty.toDouble() : max) + 2,
+        maxY: maxQty > 0 ? (maxQty * 1.3) : 10,
         barTouchData: BarTouchData(
           enabled: true,
           touchTooltipData: BarTouchTooltipData(
-            tooltipBgColor: Colors.blueGrey,
+            tooltipBgColor: Colors.blueGrey.shade800,
+            tooltipRoundedRadius: 6,
+            tooltipPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            tooltipMargin: 4,
+            fitInsideHorizontally: true,
+            fitInsideVertically: true,
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               return BarTooltipItem(
-                '${displaySales[group.x.toInt()].productName}\n',
-                const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                children: [
-                  TextSpan(
-                    text: '${rod.toY.toInt()} terjual',
-                    style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.w500),
-                  ),
-                ],
+                '${rod.toY.toInt()}',
+                const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                ),
               );
             },
           ),
@@ -407,6 +412,7 @@ class _ProductBarChart extends StatelessWidget {
         barGroups: displaySales.asMap().entries.map((entry) {
           return BarChartGroupData(
             x: entry.key,
+            showingTooltipIndicators: [0],
             barRods: [
               BarChartRodData(
                 toY: entry.value.totalQty.toDouble(),

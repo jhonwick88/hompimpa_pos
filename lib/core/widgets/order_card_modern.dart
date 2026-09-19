@@ -81,13 +81,29 @@ class _OrderCardModernState extends State<OrderCardModern> {
                       children: [
                         Row(
                           children: [
-                              Text(
-                          order.customerName,
-                          style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                       
-                        
+                            Text(
+                              order.customerName,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                            if (order.orderSource == 'DO') ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.shade800,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Text(
+                                  'DO',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                         Row(
@@ -289,16 +305,51 @@ class _OrderCardModernState extends State<OrderCardModern> {
           ),
         ),
 
+        if (order.deliveryFee > 0 || (order.deliveryAddress != null && order.deliveryAddress!.isNotEmpty)) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Colors.orange.shade50.withOpacity(0.6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (order.deliveryFee > 0)
+                  Text(
+                    'Biaya Ongkir (DO): Rp ${NumberFormat.currency(locale: 'id_ID', symbol: '', decimalDigits: 0).format(order.deliveryFee)}',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.orange[900]),
+                  ),
+                if (order.deliveryAddress != null && order.deliveryAddress!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.location_on, size: 14, color: Colors.orange[800]),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            'Alamat: ${order.deliveryAddress}',
+                            style: TextStyle(fontSize: 12, color: Colors.grey[800]),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+
         const Divider(height: 1),
 
         // Action Section (tombol aksi saja)
-Padding(
-  padding: const EdgeInsets.all(12),
-  child: Align(
-    alignment: Alignment.centerLeft,
-    child: widget.actionSection,
-  ),
-),
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: widget.actionSection,
+          ),
+        ),
 
       ],
     );

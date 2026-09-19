@@ -171,6 +171,11 @@ class _NotaPreviewDialogState extends ConsumerState<NotaPreviewDialog> {
                         _buildInfoRow('Tgl:', dateFormat.format(order.orderDate.toLocal())),
                         _buildInfoRow('Kasir:', order.executorName ?? "-"),
                         _buildInfoRow('Bayar:', order.paymentMethod),
+                        if (order.orderSource == 'DO' || (order.deliveryAddress != null && order.deliveryAddress!.isNotEmpty)) ...[
+                          _buildInfoRow('Jenis:', 'DO (Drop Order)'),
+                          if (order.deliveryAddress != null && order.deliveryAddress!.isNotEmpty)
+                            _buildInfoRow('Alamat:', order.deliveryAddress!),
+                        ],
                         const Divider(thickness: 1, color: Colors.black),
 
                         // Items
@@ -207,6 +212,24 @@ class _NotaPreviewDialogState extends ConsumerState<NotaPreviewDialog> {
                         const Divider(thickness: 1, color: Colors.black),
 
                         // Summary
+                        if (order.deliveryFee > 0) ...[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('Subtotal', style: TextStyle(fontSize: 12)),
+                              Text('Rp ${currencyFormat.format(order.total - order.deliveryFee)}', style: const TextStyle(fontSize: 12)),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('Ongkir (DO)', style: TextStyle(fontSize: 12)),
+                              Text('Rp ${currencyFormat.format(order.deliveryFee)}', style: const TextStyle(fontSize: 12)),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                        ],
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [

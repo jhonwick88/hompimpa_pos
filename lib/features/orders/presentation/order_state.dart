@@ -10,6 +10,8 @@ class OrderMetadata {
   final String selectedVia;
   final bool isDineIn;
   final String selectedPayment;
+  final double deliveryFee;
+  final String deliveryAddress;
   final bool cartExpanded;
   final bool isInitialized;
 
@@ -22,6 +24,8 @@ class OrderMetadata {
     this.selectedVia = 'Offline',
     this.isDineIn = false,
     this.selectedPayment = 'Cash',
+    this.deliveryFee = 0.0,
+    this.deliveryAddress = '',
     this.cartExpanded = false,
     this.isInitialized = false,
   })  : selectedDate = selectedDate ?? DateTime.now(),
@@ -36,6 +40,8 @@ class OrderMetadata {
     String? selectedVia,
     bool? isDineIn,
     String? selectedPayment,
+    double? deliveryFee,
+    String? deliveryAddress,
     bool? cartExpanded,
     bool? isInitialized,
   }) {
@@ -48,6 +54,8 @@ class OrderMetadata {
       selectedVia: selectedVia ?? this.selectedVia,
       isDineIn: isDineIn ?? this.isDineIn,
       selectedPayment: selectedPayment ?? this.selectedPayment,
+      deliveryFee: deliveryFee ?? this.deliveryFee,
+      deliveryAddress: deliveryAddress ?? this.deliveryAddress,
       cartExpanded: cartExpanded ?? this.cartExpanded,
       isInitialized: isInitialized ?? this.isInitialized,
     );
@@ -57,26 +65,36 @@ class OrderMetadata {
 class OrderMetadataNotifier extends StateNotifier<OrderMetadata> {
   OrderMetadataNotifier() : super(OrderMetadata());
 
- 
   void updateCustomerPhone(String phone) => state = state.copyWith(customerPhone: phone);
   void updateTableNumber(String table) => state = state.copyWith(tableNumber: table);
   void updateSelectedDate(DateTime date) => state = state.copyWith(selectedDate: date);
   void updateSelectedTime(TimeOfDay time) => state = state.copyWith(selectedTime: time);
+  void updateDeliveryFee(double fee) => state = state.copyWith(deliveryFee: fee);
+  void updateDeliveryAddress(String address) => state = state.copyWith(deliveryAddress: address);
+
   void updateSelectedVia(String via) {
     String name = state.customerName;
     // Remove existing prefixes if any
-    String baseName = name.replaceAll(RegExp(r'^(Offline - |Grab - )'), '');
+    String baseName = name.replaceAll(RegExp(r'^(Offline - |Grab - |DO - )'), '');
     
     String newName = name;
     if (via == 'Offline') {
       newName = 'Offline - $baseName';
     } else if (via == 'GrabFood') {
       newName = 'Grab - $baseName';
+    } else if (via == 'DO') {
+      newName = 'DO - $baseName';
     } else {
       newName = baseName;
     }
     
-    state = state.copyWith(selectedVia: via, customerName: newName);
+    state = state.copyWith(
+      selectedVia: via,
+      customerName: newName,
+      // If not DO, delivery fee is 0
+      deliveryFee: via == 'DO' ? state.deliveryFee : 0.0,
+      isDineIn: via == 'DO' ? false : state.isDineIn,
+    );
   }
   void updateCustomerName(String name) => state = state.copyWith(customerName: name);
   void updateIsDineIn(bool isDineIn) => state = state.copyWith(isDineIn: isDineIn);
@@ -92,6 +110,8 @@ class OrderMetadataNotifier extends StateNotifier<OrderMetadata> {
     required bool isDineIn,
     required String tableNumber,
     required String selectedPayment,
+    double deliveryFee = 0.0,
+    String deliveryAddress = '',
   }) {
     state = OrderMetadata(
       customerName: customerName,
@@ -102,6 +122,8 @@ class OrderMetadataNotifier extends StateNotifier<OrderMetadata> {
       isDineIn: isDineIn,
       tableNumber: tableNumber,
       selectedPayment: selectedPayment,
+      deliveryFee: deliveryFee,
+      deliveryAddress: deliveryAddress,
       isInitialized: true,
     );
   }

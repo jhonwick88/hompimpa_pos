@@ -96,10 +96,11 @@ class FirestoreOrderRepository implements OrderRepository {
 
             if (filteredItems.isEmpty) continue;
 
-            final newTotal = filteredItems.fold<double>(
+            final itemsTotal = filteredItems.fold<double>(
               0,
-              (sum, item) => sum + (item.price * item.qty),
+              (totalSum, item) => totalSum + (item.price * item.qty),
             );
+            final newTotal = itemsTotal + order.deliveryFee;
 
             order = order.copyWith(
               items: filteredItems,
@@ -214,7 +215,10 @@ class FirestoreOrderRepository implements OrderRepository {
   @override
   Future<void> updateOrderItems(String orderId, List<OrderItem> items) async {
     final orderRef = _firestore.collection('orders').doc(orderId);
-    final total = items.fold<double>(0.0, (sum, item) => sum + (item.price * item.qty));
+    final doc = await orderRef.get();
+    final deliveryFee = (doc.data()?['deliveryFee'] as num?)?.toDouble() ?? 0.0;
+    final itemsTotal = items.fold<double>(0.0, (sum, item) => sum + (item.price * item.qty));
+    final total = itemsTotal + deliveryFee;
     
     await orderRef.update({
       'items': items.map((i) => i.toJson()).toList(),

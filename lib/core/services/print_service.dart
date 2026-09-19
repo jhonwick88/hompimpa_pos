@@ -78,6 +78,11 @@ class WebPrintService implements PrintService {
         pw.Text('Tgl: ${dateFormat.format(order.orderDate.toLocal())}', style: const pw.TextStyle(fontSize: 10)),
         pw.Text('Kasir: ${order.executorName ?? "-"}', style: const pw.TextStyle(fontSize: 10)),
         pw.Text('Bayar: ${order.paymentMethod}', style: const pw.TextStyle(fontSize: 10)),
+        if (order.orderSource == 'DO' || (order.deliveryAddress != null && order.deliveryAddress!.isNotEmpty)) ...[
+          pw.Text('Jenis: DO (Drop Order)', style: const pw.TextStyle(fontSize: 10)),
+          if (order.deliveryAddress != null && order.deliveryAddress!.isNotEmpty)
+            pw.Text('Alamat: ${order.deliveryAddress}', style: const pw.TextStyle(fontSize: 10)),
+        ],
         pw.Divider(thickness: 1.0),
 
         // Items
@@ -112,6 +117,23 @@ class WebPrintService implements PrintService {
         pw.Divider(thickness: 1.0),
 
         // Summary
+        if (order.deliveryFee > 0) ...[
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Text('Subtotal', style: const pw.TextStyle(fontSize: 10)),
+              pw.Text('Rp ${currencyFormat.format(order.total - order.deliveryFee)}', style: const pw.TextStyle(fontSize: 10)),
+            ],
+          ),
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Text('Ongkir (DO)', style: const pw.TextStyle(fontSize: 10)),
+              pw.Text('Rp ${currencyFormat.format(order.deliveryFee)}', style: const pw.TextStyle(fontSize: 10)),
+            ],
+          ),
+          pw.SizedBox(height: 2),
+        ],
         pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
@@ -236,6 +258,12 @@ class AndroidPrintService implements PrintService {
     bluetooth.printCustom(formatLeftRight("Tgl:", dateFormat.format(order.orderDate.toLocal())), 0, 0);
     bluetooth.printCustom(formatLeftRight("Kasir:", order.executorName ?? "-"), 0, 0);
     bluetooth.printCustom(formatLeftRight("Bayar:", order.paymentMethod), 0, 0);
+    if (order.orderSource == 'DO' || (order.deliveryAddress != null && order.deliveryAddress!.isNotEmpty)) {
+      bluetooth.printCustom(formatLeftRight("Jenis:", "DO (Drop Order)"), 0, 0);
+      if (order.deliveryAddress != null && order.deliveryAddress!.isNotEmpty) {
+        bluetooth.printCustom("Alamat: ${order.deliveryAddress}", 0, 0);
+      }
+    }
     bluetooth.printCustom("------------------------------------------------", 0, 1);
 
     // Items
@@ -253,17 +281,21 @@ class AndroidPrintService implements PrintService {
 
       if (item.toppings != null) {
         for (var t in item.toppings!) {
-           String toppingPrice = currencyFormat.format(t.price);
-           if (t.name.contains('(Gratis)')) {
-             toppingPrice = "~~$toppingPrice~~";
-           }
-           bluetooth.printCustom(formatLeftRight(" + ${t.name}", toppingPrice), 0, 0);
+          String toppingPrice = currencyFormat.format(t.price);
+          if (t.name.contains('(Gratis)')) {
+            toppingPrice = "~~$toppingPrice~~";
+          }
+          bluetooth.printCustom(formatLeftRight(" + ${t.name}", toppingPrice), 0, 0);
         }
       }
     }
     bluetooth.printCustom("------------------------------------------------", 0, 1);
 
     // Summary
+    if (order.deliveryFee > 0) {
+      bluetooth.printCustom(formatLeftRight("Subtotal", "Rp ${currencyFormat.format(order.total - order.deliveryFee)}"), 0, 0);
+      bluetooth.printCustom(formatLeftRight("Ongkir (DO)", "Rp ${currencyFormat.format(order.deliveryFee)}"), 0, 0);
+    }
     bluetooth.printCustom(formatLeftRight("TOTAL", "Rp ${currencyFormat.format(order.total)}"), 1, 0);
     
     if (order.paidAmount != null && order.paidAmount! > 0) {

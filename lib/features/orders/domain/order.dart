@@ -35,6 +35,8 @@ abstract class OrderEntity with _$OrderEntity {
     @Default('0') String tableNumber,
     double? paidAmount,
     double? changeAmount,
+    @Default(0.0) double deliveryFee,
+    String? deliveryAddress,
     String? shiftId, // Link to Shift
     String? storeId,
   }) = _Order;
@@ -57,6 +59,8 @@ abstract class OrderEntity with _$OrderEntity {
     normalized['tableNumber'] ??= (json['NoMeja'] ?? json['TableNumber'] ?? '0').toString();
     normalized['paidAmount'] ??= (json['Bayar'] ?? json['PaidAmount'])?.toDouble();
     normalized['changeAmount'] ??= (json['Kembali'] ?? json['ChangeAmount'])?.toDouble();
+    normalized['deliveryFee'] ??= (json['Ongkir'] ?? json['deliveryFee'] ?? json['shippingFee'] ?? 0.0).toDouble();
+    normalized['deliveryAddress'] ??= json['Alamat'] ?? json['deliveryAddress'] ?? json['address'];
 
     if (normalized['status'] == null) {
       final statusStr = (json['Status'] ?? json['status'] ?? '').toString().toLowerCase();

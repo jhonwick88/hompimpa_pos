@@ -30,6 +30,8 @@ class _OrderPageState extends ConsumerState<OrderPage> {
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
   late final TextEditingController _tableController;
+  late final TextEditingController _addressController;
+  late final TextEditingController _deliveryFeeController;
 
   @override
   void initState() {
@@ -37,6 +39,8 @@ class _OrderPageState extends ConsumerState<OrderPage> {
     _nameController = TextEditingController();
     _phoneController = TextEditingController();
     _tableController = TextEditingController(text: '0');
+    _addressController = TextEditingController();
+    _deliveryFeeController = TextEditingController();
     Future.microtask(() => _initOrder());
   }
 
@@ -45,6 +49,8 @@ class _OrderPageState extends ConsumerState<OrderPage> {
     _nameController.dispose();
     _phoneController.dispose();
     _tableController.dispose();
+    _addressController.dispose();
+    _deliveryFeeController.dispose();
     super.dispose();
   }
 
@@ -73,6 +79,8 @@ class _OrderPageState extends ConsumerState<OrderPage> {
         
         final name = "Offline - ${const Uuid().v4().substring(0, 4)}";
         _nameController.text = name;
+        _addressController.clear();
+        _deliveryFeeController.clear();
         
         // Use microtask to avoid modifying during build
         Future.microtask(() {
@@ -94,6 +102,8 @@ class _OrderPageState extends ConsumerState<OrderPage> {
         _nameController.text = order.customerName;
         _phoneController.text = order.customerPhone ?? '';
         _tableController.text = order.tableNumber;
+        _addressController.text = order.deliveryAddress ?? '';
+        _deliveryFeeController.text = order.deliveryFee > 0 ? order.deliveryFee.toStringAsFixed(0) : '';
         
         Future.microtask(() {
           if (mounted) {
@@ -106,6 +116,8 @@ class _OrderPageState extends ConsumerState<OrderPage> {
               isDineIn: order.isDineIn,
               tableNumber: order.tableNumber,
               selectedPayment: order.paymentMethod,
+              deliveryFee: order.deliveryFee,
+              deliveryAddress: order.deliveryAddress ?? '',
             );
             cartNotifier.setCartItems(order.items);
           }
@@ -174,6 +186,19 @@ class _OrderPageState extends ConsumerState<OrderPage> {
           TextPosition(offset: _tableController.text.length),
         );
       }
+      if (next.deliveryAddress != _addressController.text) {
+        _addressController.text = next.deliveryAddress;
+        _addressController.selection = TextSelection.fromPosition(
+          TextPosition(offset: _addressController.text.length),
+        );
+      }
+      final feeStr = next.deliveryFee > 0 ? next.deliveryFee.toStringAsFixed(0) : '';
+      if (feeStr != _deliveryFeeController.text && (double.tryParse(_deliveryFeeController.text) ?? 0.0) != next.deliveryFee) {
+        _deliveryFeeController.text = feeStr;
+        _deliveryFeeController.selection = TextSelection.fromPosition(
+          TextPosition(offset: _deliveryFeeController.text.length),
+        );
+      }
     });
 
     // Eager-load cashier state
@@ -203,6 +228,8 @@ class _OrderPageState extends ConsumerState<OrderPage> {
                   nameController: _nameController,
                   phoneController: _phoneController,
                   tableController: _tableController,
+                  addressController: _addressController,
+                  deliveryFeeController: _deliveryFeeController,
                 );
               } else if (isTablet) {
                 if (isPortrait) {
@@ -212,6 +239,8 @@ class _OrderPageState extends ConsumerState<OrderPage> {
                     nameController: _nameController,
                     phoneController: _phoneController,
                     tableController: _tableController,
+                    addressController: _addressController,
+                    deliveryFeeController: _deliveryFeeController,
                   );
                 } else {
                   return TabletOrderPage(
@@ -220,6 +249,8 @@ class _OrderPageState extends ConsumerState<OrderPage> {
                     nameController: _nameController,
                     phoneController: _phoneController,
                     tableController: _tableController,
+                    addressController: _addressController,
+                    deliveryFeeController: _deliveryFeeController,
                   );
                 }
               } else {
@@ -229,6 +260,8 @@ class _OrderPageState extends ConsumerState<OrderPage> {
                   nameController: _nameController,
                   phoneController: _phoneController,
                   tableController: _tableController,
+                  addressController: _addressController,
+                  deliveryFeeController: _deliveryFeeController,
                 );
               }
             },

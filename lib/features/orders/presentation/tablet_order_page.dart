@@ -26,6 +26,8 @@ class TabletOrderPage extends ConsumerStatefulWidget {
   final TextEditingController nameController;
   final TextEditingController phoneController;
   final TextEditingController tableController;
+  final TextEditingController addressController;
+  final TextEditingController deliveryFeeController;
   
   const TabletOrderPage({
     Key? key,
@@ -34,6 +36,8 @@ class TabletOrderPage extends ConsumerStatefulWidget {
     required this.nameController,
     required this.phoneController,
     required this.tableController,
+    required this.addressController,
+    required this.deliveryFeeController,
   }) : super(key: key);
 
   @override
@@ -124,6 +128,8 @@ class _TabletOrderPageState extends ConsumerState<TabletOrderPage> {
                 nameController: widget.nameController,
                 phoneController: widget.phoneController,
                 tableController: widget.tableController,
+                addressController: widget.addressController,
+                deliveryFeeController: widget.deliveryFeeController,
                 isQuickOrder: widget.isQuickOrder,
                 existingOrderId: widget.existingOrderId,
                 existingOrder: _existingOrder,

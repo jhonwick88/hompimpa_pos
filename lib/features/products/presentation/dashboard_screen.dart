@@ -874,176 +874,159 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       },
     );
   }
-  void _showAddProductDialog(BuildContext context, WidgetRef ref) {
-    final nameController = TextEditingController();
-    final priceController = TextEditingController();
-    final stockController = TextEditingController();
-    final imageUrlController = TextEditingController(text: 'assets/images/logo.png'); // Default per request
-    String category = 'makanan'; // Default
-    bool hasSambal = false;
-    bool hasLevel = false;
-    bool hasTopping = false;
+  void _showAddProductDialog(BuildContext context, WidgetRef ref, {Product? product}) {
+    final nameController = TextEditingController(text: product?.name ?? '');
+    final priceController = TextEditingController(text: product?.price.toString() ?? '');
+    final stockController = TextEditingController(text: product?.stock.toString() ?? '');
+    final imageUrlController = TextEditingController(text: product?.imageUrl ?? 'assets/images/logo.png');
+    String category = product?.category ?? 'makanan';
+    bool hasSambal = product?.hasSambal ?? false;
+    bool hasLevel = product?.hasLevel ?? false;
+    bool hasTopping = product?.hasTopping ?? false;
+    String? selectedStoreId = product?.storeId ?? ref.read(selectedStoreFilterProvider);
+    final storesAsync = ref.read(activeStoresProvider);
 
     showDialog(
       context: context,
-      builder: (contextDialog) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Tambah Produk Baru'),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: nameController,
-                      decoration: const InputDecoration(labelText: 'Nama Produk'),
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      value: category,
-                      items: const [
-                        DropdownMenuItem(value: 'makanan', child: Text('Makanan')),
-                        DropdownMenuItem(value: 'minuman', child: Text('Minuman')),
-                        DropdownMenuItem(value: 'snack', child: Text('Snack')),
-                      ],
-                      onChanged: (v) {
-                        setState(() {
-                          category = v!;
-                          if (category != 'makanan') {
-                            hasSambal = false;
-                            hasLevel = false;
-                            hasTopping = false;
-                          }
-                        });
-                      },
-                      decoration: const InputDecoration(labelText: 'Kategori'),
-                    ),
-                    if (category == 'makanan') ...[
-                      const SizedBox(height: 12),
-                      SwitchListTile(
-                        title: const Text('Enable Sambal'),
-                        value: hasSambal,
-                        onChanged: (v) => setState(() => hasSambal = v),
-                      ),
-                      SwitchListTile(
-                        title: const Text('Enable Level'),
-                        value: hasLevel,
-                        onChanged: (v) => setState(() => hasLevel = v),
-                      ),
-                      SwitchListTile(
-                        title: const Text('Enable Topping'),
-                        value: hasTopping,
-                        onChanged: (v) => setState(() => hasTopping = v),
-                      ),
-                    ],
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: priceController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Harga (Rp)'),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: stockController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Stok Awal'),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: imageUrlController,
-                      decoration: const InputDecoration(labelText: 'Image URL (Assets/Network)'),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text('Status Active: TRUE (Default)', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)),
+      builder: (contextDialog) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(product == null ? 'Tambah Produk' : 'Edit Produk'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Nama')),
+                DropdownButtonFormField<String>(
+                  value: category,
+                  items: const [
+                    DropdownMenuItem(value: 'makanan', child: Text('Makanan')),
+                    DropdownMenuItem(value: 'minuman', child: Text('Minuman')),
+                    DropdownMenuItem(value: 'snack', child: Text('Snack')),
                   ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(contextDialog),
-                  child: const Text('Batal'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (nameController.text.isEmpty || priceController.text.isEmpty) {
-                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nama dan Harga wajib diisi')));
-                       return;
-                    }
-
-                    try {
-                      final title = nameController.text;
-                      final price = double.tryParse(priceController.text) ?? 0;
-                      final stock = int.tryParse(stockController.text) ?? 0;
-                      final imageUrl = imageUrlController.text;
-
-                      final newProduct = Product(
-                        id: const Uuid().v4(),
-                        name: title,
-                        category: category,
-                        price: price,
-                        stock: stock,
-                        imageUrl: imageUrl.isNotEmpty ? imageUrl : null,
-                        isActive: true,
-                        hasSambal: hasSambal,
-                        hasLevel: hasLevel,
-                        hasTopping: hasTopping,
-                      );
-
-                      await ref.read(productRepositoryProvider).addProduct(newProduct);
-                      ref.refresh(productListProvider);
-                      
-                      Navigator.pop(contextDialog);
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Produk berhasil ditambahkan')));
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menambah produk: $e')));
-                    }
+                  onChanged: (v) {
+                    setState(() {
+                      category = v!;
+                      if (category != 'makanan') {
+                        hasSambal = false;
+                        hasLevel = false;
+                        hasTopping = false;
+                      }
+                    });
                   },
-                  child: const Text('Simpan'),
+                  decoration: const InputDecoration(labelText: 'Kategori'),
+                ),
+                if (category == 'makanan') ...[
+                  const SizedBox(height: 12),
+                  SwitchListTile(
+                    title: const Text('Enable Sambal'),
+                    value: hasSambal,
+                    onChanged: (v) => setState(() => hasSambal = v),
+                  ),
+                  SwitchListTile(
+                    title: const Text('Enable Level'),
+                    value: hasLevel,
+                    onChanged: (v) => setState(() => hasLevel = v),
+                  ),
+                  SwitchListTile(
+                    title: const Text('Enable Topping'),
+                    value: hasTopping,
+                    onChanged: (v) => setState(() => hasTopping = v),
+                  ),
+                ],
+                TextField(controller: priceController, decoration: const InputDecoration(labelText: 'Harga'), keyboardType: TextInputType.number),
+                TextField(controller: stockController, decoration: const InputDecoration(labelText: 'Stok'), keyboardType: TextInputType.number),
+                TextField(controller: imageUrlController, decoration: const InputDecoration(labelText: 'Image URL')),
+                const SizedBox(height: 16),
+                storesAsync.when(
+                  data: (stores) => DropdownButtonFormField<String?>(
+                    value: selectedStoreId,
+                    decoration: const InputDecoration(labelText: 'Store'),
+                    items: [
+                      const DropdownMenuItem(value: null, child: Text('No Store')),
+                      ...stores.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))),
+                    ],
+                    onChanged: (v) => setState(() => selectedStoreId = v),
+                  ),
+                  loading: () => const LinearProgressIndicator(),
+                  error: (_, __) => const Text('Error loading stores'),
                 ),
               ],
-            );
-          },
-        );
-      },
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(contextDialog), child: const Text('Batal')),
+            ElevatedButton(
+              onPressed: () async {
+                final newProduct = Product(
+                  id: product?.id ?? const Uuid().v4(),
+                  name: nameController.text,
+                  category: category,
+                  price: double.tryParse(priceController.text) ?? 0,
+                  stock: int.tryParse(stockController.text) ?? 0,
+                  imageUrl: imageUrlController.text.isNotEmpty ? imageUrlController.text : null,
+                  isActive: product?.isActive ?? true,
+                  storeId: selectedStoreId,
+                  hasSambal: hasSambal,
+                  hasLevel: hasLevel,
+                  hasTopping: hasTopping,
+                );
+
+                try {
+                  if (product == null) {
+                    await ref.read(productRepositoryProvider).addProduct(newProduct);
+                  } else {
+                    await ref.read(productRepositoryProvider).updateProduct(newProduct);
+                  }
+                  ref.refresh(productListProvider);
+                  Navigator.pop(contextDialog);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Produk berhasil disimpan')));
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menyimpan produk: $e')));
+                }
+              },
+              child: const Text('Simpan'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  void _showAddToppingDialog(BuildContext context, WidgetRef ref) {
-    final nameController = TextEditingController();
-    final priceController = TextEditingController();
-    final stockController = TextEditingController();
-    final imageUrlController = TextEditingController(text: 'assets/images/logo.png');
+  void _showAddToppingDialog(BuildContext context, WidgetRef ref, {Topping? topping}) {
+    final nameController = TextEditingController(text: topping?.name ?? '');
+    final priceController = TextEditingController(text: topping?.price.toString() ?? '');
+    final stockController = TextEditingController(text: topping?.stock.toString() ?? '');
+    final imageUrlController = TextEditingController(text: topping?.imageUrl ?? 'assets/images/logo.png');
 
     showDialog(
       context: context,
       builder: (contextDialog) {
         return AlertDialog(
-          title: const Text('Tambah Topping Baru'),
+          title: Text(topping == null ? 'Tambah Topping' : 'Edit Topping'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Nama Topping'),
+                  decoration: const InputDecoration(labelText: 'Nama'),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: priceController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Harga (Rp)'),
+                  decoration: const InputDecoration(labelText: 'Harga'),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: stockController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Stok Awal'),
+                  decoration: const InputDecoration(labelText: 'Stok'),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: imageUrlController,
-                  decoration: const InputDecoration(labelText: 'Image URL (Assets/Network)'),
+                  decoration: const InputDecoration(labelText: 'Image URL'),
                 ),
               ],
             ),
@@ -1061,27 +1044,33 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 }
 
                 try {
-                  final title = nameController.text;
+                  final title = nameController.text.trim();
                   final price = double.tryParse(priceController.text) ?? 0;
                   final stock = int.tryParse(stockController.text) ?? 0;
-                  final imageUrl = imageUrlController.text;
+                  final imageUrl = imageUrlController.text.trim();
 
                   final newTopping = Topping(
-                    id: const Uuid().v4(),
+                    id: topping?.id ?? const Uuid().v4(),
                     name: title,
                     price: price,
                     stock: stock,
                     imageUrl: imageUrl.isNotEmpty ? imageUrl : null,
-                    isActive: true,
+                    isActive: topping?.isActive ?? true,
                   );
 
-                  await ref.read(toppingRepositoryProvider).addTopping(newTopping);
+                  if (topping == null) {
+                    await ref.read(toppingRepositoryProvider).addTopping(newTopping);
+                  } else {
+                    await ref.read(toppingRepositoryProvider).updateTopping(newTopping);
+                  }
                   ref.refresh(toppingListProvider);
 
                   Navigator.pop(contextDialog);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Topping berhasil ditambahkan')));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(topping == null ? 'Topping berhasil ditambahkan' : 'Topping berhasil diperbarui'),
+                  ));
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menambah topping: $e')));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menyimpan topping: $e')));
                 }
               },
               child: const Text('Simpan'),

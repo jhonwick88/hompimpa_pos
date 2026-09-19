@@ -27,6 +27,8 @@ class PhoneOrderPage extends ConsumerStatefulWidget {
   final TextEditingController nameController;
   final TextEditingController phoneController;
   final TextEditingController tableController;
+  final TextEditingController? addressController;
+  final TextEditingController? deliveryFeeController;
   
   const PhoneOrderPage({
     Key? key,
@@ -35,6 +37,8 @@ class PhoneOrderPage extends ConsumerStatefulWidget {
     required this.nameController,
     required this.phoneController,
     required this.tableController,
+    this.addressController,
+    this.deliveryFeeController,
   }) : super(key: key);
 
   @override
@@ -165,6 +169,8 @@ class _PhoneOrderPageState extends ConsumerState<PhoneOrderPage> {
                     nameController: widget.nameController,
                     phoneController: widget.phoneController,
                     tableController: widget.tableController,
+                    addressController: widget.addressController,
+                    deliveryFeeController: widget.deliveryFeeController,
                     isQuickOrder: widget.isQuickOrder,
                     existingOrderId: widget.existingOrderId,
                     existingOrder: _existingOrder,
@@ -184,6 +190,8 @@ class _MobileCartView extends ConsumerWidget {
   final TextEditingController nameController;
   final TextEditingController phoneController;
   final TextEditingController tableController;
+  final TextEditingController? addressController;
+  final TextEditingController? deliveryFeeController;
   final bool isQuickOrder;
   final String? existingOrderId;
   final OrderEntity? existingOrder;
@@ -193,6 +201,8 @@ class _MobileCartView extends ConsumerWidget {
     required this.nameController,
     required this.phoneController,
     required this.tableController,
+    this.addressController,
+    this.deliveryFeeController,
     required this.isQuickOrder,
     this.existingOrderId,
     this.existingOrder,
@@ -210,6 +220,11 @@ class _MobileCartView extends ConsumerWidget {
     bool isNameFilled = nameController.text.trim().isNotEmpty;
     bool isWhatsAppValid = metadata.selectedVia != 'WhatsApp' || 
         (nameController.text.trim().isNotEmpty && phoneController.text.trim().isNotEmpty);
+    bool isDoValid = metadata.selectedVia != 'DO' || 
+        ((addressController?.text.trim().isNotEmpty ?? metadata.deliveryAddress.isNotEmpty) && 
+         nameController.text.trim().isNotEmpty);
+
+    final grandTotal = cartTotal + (metadata.selectedVia == 'DO' ? metadata.deliveryFee : 0.0);
 
     return Column(
       children: [
@@ -253,7 +268,7 @@ class _MobileCartView extends ConsumerWidget {
                         onTap: () => metadataNotifier.updateSelectedVia('Offline'),
                       ),
                    ),
-                   const SizedBox(width: 8),
+                   const SizedBox(width: 6),
                    Expanded(
                      child: _ViaButtonSmall(
                         label: 'WA',
@@ -263,7 +278,7 @@ class _MobileCartView extends ConsumerWidget {
                         color: Colors.green,
                       ),
                    ),
-                   const SizedBox(width: 8),
+                   const SizedBox(width: 6),
                    Expanded(
                      child: _ViaButtonSmall(
                         label: 'Grab',
@@ -273,38 +288,135 @@ class _MobileCartView extends ConsumerWidget {
                         color: Colors.green[700],
                       ),
                    ),
+                   const SizedBox(width: 6),
+                   Expanded(
+                     child: _ViaButtonSmall(
+                        label: 'DO',
+                        isSelected: metadata.selectedVia == 'DO',
+                        icon: Icons.local_shipping,
+                        onTap: () => metadataNotifier.updateSelectedVia('DO'),
+                        color: Colors.orange[800],
+                      ),
+                   ),
                 ],
               ),
               const SizedBox(height: 16),
 
-              // Dine In & Table Section
-              Row(
-                children: [
-                  const Text('Dine In', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
-                  const SizedBox(width: 8),
-                  Switch(
-                    value: metadata.isDineIn,
-                    onChanged: (v) => metadataNotifier.updateIsDineIn(v),
-                    activeColor: Colors.orange[800],
+              // DO Delivery Details vs Dine In & Table Section
+              if (metadata.selectedVia == 'DO') ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.orange.shade200),
                   ),
-                  if (metadata.isDineIn) ...[
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: TextField(
-                        controller: tableController,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.local_shipping, size: 18, color: Colors.orange[900]),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Pengiriman Drop Order (DO)',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              color: Colors.orange[900],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: addressController,
+                        maxLines: 2,
+                        decoration: const InputDecoration(
+                          labelText: 'Alamat Pengantaran / Lokasi (Wajib)',
+                          hintText: 'Contoh: Jl. Sudirman No. 12, samping minimarket',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.location_on),
+                          isDense: true,
+                        ),
+                        onChanged: (v) => metadataNotifier.updateDeliveryAddress(v),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: deliveryFeeController,
                         keyboardType: TextInputType.number,
                         decoration: const InputDecoration(
-                          labelText: 'No. Meja',
-                          isDense: true,
+                          labelText: 'Biaya Ongkir (Rp)',
+                          hintText: '0',
+                          prefixText: 'Rp ',
                           border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.payments_outlined),
+                          isDense: true,
                         ),
-                        onChanged: (v) => metadataNotifier.updateTableNumber(v),
+                        onChanged: (v) {
+                          final fee = double.tryParse(v.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0;
+                          metadataNotifier.updateDeliveryFee(fee);
+                        },
                       ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [0, 5000, 10000, 15000, 20000].map((presetFee) {
+                          final isSelected = metadata.deliveryFee == presetFee.toDouble();
+                          return ChoiceChip(
+                            label: Text(
+                              presetFee == 0 ? 'Bebas Ongkir (Rp 0)' : 'Rp ${NumberFormat.currency(locale: 'id_ID', symbol: '', decimalDigits: 0).format(presetFee)}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                color: isSelected ? Colors.white : Colors.orange[900],
+                              ),
+                            ),
+                            selected: isSelected,
+                            selectedColor: Colors.orange[800],
+                            backgroundColor: Colors.white,
+                            onSelected: (selected) {
+                              final fee = selected ? presetFee.toDouble() : 0.0;
+                              deliveryFeeController?.text = fee > 0 ? fee.toStringAsFixed(0) : '';
+                              metadataNotifier.updateDeliveryFee(fee);
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ] else ...[
+                Row(
+                  children: [
+                    const Text('Dine In', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
+                    const SizedBox(width: 8),
+                    Switch(
+                      value: metadata.isDineIn,
+                      onChanged: (v) => metadataNotifier.updateIsDineIn(v),
+                      activeColor: Colors.orange[800],
                     ),
+                    if (metadata.isDineIn) ...[
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextField(
+                          controller: tableController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'No. Meja',
+                            isDense: true,
+                            border: OutlineInputBorder(),
+                          ),
+                          onChanged: (v) => metadataNotifier.updateTableNumber(v),
+                        ),
+                      ),
+                    ],
                   ],
-                ],
-              ),
-              const SizedBox(height: 16),
+                ),
+                const SizedBox(height: 16),
+              ],
 
               // Payment Method Section
               const Text('Metode Pembayaran', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
@@ -347,7 +459,7 @@ class _MobileCartView extends ConsumerWidget {
                 controller: phoneController,
                 keyboardType: TextInputType.phone,
                 decoration: InputDecoration(
-                  labelText: metadata.selectedVia == 'WhatsApp' ? 'Nomor WhatsApp (Wajib)' : 'Nomor WhatsApp (Opsional)',
+                  labelText: (metadata.selectedVia == 'WhatsApp' || metadata.selectedVia == 'DO') ? 'Nomor WhatsApp (Wajib)' : 'Nomor WhatsApp (Opsional)',
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.phone),
                   hintText: '0812...',
@@ -394,10 +506,7 @@ class _MobileCartView extends ConsumerWidget {
                   ),
                 ],
               ),
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16.0),
-                child: Divider(),
-              ),
+              const Divider(height: 32),
               if (cart.isEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 32.0),
@@ -419,28 +528,74 @@ class _MobileCartView extends ConsumerWidget {
                         side: BorderSide(color: Colors.grey[200]!),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                        title: Text(
-                          item.level != null ? '${item.productName} - Lvl ${item.level} (${item.sambal}) - ${item.qty}x' : item.productName + ' - ${item.qty}x',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(
-                          '${item.note != null ? '(${item.note})\n' : ''}${item.toppings != null && item.toppings!.isNotEmpty ? '+ ${item.toppings!.map((t) => t.name).join(", ")}\n' : ''}Rp ${(item.price * item.qty).toStringAsFixed(0)}',
-                          style: TextStyle(color: Colors.orange[800], fontSize: 13),
-                        ),
-                        isThreeLine: true,
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Rp ${(item.price * item.qty).toStringAsFixed(0)}',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item.productName,
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                      ),
+                                      if (item.level != null)
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 2.0),
+                                          child: Text(
+                                            'Level ${item.level} (${item.sambal ?? 'No Sambal'})',
+                                            style: TextStyle(
+                                              color: Colors.orange[800],
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      if (item.toppings != null && item.toppings!.isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 4.0),
+                                          child: Text(
+                                            'Topping: ${item.toppings!.map((t) => t.name).join(', ')}',
+                                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                          ),
+                                        ),
+                                      if (item.note != null && item.note!.isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 2.0),
+                                          child: Text(
+                                            'Note: ${item.note}',
+                                            style: TextStyle(color: Colors.grey[500], fontSize: 12, fontStyle: FontStyle.italic),
+                                          ),
+                                        ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Rp ${item.price.toStringAsFixed(0)}',
+                                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                                  onPressed: () => ref.read(cartProvider.notifier).removeItem(item),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            IconButton(
-                              icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
-                              onPressed: () => ref.read(cartProvider.notifier).removeItem(item),
+                            const Divider(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('${item.qty} item', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                Text(
+                                  'Rp ${(item.price * item.qty).toStringAsFixed(0)}',
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -449,8 +604,10 @@ class _MobileCartView extends ConsumerWidget {
             ],
           ),
         ),
+        
+        // Bottom Action Bar
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white,
             boxShadow: [
@@ -462,16 +619,39 @@ class _MobileCartView extends ConsumerWidget {
             ],
           ),
           child: SafeArea(
-            bottom: true,
             top: false,
             child: Column(
               children: [
+                if (metadata.selectedVia == 'DO' && metadata.deliveryFee > 0) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Subtotal Item', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                      Text(
+                        'Rp ${cartTotal.toStringAsFixed(0)}',
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Biaya Ongkir (DO)', style: TextStyle(fontSize: 14, color: Colors.orange[900])),
+                      Text(
+                        '+ Rp ${metadata.deliveryFee.toStringAsFixed(0)}',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.orange[900]),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                ],
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text('Total Pembayaran', style: TextStyle(fontSize: 16, color: Colors.grey)),
                     Text(
-                      'Rp ${cartTotal.toStringAsFixed(0)}',
+                      'Rp ${grandTotal.toStringAsFixed(0)}',
                       style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green),
                     ),
                   ],
@@ -481,7 +661,7 @@ class _MobileCartView extends ConsumerWidget {
                   width: double.infinity,
                   height: 54,
                   child: ElevatedButton(
-                    onPressed: (cart.isEmpty || !isNameFilled || !isWhatsAppValid)
+                    onPressed: (cart.isEmpty || !isNameFilled || !isWhatsAppValid || !isDoValid)
                         ? null
                         : () async {
                             final standardizedPhone = phoneController.text.isNotEmpty ? standardizePhoneNumber(phoneController.text) : null;
@@ -539,6 +719,8 @@ class _MobileCartView extends ConsumerWidget {
                                       isDineIn: metadata.isDineIn,
                                       tableNumber: tableController.text,
                                       paymentMethod: metadata.selectedPayment,
+                                      deliveryFee: metadata.deliveryFee,
+                                      deliveryAddress: addressController?.text.trim() ?? metadata.deliveryAddress,
                                     );
                                     
                                 Navigator.pop(context); // Close cart sheet
@@ -568,6 +750,8 @@ class _MobileCartView extends ConsumerWidget {
                                       isDineIn: metadata.isDineIn,
                                       tableNumber: tableController.text,
                                       paymentMethod: metadata.selectedPayment,
+                                      deliveryFee: metadata.deliveryFee,
+                                      deliveryAddress: addressController?.text.trim() ?? metadata.deliveryAddress,
                                     );
                                 Navigator.pop(context);
                                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(

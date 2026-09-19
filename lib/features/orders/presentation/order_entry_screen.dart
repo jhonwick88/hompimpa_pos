@@ -262,12 +262,7 @@ class _OrderEntryScreenState extends ConsumerState<OrderEntryScreen> {
               TabletCartPanel(
                 nameController: _nameController,
                 phoneController: _phoneController,
-                selectedDate: _selectedDate,
-                selectedTime: _selectedTime,
-                onSelectDate: () => _selectDate(context),
-                onSelectTime: () => _selectTime(context),
-                onManualOrder: _switchToManualOrder,
-                onQuickOrder: _switchToQuickOrder,
+                tableController: _tableController,
                 isQuickOrder: widget.isQuickOrder,
                 existingOrderId: widget.existingOrderId,
                 standardizePhoneNumber: _standardizePhoneNumber,
