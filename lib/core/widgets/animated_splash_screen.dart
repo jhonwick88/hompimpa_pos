@@ -67,12 +67,7 @@ class _AnimatedSplashScreenState extends ConsumerState<AnimatedSplashScreen>
     await ref.read(notificationServiceProvider).requestPermissions();
 
     if (user != null) {
-      // 2. Check role
-      if (user.role == UserRole.dev || user.role == UserRole.admin) {
-        context.go('/'); // Dashboard
-      } else {
-        context.go('/orders'); // Orders Page
-      }
+      context.go('/'); // Dashboard
     } else {
       // Not logged in or error fetching user
       context.go('/login');

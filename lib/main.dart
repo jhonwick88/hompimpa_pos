@@ -6,7 +6,6 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'firebase_options.dart';
 import 'core/router.dart';
-import 'core/widgets/animated_splash_screen.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/order_notification_controller.dart';
 

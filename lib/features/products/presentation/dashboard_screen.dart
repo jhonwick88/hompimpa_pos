@@ -53,13 +53,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   void initState() {
     super.initState();
     FlutterNativeSplash.remove();
-    // Role Guard
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authState = ref.read(authStateChangesProvider);
-      if (authState.value != null && authState.value!.role == UserRole.user) {
-        context.go('/orders');
-      }
-    });
   }
 
   String _getGreeting() {
