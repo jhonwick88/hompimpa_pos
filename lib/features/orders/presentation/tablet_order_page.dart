@@ -15,6 +15,7 @@ import 'package:hompimpa_pos/core/widgets/gradient_app_bar.dart';
 import 'package:hompimpa_pos/core/widgets/gradient_status_tab_bar.dart';
 import 'package:hompimpa_pos/features/cashier/presentation/cashier_controller.dart';
 import 'package:hompimpa_pos/core/widgets/app_image.dart';
+import 'package:hompimpa_pos/core/widgets/product_card_modern.dart';
 
 /// Tablet-specific order entry page (>= 600px)
 /// - Split layout: product grid + side cart panel
@@ -158,142 +159,70 @@ class _ProductGrid extends ConsumerWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = constraints.maxWidth > 900 ? 5 : (constraints.maxWidth > 600 ? 4 : 3);
+        final childAspectRatio = constraints.maxWidth > 900 ? 0.86 : 0.82;
         
         return GridView.builder(
           padding: const EdgeInsets.all(8),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            childAspectRatio: 0.75,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
+            childAspectRatio: childAspectRatio,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
           ),
           itemCount: products.length,
           itemBuilder: (context, index) {
             final product = products[index];
             final isFood = product.category == 'makanan';
             
-            return Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              clipBehavior: Clip.antiAlias,
-              child: Stack(
-                children: [
-                   Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                       child: AppImage(
-                          url: product.imageUrl,
-                          errorWidget: const Center(
-                            child: Opacity(
-                              opacity: 0.1,
-                              child: Icon(Icons.grain, size: 64),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              product.name,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 2),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Rp ${product.price.toStringAsFixed(0)}',
-                                  style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade200,
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    product.category,
-                                    style: TextStyle(fontSize: 10, color: Colors.grey.shade700),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Stok: ${product.stock}',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: product.stock < 10 ? Colors.red : Colors.grey.shade600,
-                                fontWeight: product.stock < 10 ? FontWeight.bold : FontWeight.normal,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  Positioned.fill(
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          // Check Cashier State
-                          if (!cashierState.isOpen) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Kasir belum dibuka. Silakan buka kasir terlebih dahulu.'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                            return;
-                          }
-
-                          print('DEBUG: Tablet Tapped ${product.name}, Stock: ${product.stock}');
-
-                          if (product.stock <= 0) {
-                             ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Stok ${product.name} habis!', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                backgroundColor: Colors.red,
-                                duration: const Duration(seconds: 2),
-                                behavior: SnackBarBehavior.floating,
-                                margin: const EdgeInsets.all(20),
-                              ),
-                            );
-                            return;
-                          }
-
-                          if (isFood) {
-                            showDialog(
-                              context: context,
-                              builder: (context) => ProductOptionDialog(product: product),
-                            );
-                          } else {
-                            try {
-                              ref.read(cc.cartProvider.notifier).addItem(product, 1);
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(e.toString().replaceAll('Exception: ', '')),
-                                  behavior: SnackBarBehavior.floating,
-                                  margin: const EdgeInsets.all(20),
-                                ),
-                              );
-                            }
-                          }
-                        },
-                      ),
+            return ProductCardModern(
+              product: product,
+              onTap: () {
+                // Check Cashier State
+                if (!cashierState.isOpen) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Kasir belum dibuka. Silakan buka kasir terlebih dahulu.'),
+                      backgroundColor: Colors.red,
                     ),
-                  ),
-                ],
-              ),
+                  );
+                  return;
+                }
+
+                print('DEBUG: Tablet Tapped ${product.name}, Stock: ${product.stock}');
+
+                if (product.stock <= 0) {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Stok ${product.name} habis!', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      backgroundColor: Colors.red,
+                      duration: const Duration(seconds: 2),
+                      behavior: SnackBarBehavior.floating,
+                      margin: const EdgeInsets.all(20),
+                    ),
+                  );
+                  return;
+                }
+
+                if (isFood) {
+                  showDialog(
+                    context: context,
+                    builder: (context) => ProductOptionDialog(product: product),
+                  );
+                } else {
+                  try {
+                    ref.read(cc.cartProvider.notifier).addItem(product, 1);
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(e.toString().replaceAll('Exception: ', '')),
+                        behavior: SnackBarBehavior.floating,
+                        margin: const EdgeInsets.all(20),
+                      ),
+                    );
+                  }
+                }
+              },
             );
           },
         );

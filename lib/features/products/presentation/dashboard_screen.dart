@@ -21,6 +21,7 @@ import 'package:uuid/uuid.dart';
 import 'package:hompimpa_pos/features/products/domain/topping.dart';
 import 'package:hompimpa_pos/core/widgets/gradient_app_bar.dart';
 import 'package:hompimpa_pos/core/widgets/app_image.dart';
+import 'package:hompimpa_pos/core/widgets/product_card_modern.dart';
 import 'package:hompimpa_pos/core/extensions/string_extension.dart';
 import 'package:hompimpa_pos/features/settings/data/store_repository.dart';
 
@@ -734,126 +735,33 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           crossAxisCount = 5;
         }
 
+        final childAspectRatio = crossAxisCount >= 4 ? 0.86 : 0.80;
+
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            childAspectRatio: 0.82,
+            childAspectRatio: childAspectRatio,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
           ),
           itemCount: products.length,
           itemBuilder: (context, index) {
             final product = products[index];
-            return _buildModernProductCard(product, user, currencyFormat);
+            return ProductCardModern(
+              product: product,
+              onTap: () {
+                if (user != null && user.role == UserRole.dev) {
+                  _showUpdateStockDialog(context, ref, product, user);
+                }
+              },
+            );
           },
         );
       },
       loading: () => const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator())),
       error: (e, _) => Center(child: Text('Error: $e')),
-    );
-  }
-
-  Widget _buildModernProductCard(Product product, AppUser? user, NumberFormat currencyFormat) {
-    Color stockColor = Colors.green.shade700;
-    if (product.stock == 0) {
-      stockColor = Colors.red.shade700;
-    } else if (product.stock <= 5) {
-      stockColor = Colors.amber.shade800;
-    }
-
-    return Card(
-      elevation: 3,
-      shadowColor: Colors.black.withValues(alpha: 0.08),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.withValues(alpha: 0.15), width: 1),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          if (user != null && user.role == UserRole.dev) {
-            _showUpdateStockDialog(context, ref, product, user);
-          }
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              flex: 4,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  AppImage(url: product.imageUrl, fit: BoxFit.cover),
-                  // Stock Badge
-                  Positioned(
-                    top: 6,
-                    right: 6,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: stockColor,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 1))],
-                      ),
-                      child: Text(
-                        product.stock == 0 ? 'Habis' : 'Stok: ${product.stock}',
-                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                  if (user?.role == UserRole.dev) ...[
-                    Positioned(
-                      top: 6,
-                      left: 6,
-                      child: CircleAvatar(
-                        backgroundColor: Colors.black.withValues(alpha: 0.5),
-                        radius: 12,
-                        child: const Icon(Icons.edit, size: 12, color: Colors.white),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    product.name.toUpperCase(),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 12,
-                      letterSpacing: 0.6,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    currencyFormat.format(product.price),
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(
-                      color: Color(0xFFE65100),
-                      fontWeight: FontWeight.w900,
-                      fontSize: 14,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -1154,7 +1062,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   category: category,
                   price: double.tryParse(priceController.text) ?? 0,
                   stock: int.tryParse(stockController.text) ?? 0,
-                  imageUrl: imageUrlController.text.trim().isNotEmpty ? imageUrlController.text.trim() : null,
+                  imageUrl: imageUrlController.text.trim().isNotEmpty
+                      ? imageUrlController.text.trim()
+                      : null,
                   isActive: product?.isActive ?? true,
                   storeId: selectedStoreId,
                   hasSambal: hasSambal,

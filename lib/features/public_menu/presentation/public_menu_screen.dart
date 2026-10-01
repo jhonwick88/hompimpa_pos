@@ -10,6 +10,7 @@ import '../../../core/widgets/skeleton.dart';
 
 import './public_product_option_dialog.dart';
 import '../../../core/widgets/app_image.dart';
+import '../../../core/widgets/product_card_modern.dart';
 
 class PublicMenuScreen extends ConsumerStatefulWidget {
   const PublicMenuScreen({Key? key}) : super(key: key);
@@ -71,16 +72,31 @@ class _PublicMenuScreenState extends ConsumerState<PublicMenuScreen> {
                         crossAxisCount = 3;
                       }
                       
+                      final childAspectRatio = constraints.maxWidth > 900 ? 0.86 : (constraints.maxWidth > 600 ? 0.84 : 0.80);
+                      
                       return GridView.builder(
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: crossAxisCount,
-                          childAspectRatio: 0.75,
+                          childAspectRatio: childAspectRatio,
                           crossAxisSpacing: 10,
                           mainAxisSpacing: 10,
                         ),
                         itemCount: filteredProducts.length,
                         itemBuilder: (context, index) {
-                          return _ProductCard(product: filteredProducts[index]);
+                          final product = filteredProducts[index];
+                          return ProductCardModern(
+                            product: product,
+                            onTap: () {
+                              if (product.category != 'makanan') {
+                                ref.read(publicCartProvider.notifier).addItem(product, 1);
+                              } else {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => PublicProductOptionDialog(product: product),
+                                );
+                              }
+                            },
+                          );
                         },
                       );
                     },
@@ -348,106 +364,4 @@ class _CategorySelector extends StatelessWidget {
   }
 }
 
-class _ProductCard extends ConsumerWidget {
-  final Product product;
-  const _ProductCard({required this.product});
 
-   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: AppImage(
-                      url: product.imageUrl,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 15),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Rp ${product.price.toStringAsFixed(0)}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.deepOrange,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Padding(
-                padding: const EdgeInsets.only(
-                    right: 12, bottom: 12),
-                child: InkWell(
-                  onTap: () {
-                                                    if(product.category != 'makanan'){
-                             // Default add 1
-                         ref.read(publicCartProvider.notifier).addItem(product, 1);
-                        //  ScaffoldMessenger.of(context).showSnackBar(
-                        //    SnackBar(
-                        //      content: Text('${product.name} ditambah ke keranjang'),
-                        //      duration: const Duration(seconds: 1),
-                        //      action: SnackBarAction(label: 'LIHAT', onPressed: () => context.push('/cart')),
-                        //    )
-                        //    );
-                          }else{
-                            showDialog(
-                            context: context,
-                            builder: (context) => PublicProductOptionDialog(product: product),
-                          );
-                          }
-                  },
-                  borderRadius: BorderRadius.circular(30),
-                  child: Container(
-                    height: 36,
-                    width: 36,
-                    decoration: const BoxDecoration(
-                      color: Colors.deepOrange,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.add,
-                        color: Colors.white, size: 20),
-                  ),
-                ),
-              ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-}

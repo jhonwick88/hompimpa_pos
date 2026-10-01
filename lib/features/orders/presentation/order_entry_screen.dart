@@ -16,6 +16,7 @@ import 'package:hompimpa_pos/features/orders/presentation/order_list_screen.dart
 import 'package:hompimpa_pos/features/products/data/topping_repository.dart';
 import 'package:hompimpa_pos/features/orders/presentation/widgets/product_option_dialog.dart';
 import 'package:hompimpa_pos/core/widgets/gradient_status_tab_bar.dart';
+import 'package:hompimpa_pos/core/widgets/product_card_modern.dart';
 
 class OrderEntryScreen extends ConsumerStatefulWidget {
   final bool isQuickOrder;
@@ -775,30 +776,28 @@ class _ProductGrid extends ConsumerWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = constraints.maxWidth > 900 ? 5 : (constraints.maxWidth > 600 ? 4 : 3);
+        final childAspectRatio = constraints.maxWidth > 900 ? 0.86 : (constraints.maxWidth > 600 ? 0.84 : 0.80);
         
         return GridView.builder(
           padding: const EdgeInsets.all(8),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            childAspectRatio: 0.75,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
+            childAspectRatio: childAspectRatio,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
           ),
           itemCount: products.length,
           itemBuilder: (context, index) {
             final product = products[index];
             final isFood = product.category == 'makanan';
             
-            return Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: () {
-                  print('DEBUG: Tapped ${product.name}, Stock: ${product.stock}'); // Changed to print for visibility
-                  
-                  if (product.stock <= 0) {
-                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            return ProductCardModern(
+              product: product,
+              onTap: () {
+                print('DEBUG: Tapped ${product.name}, Stock: ${product.stock}');
+                
+                if (product.stock <= 0) {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Stok ${product.name} habis!', style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -809,85 +808,23 @@ class _ProductGrid extends ConsumerWidget {
                     ),
                   );
                   return;
-                  }
+                }
 
-                  if (isFood) {
-                    showDialog(
-                      context: context,
-                      builder: (context) => ProductOptionDialog(product: product),
+                if (isFood) {
+                  showDialog(
+                    context: context,
+                    builder: (context) => ProductOptionDialog(product: product),
+                  );
+                } else {
+                  try {
+                    ref.read(cartProvider.notifier).addItem(product, 1);
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
                     );
-                  } else {
-                    try {
-                      ref.read(cartProvider.notifier).addItem(product, 1);
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
-                      );
-                    }
                   }
-                },
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: Container(
-                        color: isFood ? Colors.orange.shade100 : Colors.blue.shade100,
-                        child: Center(
-                          child: Icon(
-                            isFood ? Icons.fastfood : Icons.local_drink,
-                            size: 40,
-                            color: isFood ? Colors.orange : Colors.blue,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            product.name,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Rp ${product.price.toStringAsFixed(0)}',
-                                style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade200,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  product.category,
-                                  style: TextStyle(fontSize: 10, color: Colors.grey.shade700),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Stok: ${product.stock}',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: product.stock < 10 ? Colors.red : Colors.grey.shade600,
-                              fontWeight: product.stock < 10 ? FontWeight.bold : FontWeight.normal,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                }
+              },
             );
           },
         );

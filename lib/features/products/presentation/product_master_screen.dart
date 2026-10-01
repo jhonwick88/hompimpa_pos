@@ -250,7 +250,9 @@ class ProductMasterScreen extends ConsumerWidget {
                   category: category,
                   price: double.tryParse(priceController.text) ?? 0,
                    stock: int.tryParse(stockController.text) ?? 0,
-                  imageUrl: imageUrlController.text.isNotEmpty ? imageUrlController.text : null,
+                  imageUrl: imageUrlController.text.trim().isNotEmpty
+                      ? imageUrlController.text.trim()
+                      : null,
                   isActive: product?.isActive ?? true,
                   storeId: selectedStoreId,
                   hasSambal: hasSambal,
