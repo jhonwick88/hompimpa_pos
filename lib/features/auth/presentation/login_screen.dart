@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:hompimpa_pos/features/auth/presentation/auth_controller.dart';
+import 'package:hompimpa_pos/features/settings/presentation/firebase_setup_screen.dart';
 
 class LoginScreen extends ConsumerWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -113,6 +114,24 @@ class LoginScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
+
+                const SizedBox(height: 20),
+
+                TextButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => FirebaseSetupScreen(isInitialSetup: false),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.settings_outlined, color: Colors.white70, size: 18),
+                  label: const Text(
+                    '⚙️ Konfigurasi Database Firebase',
+                    style: TextStyle(color: Colors.white, fontSize: 13, decoration: TextDecoration.underline),
+                  ),
+                ),
               ],
             ),
           ),

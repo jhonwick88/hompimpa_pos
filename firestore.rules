@@ -1,0 +1,89 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isDev() {
+      return isSignedIn() && 
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         getUserData().role == 'dev');
+    }
+
+    function isAdmin() {
+      return isSignedIn() && 
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         (getUserData().role == 'admin' || getUserData().role == 'dev'));
+    }
+
+    // 1. KOLEKSI USERS
+    match /users/{userId} {
+      // User dapat membaca datanya sendiri, admin/dev dapat membaca semua, atau query email saat login pertama
+      allow read: if isSignedIn();
+      // Admin/dev dapat membuat dan mengedit user, user dapat mengedit dirinya sendiri
+      allow create, update: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow delete: if isDev();
+    }
+
+    // 2. KOLEKSI STORES (TOKO / CABANG)
+    match /stores/{storeId} {
+      allow read: if true; // Public agar QR Menu / Staf dapat melihat nama toko
+      allow create, update, delete: if isAdmin();
+    }
+
+    // 3. KOLEKSI PRODUK & TOPPING (KATALOG MENU)
+    match /products/{productId} {
+      allow read: if true; // Public untuk QR Menu dan Kasir
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /toppings/{toppingId} {
+      allow read: if true; // Public untuk QR Menu dan Kasir
+      allow create, update, delete: if isAdmin();
+    }
+
+    // 4. KOLEKSI PENGATURAN (SETTINGS: NOTA & SAMBAL)
+    match /settings/{settingId} {
+      allow read: if true; // Dibutuhkan oleh Kasir & Public Menu
+      allow write: if isAdmin();
+    }
+
+    // 5. KOLEKSI ORDERS (TRANSAKSI KASIR & QR ORDER)
+    match /orders/{orderId} {
+      allow read: if true; // Memungkinkan kasir & pembeli memantau status pesanan
+      allow create: if true; // Kasir atau QR Self Order
+      allow update: if isSignedIn(); // Kasir / Admin mengubah status pesanan
+      allow delete: if isDev();
+    }
+
+    // 6. KOLEKSI SHIFTS, STOCK LOGS, & LAPORAN
+    match /shifts/{shiftId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /stock_logs/{logId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /daily_sales/{saleId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+
+    match /order_logs/{logId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // Default fallback: tolak semua akses lainnya yang tidak terdaftar
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

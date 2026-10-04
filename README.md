@@ -10,6 +10,14 @@ Tingkatkan kecepatan pelayanan hingga **3x lipat**, kurangi human error dalam pe
 
 ---
 
+## 📖 Panduan Instalasi & Setup Database Customer
+Bagi Anda pembeli / pemilik restoran baru, silakan ikuti panduan setup database mandiri yang sangat mudah:
+👉 **[BACA PANDUAN SETUP FIREBASE LENGKAP (PANDUAN_SETUP_FIREBASE.md)](file:///h:/FlutterProject/hompimpa_pos/PANDUAN_SETUP_FIREBASE.md)**
+
+*Hanya butuh waktu ~5 menit, gratis (Firebase Spark Plan), dan dilengkapi fitur **Auto Setup / Seeder Database Awal** (1 kali klik).*
+
+---
+
 ## 🌟 Mengapa Memilih Hompimpa POS? (Fitur Unggulan)
 
 ### ⚡ 1. Kasir Cepat & Responsif (Quick Order)

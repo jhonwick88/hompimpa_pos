@@ -1,0 +1,11 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Izinkan publik membaca gambar produk/logo
+    match /{allPaths=**} {
+      allow read: if true;
+      // Hanya user login yang dapat mengunggah gambar produk
+      allow write: if request.auth != null;
+    }
+  }
+}

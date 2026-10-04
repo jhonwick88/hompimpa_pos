@@ -252,6 +252,14 @@ class AppEndDrawer extends ConsumerWidget {
                         label: 'Harga Sambal',
                         onTap: () => _showSambalSettingsDialog(context, ref),
                       ),
+                      _DrawerButton(
+                        icon: Icons.cloud_sync_outlined,
+                        label: 'Database & Firebase',
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push('/settings/firebase');
+                        },
+                      ),
                     ],
 
                     // ===== MAINTENANCE (DEV ONLY) =====

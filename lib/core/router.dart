@@ -21,6 +21,7 @@ import 'package:hompimpa_pos/features/auth/presentation/profile_screen.dart';
 import 'package:hompimpa_pos/features/settings/presentation/settings_screen.dart';
 import 'package:hompimpa_pos/features/settings/presentation/store_management_screen.dart';
 import 'package:hompimpa_pos/features/settings/presentation/developer_contact_screen.dart';
+import 'package:hompimpa_pos/features/settings/presentation/firebase_setup_screen.dart';
 import 'package:hompimpa_pos/core/widgets/animated_splash_screen.dart';
 import 'package:hompimpa_pos/features/public_menu/presentation/public_menu_screen.dart';
 import 'package:hompimpa_pos/features/public_menu/presentation/public_cart_screen.dart';
@@ -41,11 +42,13 @@ final routerProvider = Provider<GoRouter>((ref) {
        final isLoggingIn = path == '/login';
        final isSplash = path == '/splash';
        final isPublic = path == '/menu' || path == '/cart';
+       final isFirebaseSetup = path == '/settings/firebase';
        
        if (!isLoggedIn) {
          if (isSplash) return null; 
          if (isLoggingIn) return null; 
          if (isPublic) return null;
+         if (isFirebaseSetup) return null;
          return '/login'; 
        }
 
@@ -134,6 +137,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/settings/firebase',
+        builder: (context, state) => FirebaseSetupScreen(),
       ),
       GoRoute(
         path: '/profile',
