@@ -11,10 +11,40 @@ class FirebaseConfigService {
   static const String _keyStorageBucket = 'firebase_storage_bucket';
   static const String _keyAuthDomain = 'firebase_auth_domain';
   static const String _keyIsCustomConfig = 'firebase_is_custom_config';
+  static const String _keyDevModeEnabled = 'firebase_dev_mode_enabled';
+
+  /// PIN Rahasia Developer untuk mengakses database internal developer
+  static const String devSecretPin = '1471';
 
   /// Mendapatkan instance SharedPreferences
   static Future<SharedPreferences> get _prefs async =>
       await SharedPreferences.getInstance();
+
+  /// Memverifikasi PIN Developer
+  static bool verifyDevPin(String inputPin) {
+    return inputPin.trim() == devSecretPin;
+  }
+
+  /// Mengecek apakah Developer Mode sedang aktif di perangkat ini
+  static Future<bool> isDevModeActive() async {
+    try {
+      final p = await _prefs;
+      return p.getBool(_keyDevModeEnabled) ?? false;
+    } catch (e) {
+      debugPrint('Error checking dev mode: $e');
+      return false;
+    }
+  }
+
+  /// Mengaktifkan / Menonaktifkan Developer Mode
+  static Future<void> setDevMode(bool enabled) async {
+    final p = await _prefs;
+    await p.setBool(_keyDevModeEnabled, enabled);
+    if (enabled) {
+      // Jika dev mode diaktifkan, matikan custom config agar langsung memakai DefaultFirebaseOptions
+      await p.setBool(_keyIsCustomConfig, false);
+    }
+  }
 
   /// Mengecek apakah ada konfigurasi custom yang tersimpan
   static Future<bool> hasCustomConfig() async {
@@ -34,6 +64,9 @@ class FirebaseConfigService {
   static Future<FirebaseOptions?> getCustomOptions() async {
     try {
       final p = await _prefs;
+      final isCustom = p.getBool(_keyIsCustomConfig) ?? false;
+      if (!isCustom) return null;
+
       final apiKey = p.getString(_keyApiKey);
       final appId = p.getString(_keyAppId);
       final projectId = p.getString(_keyProjectId);
@@ -93,9 +126,10 @@ class FirebaseConfigService {
     await p.setString(_keyStorageBucket, (storageBucket ?? '').trim());
     await p.setString(_keyAuthDomain, (authDomain ?? '').trim());
     await p.setBool(_keyIsCustomConfig, true);
+    await p.setBool(_keyDevModeEnabled, false); // Matikan dev mode saat pakai custom config
   }
 
-  /// Menghapus konfigurasi custom (reset ke default)
+  /// Menghapus konfigurasi custom customer
   static Future<void> clearConfig() async {
     final p = await _prefs;
     await p.remove(_keyApiKey);
@@ -108,10 +142,6 @@ class FirebaseConfigService {
   }
 
   /// Smart Parser: Mengekstrak key-value dari teks snippet Firebase Console (JS Object / JSON)
-  /// Contoh input yang didukung:
-  /// 1. const firebaseConfig = { apiKey: "AIza...", projectId: "my-pos", ... };
-  /// 2. { "apiKey": "AIza...", "projectId": "my-pos" }
-  /// 3. Baris biasa: apiKey=AIza... atau apiKey: AIza...
   static Map<String, String> parseSnippet(String text) {
     final Map<String, String> result = {};
     if (text.trim().isEmpty) return result;
@@ -143,7 +173,6 @@ class FirebaseConfigService {
     ];
 
     for (final key in keys) {
-      // Pola: key: "value" atau "key": "value" atau key: 'value'
       final regExp = RegExp(
         '''['"]?$key['"]?\\s*[:=]\\s*['"]([^'"]+)['"]''',
         caseSensitive: false,
@@ -176,5 +205,49 @@ class FirebaseConfigService {
       }
     });
     return normalized;
+  }
+
+  /// Menghasilkan payload QR Code dari konfigurasi
+  static String generateQrPayload(Map<String, String> config) {
+    final payloadMap = {
+      'app': 'hompimpa_pos',
+      'v': 1,
+      'apiKey': config['apiKey'] ?? '',
+      'appId': config['appId'] ?? '',
+      'projectId': config['projectId'] ?? '',
+      'messagingSenderId': config['messagingSenderId'] ?? '',
+      'storageBucket': config['storageBucket'] ?? '',
+      'authDomain': config['authDomain'] ?? '',
+    };
+    return 'HOMPIMPA_CFG:${json.encode(payloadMap)}';
+  }
+
+  /// Membaca dan memvalidasi payload QR Code
+  static Map<String, String>? parseQrPayload(String raw) {
+    if (raw.trim().isEmpty) return null;
+    try {
+      String jsonStr = raw.trim();
+      if (jsonStr.startsWith('HOMPIMPA_CFG:')) {
+        jsonStr = jsonStr.substring('HOMPIMPA_CFG:'.length);
+      }
+      final decoded = json.decode(jsonStr);
+      if (decoded is Map && decoded['projectId'] != null && decoded['apiKey'] != null) {
+        return {
+          'apiKey': decoded['apiKey']?.toString() ?? '',
+          'appId': decoded['appId']?.toString() ?? '',
+          'projectId': decoded['projectId']?.toString() ?? '',
+          'messagingSenderId': decoded['messagingSenderId']?.toString() ?? '',
+          'storageBucket': decoded['storageBucket']?.toString() ?? '',
+          'authDomain': decoded['authDomain']?.toString() ?? '',
+        };
+      }
+    } catch (_) {
+      // Fallback: coba parse sebagai snippet biasa jika QR berisi teks JSON biasa
+      final snippetResult = parseSnippet(raw);
+      if (snippetResult.isNotEmpty && snippetResult['projectId'] != null) {
+        return snippetResult;
+      }
+    }
+    return null;
   }
 }

@@ -183,12 +183,22 @@ const firebaseConfig = {
 
 ## 📱 Langkah 6: Menghubungkan ke Aplikasi
 
-1. Buka aplikasi **Hompimpa POS** di HP / Tablet / Browser Anda.
+### A. Setup di HP / Komputer Utama (Owner):
+1. Buka aplikasi **Hompimpa POS** di HP / Laptop utama Anda.
 2. Jika aplikasi belum terhubung ke database, klik tombol **"⚙️ Konfigurasi Database Firebase Sekarang"** (atau klik link **⚙️ Konfigurasi Database Firebase** pada halaman login).
-3. Klik tombol **"📋 Paste Otomatis Config"**.
+3. Klik tombol **"📋 Paste Config"**.
 4. Tempel teks kode yang Anda salin dari Langkah 5, lalu klik **Ekstrak Otomatis**.
 5. Semua kolom (*Project ID, API Key, App ID, Messaging Sender ID*) akan terisi secara otomatis!
 6. Klik tombol **"Simpan & Terapkan Konfigurasi"**.
+
+---
+
+### B. Menghubungkan HP / Tablet Kasir Baru (Sangat Praktis dengan QR Code ✨):
+Untuk memasang aplikasi di HP/Tablet kasir baru tanpa perlu copy-paste teks:
+1. Di HP Owner yang sudah terhubung, buka menu **Konfigurasi Database Firebase** lalu klik **"📱 Tampilkan QR Code Database Toko"**.
+2. Di HP/Tablet kasir yang baru di-install, buka aplikasi lalu klik **"📷 Scan QR"**.
+3. Arahkan kamera kasir ke QR Code di layar HP Owner.
+4. Dalam 1 detik seluruh konfigurasi langsung tersalin dan tersambung otomatis! Klik **Simpan**.
 
 ---
 

@@ -22,11 +22,19 @@ void main() async {
     
     // 1. Cek apakah ada konfigurasi custom yang disimpan oleh customer
     FirebaseOptions? targetOptions = await FirebaseConfigService.getCustomOptions();
+    final bool isDevMode = await FirebaseConfigService.isDevModeActive();
     
-    // 2. Jika tidak ada custom config, fallback ke static platform options
-    targetOptions ??= kIsWeb 
-        ? DefaultFirebaseOptions.web 
-        : DefaultFirebaseOptions.currentPlatform;
+    // 2. Proteksi Database Developer:
+    // Jika tidak ada custom config, hanya boleh memakai database developer jika Dev Mode aktif atau dalam mode debug lokal
+    if (targetOptions == null) {
+      if (isDevMode || kDebugMode) {
+        targetOptions = kIsWeb 
+            ? DefaultFirebaseOptions.web 
+            : DefaultFirebaseOptions.currentPlatform;
+      } else {
+        throw 'Database Firebase belum dikonfigurasi. Silakan masukkan kredensial Firebase project Anda untuk memulai.';
+      }
+    }
 
     await Firebase.initializeApp(
       options: targetOptions,

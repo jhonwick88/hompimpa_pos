@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:hompimpa_pos/core/services/firebase_config_service.dart';
 import 'package:hompimpa_pos/core/services/database_seeder_service.dart';
+import 'package:hompimpa_pos/features/settings/presentation/qr_config_scanner_screen.dart';
 
 class FirebaseSetupScreen extends ConsumerStatefulWidget {
   final bool isInitialSetup;
@@ -30,6 +32,8 @@ class _FirebaseSetupScreenState extends ConsumerState<FirebaseSetupScreen> {
   bool _isSeeding = false;
   bool _hasCustom = false;
 
+  bool _isDevMode = false;
+
   @override
   void initState() {
     super.initState();
@@ -47,6 +51,7 @@ class _FirebaseSetupScreenState extends ConsumerState<FirebaseSetupScreen> {
     setState(() => _isLoading = true);
     final raw = await FirebaseConfigService.getRawConfig();
     final hasCust = await FirebaseConfigService.hasCustomConfig();
+    final isDev = await FirebaseConfigService.isDevModeActive();
     if (mounted) {
       setState(() {
         _apiKeyController.text = raw['apiKey'] ?? '';
@@ -56,8 +61,154 @@ class _FirebaseSetupScreenState extends ConsumerState<FirebaseSetupScreen> {
         _storageBucketController.text = raw['storageBucket'] ?? '';
         _authDomainController.text = raw['authDomain'] ?? '';
         _hasCustom = hasCust;
+        _isDevMode = isDev;
         _isLoading = false;
       });
+    }
+  }
+
+  void _openDeveloperPinDialog() {
+    final pinController = TextEditingController();
+    bool isPinError = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          Future<void> verifyAndProceed() async {
+            final pin = pinController.text.trim();
+            if (FirebaseConfigService.verifyDevPin(pin)) {
+              Navigator.pop(ctx);
+              await FirebaseConfigService.setDevMode(true);
+              await _loadExistingConfig();
+
+              if (mounted) {
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (alertCtx) => AlertDialog(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    title: const Row(
+                      children: [
+                        Icon(Icons.verified_user, color: Colors.green, size: 28),
+                        SizedBox(width: 8),
+                        Text('Mode Developer Aktif'),
+                      ],
+                    ),
+                    content: const Text(
+                      'Aplikasi sekarang terhubung ke Database Internal Developer Anda. Silakan muat ulang atau lanjutkan ke login.',
+                    ),
+                    actions: [
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFB71C1C),
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(alertCtx);
+                          if (widget.isInitialSetup) {
+                            context.go('/login');
+                          } else {
+                            Navigator.pop(context);
+                          }
+                        },
+                        child: const Text('Lanjutkan ke Login'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            } else {
+              setDialogState(() {
+                isPinError = true;
+              });
+            }
+          }
+
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Row(
+              children: [
+                Icon(Icons.admin_panel_settings_rounded, color: Color(0xFFB71C1C), size: 28),
+                SizedBox(width: 10),
+                Text('Akses Database Developer', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Fitur ini khusus untuk Developer pemilik aplikasi. Masukkan PIN Developer untuk beralih ke Database Internal:',
+                  style: TextStyle(fontSize: 13, color: Colors.black87),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: pinController,
+                  obscureText: true,
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    labelText: 'PIN Developer',
+                    hintText: 'Masukkan 4 digit PIN',
+                    errorText: isPinError ? 'PIN Developer salah!' : null,
+                    prefixIcon: const Icon(Icons.lock_rounded, color: Color(0xFFB71C1C)),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onSubmitted: (_) => verifyAndProceed(),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Batal'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFB71C1C),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: verifyAndProceed,
+                child: const Text('Buka Database Developer'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _clearCustomConfigOnly() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Kosongkan Konfigurasi?'),
+        content: const Text(
+          'Konfigurasi database custom akan dihapus dari form dan penyimpanan perangkat ini.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    await FirebaseConfigService.clearConfig();
+    await _loadExistingConfig();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Konfigurasi database telah dikosongkan.'), backgroundColor: Colors.orange),
+      );
     }
   }
 
@@ -155,6 +306,113 @@ class _FirebaseSetupScreenState extends ConsumerState<FirebaseSetupScreen> {
                 );
               }
             },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openQrScanner() async {
+    final result = await Navigator.push<Map<String, String>>(
+      context,
+      MaterialPageRoute(builder: (_) => const QrConfigScannerScreen()),
+    );
+
+    if (result != null && result.isNotEmpty && mounted) {
+      setState(() {
+        if (result['apiKey'] != null) _apiKeyController.text = result['apiKey']!;
+        if (result['projectId'] != null) _projectIdController.text = result['projectId']!;
+        if (result['appId'] != null) _appIdController.text = result['appId']!;
+        if (result['messagingSenderId'] != null) _senderIdController.text = result['messagingSenderId']!;
+        if (result['storageBucket'] != null) _storageBucketController.text = result['storageBucket']!;
+        if (result['authDomain'] != null) _authDomainController.text = result['authDomain']!;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ QR Code berhasil dipindai! Konfigurasi database terisi.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
+  void _showShareQrDialog() {
+    final currentConfig = {
+      'apiKey': _apiKeyController.text.trim(),
+      'projectId': _projectIdController.text.trim(),
+      'appId': _appIdController.text.trim(),
+      'messagingSenderId': _senderIdController.text.trim(),
+      'storageBucket': _storageBucketController.text.trim(),
+      'authDomain': _authDomainController.text.trim(),
+    };
+
+    if (currentConfig['projectId']!.isEmpty || currentConfig['apiKey']!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('⚠️ Masukkan atau simpan konfigurasi database terlebih dahulu untuk membagikan QR Code.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final qrPayload = FirebaseConfigService.generateQrPayload(currentConfig);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.qr_code_2_rounded, color: Color(0xFFB71C1C), size: 28),
+            SizedBox(width: 8),
+            Text('QR Database Toko', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          ],
+        ),
+        content: SizedBox(
+          width: 320,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Arahkan kamera HP/Tablet Kasir baru ke QR Code ini saat membuka menu setup untuk menghubungkan database secara instan.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12.5, color: Colors.black87),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: QrImageView(
+                  data: qrPayload,
+                  version: QrVersions.auto,
+                  size: 220,
+                  backgroundColor: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Project: ${currentConfig['projectId']}',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFFB71C1C)),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Tutup'),
           ),
         ],
       ),
@@ -422,21 +680,93 @@ class _FirebaseSetupScreenState extends ConsumerState<FirebaseSetupScreen> {
                                   padding: const EdgeInsets.symmetric(vertical: 12),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 ),
-                                icon: const Icon(Icons.content_paste_go_rounded, size: 20),
+                                icon: const Icon(Icons.content_paste_go_rounded, size: 18),
                                 label: const Text(
-                                  '📋 Paste Otomatis Config',
+                                  '📋 Paste Config',
                                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                                 ),
                                 onPressed: _openPasteSnippetDialog,
                               ),
                             ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFFFD54F),
+                                  foregroundColor: const Color(0xFF3E2723),
+                                  elevation: 2,
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                                icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
+                                label: const Text(
+                                  '📷 Scan QR',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                ),
+                                onPressed: _openQrScanner,
+                              ),
+                            ),
                           ],
+                        ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              side: const BorderSide(color: Colors.white70, width: 1.2),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                            icon: const Icon(Icons.qr_code_2_rounded, size: 18),
+                            label: const Text(
+                              '📱 Tampilkan QR Code Database Toko (Untuk Dibagikan)',
+                              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5),
+                            ),
+                            onPressed: _showShareQrDialog,
+                          ),
                         ),
                       ],
                     ),
                   ),
 
                   const SizedBox(height: 24),
+
+                  // Status Developer Mode
+                  if (_isDevMode)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 20),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        border: Border.all(color: Colors.blue.shade300),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.shield_rounded, color: Colors.blue),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: Text(
+                              'Database Internal Developer Aktif (Terkunci PIN)',
+                              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              await FirebaseConfigService.setDevMode(false);
+                              await _loadExistingConfig();
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Mode Developer dinonaktifkan.'), backgroundColor: Colors.orange),
+                                );
+                              }
+                            },
+                            child: const Text('Matikan', style: TextStyle(color: Colors.red)),
+                          ),
+                        ],
+                      ),
+                    ),
 
                   // Status Custom Config
                   if (_hasCustom)
@@ -459,8 +789,8 @@ class _FirebaseSetupScreenState extends ConsumerState<FirebaseSetupScreen> {
                             ),
                           ),
                           TextButton(
-                            onPressed: _resetToDefault,
-                            child: const Text('Reset', style: TextStyle(color: Colors.red)),
+                            onPressed: _clearCustomConfigOnly,
+                            child: const Text('Kosongkan', style: TextStyle(color: Colors.red)),
                           ),
                         ],
                       ),
@@ -574,6 +904,20 @@ class _FirebaseSetupScreenState extends ConsumerState<FirebaseSetupScreen> {
                     label: Text(
                       _isSeeding ? 'Mengisi Database Awal...' : '⚡ Jalankan Auto Setup / Seeder Database Awal',
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Tombol Developer Mode (PIN 1471)
+                  Center(
+                    child: TextButton.icon(
+                      onPressed: _openDeveloperPinDialog,
+                      icon: const Icon(Icons.lock_outline_rounded, size: 16, color: Colors.grey),
+                      label: const Text(
+                        '🔐 Beralih ke Database Internal Developer (PIN)',
+                        style: TextStyle(color: Colors.grey, fontSize: 12.5, fontWeight: FontWeight.w600),
+                      ),
                     ),
                   ),
 
